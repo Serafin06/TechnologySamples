@@ -1,29 +1,30 @@
 package pl.rafapp.techSam.DataBase
 
+import io.github.cdimascio.dotenv.Dotenv
+import io.github.cdimascio.dotenv.DotenvException
+import io.github.cdimascio.dotenv.dotenv
 import org.hibernate.SessionFactory
 import org.hibernate.cfg.Configuration
 import java.util.Properties
 
 object HibernateConfig {
 
+    private val dotenv = dotenv {
+        filename = "pas.env"
+        ignoreIfMissing = false
+    }
+
     val sessionFactory: SessionFactory by lazy {
         try {
             val configuration = Configuration()
 
-            // Ustawienia w kodzie (bez hibernate.cfg.xml)
             configuration.properties = createProperties()
 
-            // Dodaj encje
-            configuration.addAnnotatedClass(KA::class.java)
+            // ✅ Tylko potrzebne encje
             configuration.addAnnotatedClass(KD::class.java)
-            configuration.addAnnotatedClass(KOD_NAWOJU::class.java)
-            configuration.addAnnotatedClass(TypPalety::class.java)
             configuration.addAnnotatedClass(ZD::class.java)
             configuration.addAnnotatedClass(ZK::class.java)
             configuration.addAnnotatedClass(ZO::class.java)
-            configuration.addAnnotatedClass(DtProperties::class.java)
-            configuration.addAnnotatedClass(KartyWyrobu::class.java)
-            configuration.addAnnotatedClass(WlasciwosciFizyczne::class.java)
 
             configuration.buildSessionFactory()
         } catch (ex: Throwable) {
@@ -32,18 +33,21 @@ object HibernateConfig {
     }
 
     private fun createProperties(): Properties {
-        return Properties().apply {
-            setProperty("hibernate.connection.driver_class", "org.postgresql.Driver")
-            setProperty("hibernate.connection.url", "jdbc:postgresql://<HOST>:<PORT>/<DBNAME>")
-            setProperty("hibernate.connection.username", "<USERNAME>")
-            setProperty("hibernate.connection.password", "<PASSWORD>")
+        val dbUrl = dotenv["DB_URL"] ?: error("Brak DB_URL w .env")
+        val dbUser = dotenv["DB_USER"] ?: error("Brak DB_USER w .env")
+        val dbPass = dotenv["DB_PASS"] ?: error("Brak DB_PASS w .env")
 
-            setProperty("hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect")
+        return Properties().apply {
+            setProperty("hibernate.connection.driver_class", "com.microsoft.sqlserver.jdbc.SQLServerDriver")
+            setProperty("hibernate.connection.url", dbUrl)
+            setProperty("hibernate.connection.username", dbUser)
+            setProperty("hibernate.connection.password", dbPass)
+
+            //setProperty("hibernate.dialect", "org.hibernate.dialect.SQLServerDialect")
             setProperty("hibernate.hbm2ddl.auto", "validate")
             setProperty("hibernate.show_sql", "true")
             setProperty("hibernate.format_sql", "true")
 
-            // Connection pool HikariCP
             setProperty("hibernate.connection.provider_class", "org.hibernate.hikaricp.internal.HikariCPConnectionProvider")
             setProperty("hibernate.hikari.minimumIdle", "5")
             setProperty("hibernate.hikari.maximumPoolSize", "20")

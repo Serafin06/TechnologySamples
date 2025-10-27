@@ -4,6 +4,7 @@ plugins {
     kotlin("jvm") version "2.2.20"
     id("org.jetbrains.compose") version "1.7.1"
     id("org.jetbrains.kotlin.plugin.compose") version "2.2.20"
+    id("org.jetbrains.kotlin.plugin.jpa") version "2.2.20"
 }
 
 group = "pl.rafapp.techSam"
@@ -22,14 +23,17 @@ dependencies {
     implementation(compose.materialIconsExtended)
 
     implementation("org.hibernate.orm:hibernate-core:6.6.4.Final") // Hibernate
-    implementation("com.mysql:mysql-connector-j:9.1.0") // sterownik do mySQL
+    implementation("com.microsoft.sqlserver:mssql-jdbc:12.8.0.jre11") // sterownik do mySQL
     implementation("org.jetbrains.kotlin:kotlin-stdlib")
 
     // Connection Pool
-    implementation("com.zaxxer:HikariCP:6.2.1")
+    implementation("org.hibernate.orm:hibernate-hikaricp:6.6.4.Final")
 
     // Logging
     implementation("org.slf4j:slf4j-simple:2.0.16")
+
+    // szyfrowanie hasel
+    implementation("io.github.cdimascio:dotenv-kotlin:6.4.1")
 
     testImplementation(kotlin("test"))
 }
