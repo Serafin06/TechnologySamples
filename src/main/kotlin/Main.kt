@@ -19,7 +19,7 @@ fun main() = application {
             exitApplication()
         },
         state = windowState,
-        title = "TechSam - Zarządzanie Próbkami"
+        title = "Technologia - Zarządzanie Próbkami"
     ) {
         val sessionFactory = remember { HibernateConfig.sessionFactory }
         val probkaService = remember { ProbkaServiceFactory.createProbkaService(sessionFactory) }

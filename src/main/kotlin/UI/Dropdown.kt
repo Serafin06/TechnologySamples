@@ -68,9 +68,9 @@ fun StatusDropdown(
 ) {
     var expanded by remember { mutableStateOf(false) }
     val statusy = mapOf(
-        0.toByte() to "Nowe",
-        1.toByte() to "W realizacji",
-        2.toByte() to "Zakończone",
+        0.toByte() to "Wykonane",
+        1.toByte() to "Do realizacji",
+        2.toByte() to "Zaplanowane",
         3.toByte() to "Wstrzymane",
         4.toByte() to "Anulowane"
     )
