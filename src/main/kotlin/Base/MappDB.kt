@@ -90,9 +90,9 @@ class ProbkaMapper {
 class StatusResolver {
 
     private val statusMap = mapOf(
-        0.toByte() to "Nowe",
+        0.toByte() to "Wykonane",
         1.toByte() to "W realizacji",
-        2.toByte() to "Zakończone",
+        2.toByte() to "Planowane",
         3.toByte() to "Wstrzymane",
         4.toByte() to "Anulowane",
         5.toByte() to "Do weryfikacji"
