@@ -5,19 +5,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import kotlinx.coroutines.launch
-
-
 
 @Composable
 fun ProbkiScreen(viewModel: ProbkiViewModel) {
-    val scope = rememberCoroutineScope()
-
-    LaunchedEffect(Unit) {
-        scope.launch {
-            viewModel.loadProbki()
-        }
-    }
 
     MaterialTheme(
         colors = lightColors(
@@ -41,12 +31,15 @@ fun ProbkiScreen(viewModel: ProbkiViewModel) {
                 FilterPanel(
                     filterState = viewModel.filterState,
                     onFilterChange = { viewModel.updateFilter(it) },
-                    onRefresh = { scope.launch { viewModel.loadProbki() } }
+                    onRefresh = { viewModel.loadProbki() } // Usuń scope.launch
                 )
 
                 // Zawartość
                 when {
-                    viewModel.isLoading -> LoadingScreen()
+                    viewModel.isLoading -> LoadingScreen(
+                        progress = viewModel.loadingProgress,
+                        message = viewModel.loadingMessage
+                    )
                     viewModel.errorMessage != null -> ErrorScreen(viewModel.errorMessage!!)
                     viewModel.filteredProbki.isEmpty() -> EmptyScreen()
                     else -> ProbkiList(viewModel.filteredProbki)

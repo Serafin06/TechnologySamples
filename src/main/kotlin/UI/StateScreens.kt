@@ -15,15 +15,30 @@ import androidx.compose.ui.unit.sp
 // 🔄 State Screens
 
 @Composable
-fun LoadingScreen() {
+fun LoadingScreen(progress: Float = 0f, message: String = "Ładowanie próbek...") {
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.width(300.dp)
+        ) {
             CircularProgressIndicator()
+            Spacer(Modifier.height(24.dp))
+
+            if (progress > 0f) {
+                LinearProgressIndicator(
+                    progress = progress,
+                    modifier = Modifier.fillMaxWidth(),
+                    color = AppColors.Primary
+                )
+                Spacer(Modifier.height(8.dp))
+                Text("${(progress * 100).toInt()}%", color = Color.Gray, fontSize = 14.sp)
+            }
+
             Spacer(Modifier.height(16.dp))
-            Text("Ładowanie próbek...")
+            Text(message, fontWeight = FontWeight.Medium)
         }
     }
 }

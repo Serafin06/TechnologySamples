@@ -1,10 +1,19 @@
 package pl.rafapp.techSam.UI
 
 import androidx.compose.runtime.*
+import kotlinx.coroutines.*
 import pl.rafapp.techSam.Base.*
 
 
 class ProbkiViewModel(private val probkaService: ProbkaService) {
+
+    private val coroutineScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
+
+    var loadingProgress by mutableStateOf(0f)
+        private set
+
+    var loadingMessage by mutableStateOf("")
+        private set
 
     var probki by mutableStateOf<List<ProbkaDTO>>(emptyList())
         private set
@@ -21,18 +30,34 @@ class ProbkiViewModel(private val probkaService: ProbkaService) {
     var filterState by mutableStateOf(FilterState())
         private set
 
-    suspend fun loadProbki() {
-        isLoading = true
-        errorMessage = null
-        try {
-            probki = probkaService.getProbki()
-            applyFilters()
-        } catch (e: Exception) {
-            errorMessage = "Błąd ładowania danych: ${e.message}"
-        } finally {
-            isLoading = false
+    fun loadProbki() {
+        coroutineScope.launch {
+            isLoading = true
+            loadingProgress = 0f
+            errorMessage = null
+
+            try {
+                loadingMessage = "Ładowanie próbek ZO..."
+                loadingProgress = 0.3f
+
+                probki = withContext(Dispatchers.IO) {
+                    probkaService.getProbki()
+                }
+
+                loadingMessage = "Przetwarzanie danych..."
+                loadingProgress = 0.8f
+
+                applyFilters()
+                loadingProgress = 1f
+
+            } catch (e: Exception) {
+                errorMessage = "Błąd ładowania danych: ${e.message}"
+            } finally {
+                isLoading = false
+            }
         }
     }
+
 
     fun updateFilter(newFilter: FilterState) {
         filterState = newFilter
@@ -73,5 +98,8 @@ class ProbkiViewModel(private val probkaService: ProbkaService) {
 
             matchesSearch && matchesOddzial && matchesStanZO && matchesStanZK && matchesStanZD
         }
+    }
+    fun dispose() {
+        coroutineScope.cancel()
     }
 }

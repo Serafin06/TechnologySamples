@@ -1,5 +1,7 @@
 package pl.rafapp.techSam
 
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
@@ -24,6 +26,18 @@ fun main() = application {
         val sessionFactory = remember { HibernateConfig.sessionFactory }
         val probkaService = remember { ProbkaServiceFactory.createProbkaService(sessionFactory) }
         val viewModel = remember { ProbkiViewModel(probkaService) }
+
+        // Załaduj dane asynchronicznie przy starcie
+        LaunchedEffect(Unit) {
+            viewModel.loadProbki()
+        }
+
+        // Cleanup przy zamknięciu
+        DisposableEffect(Unit) {
+            onDispose {
+                viewModel.dispose()
+            }
+        }
 
         ProbkiScreen(viewModel)
     }

@@ -32,6 +32,10 @@ dependencies {
     // Logging
     implementation("org.slf4j:slf4j-simple:2.0.16")
 
+    //corutines
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-swing:1.7.3")
+
     // szyfrowanie hasel
     implementation("io.github.cdimascio:dotenv-kotlin:6.4.1")
 
