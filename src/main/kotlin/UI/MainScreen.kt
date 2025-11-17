@@ -42,7 +42,18 @@ fun ProbkiScreen(viewModel: ProbkiViewModel) {
                     )
                     viewModel.errorMessage != null -> ErrorScreen(viewModel.errorMessage!!)
                     viewModel.filteredProbki.isEmpty() -> EmptyScreen()
-                    else -> ProbkiList(viewModel.filteredProbki)
+                    else -> ProbkiList(
+                        probki = viewModel.filteredProbki,
+                        onTechnologiaSave = { probka, k1, k2, k3, k4 ->
+                            viewModel.saveTechnologiaKolumny(
+                                numer = probka.numer,
+                                k1 = k1,
+                                k2 = k2,
+                                k3 = k3,
+                                k4 = k4
+                            )
+                        }
+                    )
                 }
             }
         }

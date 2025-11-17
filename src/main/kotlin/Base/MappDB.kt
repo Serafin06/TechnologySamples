@@ -3,11 +3,8 @@ package pl.rafapp.techSam.Base
 import pl.rafapp.techSam.DataBase.*
 import java.time.LocalDateTime
 
-
-// 🔄 Mapper - Przekształcanie encji na DTO
-
 /**
- * Mapper zgodny z Single Responsibility Principle
+ * Mapper - Przekształca encje na DTO (Single Responsibility)
  */
 class ProbkaMapper {
 
@@ -15,11 +12,15 @@ class ProbkaMapper {
         zo: ZO,
         zkList: List<ZK>,
         zdList: List<ZD>,
+        zlList: List<ZL>,
+        technologia: Technologia?,
         statusResolver: StatusResolver
     ): ProbkaDTO {
         return ProbkaDTO(
             numer = zo.numer,
-            oddzialNazwa = getOddzialNazwa(zo.idPro1),
+            oddzial = zo.oddzial,
+            rok = zo.rok.toByte(),
+            oddzialNazwa = getOddzialNazwa(zo.oddzial),
             dataZamowienia = zo.data,
             art = zo.art,
             receptura = zo.receptura1,
@@ -27,6 +28,8 @@ class ProbkaMapper {
             grubosc21 = zo.grubosc21,
             grubosc31 = zo.grubosc31,
             szerokosc = zo.szerokosc1,
+
+            // Statusy z wszystkich tabel
             statusZO = createStatusInfo(
                 zo.stan,
                 zo.ilosc,
@@ -54,7 +57,23 @@ class ProbkaMapper {
                     zd.dataZak,
                     statusResolver
                 )
-            }
+            },
+            statusZL = zlList.firstOrNull()?.let { zl ->
+                createStatusInfo(
+                    zl.stan,
+                    zl.ilosc,
+                    zl.wykonana,
+                    zl.terminZak,
+                    zl.dataZak,
+                    statusResolver
+                )
+            },
+
+            // TODO pola
+            todoKolumna1 = technologia?.opis,
+            todoKolumna2 = technologia?.dodatkoweInfo,
+            todoKolumna3 = technologia?.uwagi,
+            todoKolumna4 = technologia?.testy
         )
     }
 
@@ -76,17 +95,21 @@ class ProbkaMapper {
         )
     }
 
-    private fun getOddzialNazwa(idPro1: Byte): String {
-        return when (idPro1.toInt()) {
-            1 -> "Ignatki"
-            10 -> "Tychy"
-            else -> "Nieznany ($idPro1)"
+    /**
+     * Mapuje ODDZIAL_W na nazwę oddziału
+     */
+    private fun getOddzialNazwa(oddzialW: Byte): String {
+        return when (oddzialW.toInt()) {
+            11 -> "Ignatki"
+            12 -> "Tychy"
+            else -> "Nieznany ($oddzialW)"
         }
     }
 }
 
-// 🎯 Status Resolver - Strategy Pattern
-
+/**
+ * Resolver statusów - Strategy Pattern
+ */
 class StatusResolver {
 
     private val statusMap = mapOf(

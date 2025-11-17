@@ -44,14 +44,14 @@ dependencies {
 
 compose.desktop {
     application {
-        mainClass = "pl.rafapp.appendixCreator.MainKt"
+        mainClass = "pl.rafapp.techSam.MainKt"
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "AppendixCreator"
+            packageName = "TechSamples"
             packageVersion = "1.0.0"
 
-            description = "System zarządzania budynkami i pracami"
+            description = "Program do zarządzania próbkami technologicznymi"
             copyright = "© 2025 RafApp"
             vendor = "RafApp"
         }

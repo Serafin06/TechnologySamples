@@ -22,7 +22,7 @@ fun TopAppBar() {
                     contentDescription = null,
                     modifier = Modifier.size(32.dp).padding(end = 8.dp)
                 )
-                Text("TechSam - Zarządzanie Próbkami", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                Text("Technologia - Zarządzanie Próbkami", fontSize = 20.sp, fontWeight = FontWeight.Bold)
             }
         },
         backgroundColor = AppColors.Primary,

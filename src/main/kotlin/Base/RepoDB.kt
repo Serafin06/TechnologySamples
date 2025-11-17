@@ -16,6 +16,9 @@ interface ProbkaRepository {
     fun findProbkiZO(): List<ZO>
     fun findZKByNumer(numer: Int, oddzial: Byte, rok: Byte): List<ZK>
     fun findZDByNumer(numer: Int, oddzial: Byte, rok: Byte): List<ZD>
+    fun findZLByNumer(numer: Int, oddzial: Byte, rok: Byte): List<ZL>
+    fun findTechnologiaNumer(numer: Int): Technologia?
+    fun saveTechnologia(technologia: Technologia): Technologia
 }
 
 /**
@@ -62,6 +65,43 @@ class ProbkaRepositoryImpl(private val sessionFactory: org.hibernate.SessionFact
         }
     }
 
+    override fun findZLByNumer(numer: Int, oddzial: Byte, rok: Byte): List<ZL> {
+        return useSession { session ->
+            session.createQuery(
+                "FROM ZL WHERE numer = :numer AND oddzial = :oddzial AND rok = :rok",
+                ZL::class.java
+            ).apply {
+                setParameter("numer", numer)
+                setParameter("oddzial", oddzial)
+                setParameter("rok", rok)
+            }.list()
+        }
+    }
+
+    override fun findTechnologiaNumer(numer: Int): Technologia? {
+        return useSession { session ->
+            session.createQuery(
+                "FROM Technologia WHERE numer = :numer",
+                Technologia::class.java
+            ).apply {
+                setParameter("numer", numer)
+            }.uniqueResultOptional().orElse(null)
+        }
+    }
+
+    override fun saveTechnologia(technologia: Technologia): Technologia {
+        return useSession { session ->
+            val transaction = session.beginTransaction()
+            try {
+                session.merge(technologia).also {
+                    transaction.commit()
+                }
+            } catch (e: Exception) {
+                transaction.rollback()
+                throw e
+            }
+        }
+    }
 
     private fun <T> useSession(block: (Session) -> T): T {
         val session = sessionFactory.openSession()
@@ -71,6 +111,4 @@ class ProbkaRepositoryImpl(private val sessionFactory: org.hibernate.SessionFact
             session.close()
         }
     }
-
-
 }

@@ -25,7 +25,7 @@ fun OddzialDropdown(
             value = selectedOddzial ?: "Wszystkie",
             onValueChange = {},
             readOnly = true,
-            label = { Text("Oddział") },
+            label = { Text("Zakład") },
             trailingIcon = {
                 IconButton(onClick = { expanded = !expanded }) {
                     Icon(

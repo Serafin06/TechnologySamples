@@ -25,6 +25,8 @@ object HibernateConfig {
             configuration.addAnnotatedClass(ZD::class.java)
             configuration.addAnnotatedClass(ZK::class.java)
             configuration.addAnnotatedClass(ZO::class.java)
+            configuration.addAnnotatedClass(ZL::class.java)
+            configuration.addAnnotatedClass(Technologia::class.java)
 
             configuration.buildSessionFactory()
         } catch (ex: Throwable) {

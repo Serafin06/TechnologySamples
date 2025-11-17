@@ -99,6 +99,15 @@ class ProbkiViewModel(private val probkaService: ProbkaService) {
             matchesSearch && matchesOddzial && matchesStanZO && matchesStanZK && matchesStanZD
         }
     }
+
+    fun saveTechnologiaKolumny(numer: Int,
+                        k1: String?, k2: String?, k3: String?, k4: String?) {
+        coroutineScope.launch {
+            probkaService.saveTechnologiaKolumny(numer, k1, k2, k3, k4)
+            loadProbki() // Odśwież dane
+        }
+    }
+
     fun dispose() {
         coroutineScope.cancel()
     }
