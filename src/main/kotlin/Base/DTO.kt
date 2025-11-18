@@ -23,9 +23,9 @@ data class ProbkaDTO(
 
     // Statusy
     val statusZO: StatusInfo?,
-    val statusZK: StatusInfo?,
     val statusZD: StatusInfo?,
-    val statusZL: StatusInfo?,
+    val statusZL: List<StatusInfo>?,
+    val statusZK: StatusInfo?,
 
     // 4 nowe pola tekstowe
     val opis: String? = null,

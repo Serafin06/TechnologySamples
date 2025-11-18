@@ -41,7 +41,8 @@ class ProbkiViewModel(private val probkaService: ProbkaService) {
                 loadingProgress = 0.3f
 
                 probki = withContext(Dispatchers.IO) {
-                    probkaService.getProbki(filterState.dateRange.months)
+                    val monthsNonNull = filterState.dateRange.months ?: 6L
+                    probkaService.getProbki(monthsNonNull)
                 }
 
                 loadingMessage = "Przetwarzanie danych..."
@@ -91,8 +92,8 @@ class ProbkiViewModel(private val probkaService: ProbkaService) {
                 probka.statusZD?.stan == it
             } ?: true
 
-            val matchesStanZL = filterState.stanZL?.let { // Nowe
-                probka.statusZL?.stan == it
+            val matchesStanZL = filterState.stanZL?.let { expectedStan ->
+                probka.statusZL?.any { it.stan == expectedStan } ?: false
             } ?: true
 
             matchesSearch && matchesOddzial && matchesStanZO && matchesStanZK && matchesStanZD && matchesStanZL

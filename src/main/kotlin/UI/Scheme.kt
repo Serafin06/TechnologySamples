@@ -1,6 +1,7 @@
 package pl.rafapp.techSam.UI
 
 import androidx.compose.ui.graphics.Color
+import java.time.LocalDateTime
 
 // 🎨 Theme & Colors
 
@@ -26,12 +27,15 @@ data class FilterState(
     val stanZO: Byte? = null,
     val stanZK: Byte? = null,
     val stanZD: Byte? = null,
-    val stanZL: Byte? = null, // Nowe
-    val dateRange: DateRange = DateRange.SIX_MONTHS
+    val stanZL: Byte? = null,
+    val dateRange: DateRange = DateRange.SIX_MONTHS,
+    val customDateFrom: LocalDateTime? = null,
+    val customDateTo: LocalDateTime? = null
 )
 
-enum class DateRange(val label: String, val months: Long) {
+enum class DateRange(val label: String, val months: Long?) {
     THREE_MONTHS("Ostatnie 3 miesiące", 3),
     SIX_MONTHS("Ostatnie 6 miesięcy", 6),
-    ONE_YEAR("Ostatni rok", 12)
+    ONE_YEAR("Ostatni rok", 12),
+    CUSTOM("Własny zakres", null)
 }

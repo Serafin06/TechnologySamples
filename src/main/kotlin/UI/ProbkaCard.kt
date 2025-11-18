@@ -133,31 +133,74 @@ fun ProbkaCard(
             // ═══════════════════════════════════════════════════════
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(6.dp) // ODSTĘP: między statusami
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 MiniStatusChip("ZO", probka.statusZO, Modifier.weight(1f))
-                MiniStatusChip("ZK", probka.statusZK, Modifier.weight(1f))
                 MiniStatusChip("ZD", probka.statusZD, Modifier.weight(1f))
-                MiniStatusChip("ZL", probka.statusZL, Modifier.weight(1f))
+
+                // ZL - pokaż wszystkie zlecenia lub "-"
+                if (probka.statusZL != null && probka.statusZL.isNotEmpty()) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        probka.statusZL.forEachIndexed { index, status ->
+                            MiniStatusChip("ZL${index + 1}", status, Modifier.fillMaxWidth())
+                            if (index < probka.statusZL.size - 1) Spacer(Modifier.height(4.dp))
+                        }
+                    }
+                } else {
+                    Surface(
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(4.dp),
+                        color = Color.Gray.copy(alpha = 0.1f)
+                    ) {
+                        Box(
+                            modifier = Modifier.padding(6.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("ZL: -", fontSize = 10.sp, color = Color.Gray)
+                        }
+                    }
+                }
+
+                MiniStatusChip("ZK", probka.statusZK, Modifier.weight(1f))
             }
+
+            Spacer(Modifier.height(12.dp))
 
             // ═══════════════════════════════════════════════════════
             // 4️⃣ KOLUMNY - Edytowalne pola (opcjonalne)
             // ═══════════════════════════════════════════════════════
-            if (editMode && onTechnologiaSave != null) {
-                Spacer(Modifier.height(12.dp))
-                Divider()
-                Spacer(Modifier.height(8.dp))
+            Divider()
+            Spacer(Modifier.height(8.dp))
 
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text(
                     "Notatki technologiczne",
                     fontWeight = FontWeight.Bold,
                     fontSize = 13.sp
                 )
 
-                Spacer(Modifier.height(8.dp))
+                if (onTechnologiaSave != null) {
+                    IconButton(
+                        onClick = { editMode = !editMode },
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            if (editMode) Icons.Default.Close else Icons.Default.Edit,
+                            contentDescription = "Edytuj",
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+            }
 
-                // Pierwszy rząd - 2 kolumny obok siebie
+            Spacer(Modifier.height(8.dp))
+
+            if (editMode && onTechnologiaSave != null) {
+                // Tryb edycji - pola tekstowe
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -183,7 +226,6 @@ fun ProbkaCard(
 
                 Spacer(Modifier.height(8.dp))
 
-                // Drugi rząd - 2 kolumny obok siebie
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -225,6 +267,53 @@ fun ProbkaCard(
                     Spacer(Modifier.width(8.dp))
                     Text("Zapisz")
                 }
+            } else {
+                // Tryb podglądu - tylko tekst
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("Uwagi 1:", fontSize = 10.sp, color = Color.Gray)
+                        Text(
+                            probka.opis ?: "-",
+                            fontSize = 12.sp,
+                            maxLines = 2
+                        )
+                    }
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("Uwagi 2:", fontSize = 10.sp, color = Color.Gray)
+                        Text(
+                            probka.dodtkoweInformacje ?: "-",
+                            fontSize = 12.sp,
+                            maxLines = 2
+                        )
+                    }
+                }
+
+                Spacer(Modifier.height(8.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("Uwagi 3:", fontSize = 10.sp, color = Color.Gray)
+                        Text(
+                            probka.uwagi ?: "-",
+                            fontSize = 12.sp,
+                            maxLines = 2
+                        )
+                    }
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("Uwagi 4:", fontSize = 10.sp, color = Color.Gray)
+                        Text(
+                            probka.testy ?: "-",
+                            fontSize = 12.sp,
+                            maxLines = 2
+                        )
+                    }
+                }
             }
 
             // ═══════════════════════════════════════════════════════
@@ -264,7 +353,7 @@ fun ProbkaCard(
                 probka.statusZO?.let { status -> StatusDetails("ZO", status) }
                 probka.statusZK?.let { status -> StatusDetails("ZK", status) }
                 probka.statusZD?.let { status -> StatusDetails("ZD", status) }
-                probka.statusZL?.let { status -> StatusDetails("ZL", status) }
+                probka.statusZL?.firstOrNull()?.let { status -> StatusDetails("ZL", status) }
 
             }
         }
@@ -275,75 +364,75 @@ fun ProbkaCard(
 // 🧩 Komponenty pomocnicze
 // ═══════════════════════════════════════════════════════════════
 
-/**
- * Kompaktowe info - label + wartość w jednej linii
- * STYL: zmień kolory, rozmiary czcionek
- */
-@Composable
-fun CompactInfo(label: String, value: String, modifier: Modifier = Modifier) {
-    Column(modifier = modifier) {
-        Text(
-            label,
-            fontSize = 10.sp, // ROZMIAR: etykieta
-            color = Color.Gray
-        )
-        Text(
-            value,
-            fontSize = 13.sp, // ROZMIAR: wartość
-            fontWeight = FontWeight.Medium
-        )
-    }
-}
-
-
-/**
- * Mini chip statusu - bardzo kompaktowy
- * WYGLĄD: zmień kolory, padding, zaokrąglenia
- */
-@Composable
-fun MiniStatusChip(label: String, status: StatusInfo?, modifier: Modifier = Modifier) {
-    val color = when (status?.stan) {
-        0.toByte() -> Color(0xFF4CAF50) // Wykonane - zielony
-        1.toByte() -> Color(0xFF2196F3) // W realizacji - niebieski
-        2.toByte() -> Color(0xFFFF9800) // Planowane - pomarańczowy
-        else -> Color.Gray
-    }
-
-    Surface(
-        modifier = modifier,
-        shape = RoundedCornerShape(4.dp), // ZAOKRĄGLENIE: zmień dla bardziej/mniej zaokrąglonych
-        color = color.copy(alpha = 0.1f)
-    ) {
-        Column(
-            modifier = Modifier.padding(6.dp), // PADDING: wewnętrzny odstęp
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
+    /**
+     * Kompaktowe info - label + wartość w jednej linii
+     * STYL: zmień kolory, rozmiary czcionek
+     */
+    @Composable
+    fun CompactInfo(label: String, value: String, modifier: Modifier = Modifier) {
+        Column(modifier = modifier) {
             Text(
                 label,
                 fontSize = 10.sp, // ROZMIAR: etykieta
-                fontWeight = FontWeight.Bold,
-                color = color
+                color = Color.Gray
             )
-            status?.let {
+            Text(
+                value,
+                fontSize = 13.sp, // ROZMIAR: wartość
+                fontWeight = FontWeight.Medium
+            )
+        }
+    }
+
+
+    /**
+     * Mini chip statusu - bardzo kompaktowy
+     * WYGLĄD: zmień kolory, padding, zaokrąglenia
+     */
+    @Composable
+    fun MiniStatusChip(label: String, status: StatusInfo?, modifier: Modifier = Modifier) {
+        val color = when (status?.stan) {
+            0.toByte() -> Color(0xFF4CAF50) // Wykonane - zielony
+            1.toByte() -> Color(0xFF2196F3) // W realizacji - niebieski
+            2.toByte() -> Color(0xFFFF9800) // Planowane - pomarańczowy
+            else -> Color.Gray
+        }
+
+        Surface(
+            modifier = modifier,
+            shape = RoundedCornerShape(4.dp), // ZAOKRĄGLENIE: zmień dla bardziej/mniej zaokrąglonych
+            color = color.copy(alpha = 0.1f)
+        ) {
+            Column(
+                modifier = Modifier.padding(6.dp), // PADDING: wewnętrzny odstęp
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
                 Text(
-                    "${it.wykonana?.toInt() ?: 0}/${it.ilosc?.toInt() ?: 0}",
-                    fontSize = 9.sp, // ROZMIAR: postęp
+                    label,
+                    fontSize = 10.sp, // ROZMIAR: etykieta
+                    fontWeight = FontWeight.Bold,
                     color = color
                 )
+                status?.let {
+                    Text(
+                        "${it.wykonana?.toInt() ?: 0}/${it.ilosc?.toInt() ?: 0}",
+                        fontSize = 9.sp, // ROZMIAR: postęp
+                        color = color
+                    )
+                }
             }
         }
     }
-}
 
-/**
- * Szczegółowy element - dla rozwijalnej sekcji
- */
-@Composable
-fun DetailItem(label: String, value: String) {
-    Column {
-        Text(label, fontSize = 10.sp, color = Color.Gray)
-        Text(value, fontSize = 12.sp)
+    /**
+     * Szczegółowy element - dla rozwijalnej sekcji
+     */
+    @Composable
+    fun DetailItem(label: String, value: String) {
+        Column {
+            Text(label, fontSize = 10.sp, color = Color.Gray)
+            Text(value, fontSize = 12.sp)
+        }
     }
-}
 
 

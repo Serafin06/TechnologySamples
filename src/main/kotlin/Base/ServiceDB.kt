@@ -22,12 +22,12 @@ class ProbkaServiceImpl(
         val probkiZO = repository.findProbkiZO(monthBack)
 
         return probkiZO.map { zo ->
-            val zkList = repository.findZKByNumer(zo.numer, zo.oddzial, zo.rok.toByte())
             val zdList = repository.findZDByNumer(zo.numer, zo.oddzial, zo.rok.toByte())
             val zlList = repository.findZLByNumer(zo.numer, zo.oddzial, zo.rok.toByte())
+            val zkList = repository.findZKByNumer(zo.numer, zo.oddzial, zo.rok.toByte())
             val technologia = repository.findTechnologiaNumer(zo.numer)
 
-            mapper.toProbkaDTO(zo, zkList, zdList, zlList, technologia, statusResolver)
+            mapper.toProbkaDTO(zo, zdList, zlList, zkList,  technologia, statusResolver)
         }
     }
 
@@ -37,12 +37,12 @@ class ProbkaServiceImpl(
             it.numer == numer && it.oddzial == oddzial && it.rok == rok.toInt()
         } ?: return null
 
-        val zkList = repository.findZKByNumer(numer, oddzial, rok)
         val zdList = repository.findZDByNumer(numer, oddzial, rok)
         val zlList = repository.findZLByNumer(numer, oddzial, rok)
+        val zkList = repository.findZKByNumer(numer, oddzial, rok)
         val technologia = repository.findTechnologiaNumer(numer)
 
-        return mapper.toProbkaDTO(zo, zkList, zdList, zlList, technologia, statusResolver)
+        return mapper.toProbkaDTO(zo, zdList, zlList,zkList, technologia, statusResolver)
     }
 
     override fun saveTechnologiaKolumny(

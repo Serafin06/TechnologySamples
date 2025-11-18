@@ -10,9 +10,9 @@ class ProbkaMapper {
 
     fun toProbkaDTO(
         zo: ZO,
-        zkList: List<ZK>,
         zdList: List<ZD>,
         zlList: List<ZL>,
+        zkList: List<ZK>,
         technologia: Technologia?,
         statusResolver: StatusResolver
     ): ProbkaDTO {
@@ -38,16 +38,6 @@ class ProbkaMapper {
                 zo.dataZak,
                 statusResolver
             ),
-            statusZK = zkList.firstOrNull()?.let { zk ->
-                createStatusInfo(
-                    zk.stan,
-                    zk.ilosc,
-                    zk.wykonana,
-                    zk.terminZak,
-                    zk.dataZak,
-                    statusResolver
-                )
-            },
             statusZD = zdList.firstOrNull()?.let { zd ->
                 createStatusInfo(
                     zd.stan,
@@ -58,13 +48,17 @@ class ProbkaMapper {
                     statusResolver
                 )
             },
-            statusZL = zlList.firstOrNull()?.let { zl ->
+            statusZL = zlList.map { zl ->
+                createStatusInfo(zl.stan, zl.ilosc, zl.wykonana, zl.terminZak, zl.dataZak, statusResolver)
+            }.takeIf { it.isNotEmpty() },
+
+            statusZK = zkList.firstOrNull()?.let { zk ->
                 createStatusInfo(
-                    zl.stan,
-                    zl.ilosc,
-                    zl.wykonana,
-                    zl.terminZak,
-                    zl.dataZak,
+                    zk.stan,
+                    zk.ilosc,
+                    zk.wykonana,
+                    zk.terminZak,
+                    zk.dataZak,
                     statusResolver
                 )
             },
