@@ -1,5 +1,6 @@
 package pl.rafapp.techSam.UI
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -112,6 +113,48 @@ fun StatusDropdown(
                         Spacer(Modifier.width(8.dp))
                         Text(nazwa)
                     }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun DateRangeDropdown(
+    selectedRange: DateRange,
+    onRangeSelected: (DateRange) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    Box(modifier = modifier) {
+        OutlinedTextField(
+            value = selectedRange.label,
+            onValueChange = {},
+            readOnly = true,
+            label = { Text("Zakres danych") },
+            trailingIcon = {
+                Icon(
+                    Icons.Default.ArrowDropDown,
+                    contentDescription = null,
+                    modifier = Modifier.clickable { expanded = true }
+                )
+            },
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            DateRange.values().forEach { range ->
+                DropdownMenuItem(
+                    onClick = {
+                        onRangeSelected(range)
+                        expanded = false
+                    }
+                ) {
+                    Text(range.label)
                 }
             }
         }

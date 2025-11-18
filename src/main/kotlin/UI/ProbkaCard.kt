@@ -34,10 +34,10 @@ fun ProbkaCard(
     var editMode by remember { mutableStateOf(false) }
 
     // Lokalne stany dla TODO kolumn
-    var technologia1 by remember { mutableStateOf(probka.todoKolumna1 ?: "") }
-    var technologia2 by remember { mutableStateOf(probka.todoKolumna2 ?: "") }
-    var technologia3 by remember { mutableStateOf(probka.todoKolumna3 ?: "") }
-    var technologia4 by remember { mutableStateOf(probka.todoKolumna4 ?: "") }
+    var technologia1 by remember { mutableStateOf(probka.opis ?: "") }
+    var technologia2 by remember { mutableStateOf(probka.dodtkoweInformacje ?: "") }
+    var technologia3 by remember { mutableStateOf(probka.uwagi ?: "") }
+    var technologia4 by remember { mutableStateOf(probka.testy ?: "") }
 
     Card(
         modifier = Modifier.fillMaxWidth(),

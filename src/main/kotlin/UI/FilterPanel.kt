@@ -70,19 +70,30 @@ fun FilterPanel(
 
                 Spacer(Modifier.height(12.dp))
 
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    DateRangeDropdown(
+                        selectedRange = filterState.dateRange,
+                        onRangeSelected = { onFilterChange(filterState.copy(dateRange = it)) },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                Spacer(Modifier.height(12.dp))
+
                 // Filtry w rzędach
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // Oddział
                     OddzialDropdown(
                         selectedOddzial = filterState.oddzial,
                         onOddzialSelected = { onFilterChange(filterState.copy(oddzial = it)) },
                         modifier = Modifier.weight(1f)
                     )
 
-                    // Status ZO
                     StatusDropdown(
                         label = "Status ZO",
                         selectedStatus = filterState.stanZO,
@@ -97,7 +108,6 @@ fun FilterPanel(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // Status ZK
                     StatusDropdown(
                         label = "Status ZK",
                         selectedStatus = filterState.stanZK,
@@ -105,11 +115,17 @@ fun FilterPanel(
                         modifier = Modifier.weight(1f)
                     )
 
-                    // Status ZD
                     StatusDropdown(
                         label = "Status ZD",
                         selectedStatus = filterState.stanZD,
                         onStatusSelected = { onFilterChange(filterState.copy(stanZD = it)) },
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    StatusDropdown(
+                        label = "Status ZL",
+                        selectedStatus = filterState.stanZL,
+                        onStatusSelected = { onFilterChange(filterState.copy(stanZL = it)) },
                         modifier = Modifier.weight(1f)
                     )
                 }

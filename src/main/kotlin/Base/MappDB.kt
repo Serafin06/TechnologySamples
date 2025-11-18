@@ -69,11 +69,10 @@ class ProbkaMapper {
                 )
             },
 
-            // TODO pola
-            todoKolumna1 = technologia?.opis,
-            todoKolumna2 = technologia?.dodatkoweInfo,
-            todoKolumna3 = technologia?.uwagi,
-            todoKolumna4 = technologia?.testy
+            opis = technologia?.opis,
+            dodtkoweInformacje = technologia?.dodatkoweInfo,
+            uwagi = technologia?.uwagi,
+            testy = technologia?.testy
         )
     }
 

@@ -26,6 +26,12 @@ data class FilterState(
     val stanZO: Byte? = null,
     val stanZK: Byte? = null,
     val stanZD: Byte? = null,
-    val dateFrom: String = "",
-    val dateTo: String = ""
+    val stanZL: Byte? = null, // Nowe
+    val dateRange: DateRange = DateRange.SIX_MONTHS
 )
+
+enum class DateRange(val label: String, val months: Long) {
+    THREE_MONTHS("Ostatnie 3 miesiące", 3),
+    SIX_MONTHS("Ostatnie 6 miesięcy", 6),
+    ONE_YEAR("Ostatni rok", 12)
+}

@@ -27,11 +27,11 @@ data class ProbkaDTO(
     val statusZD: StatusInfo?,
     val statusZL: StatusInfo?,
 
-    // 4 nowe pola tekstowe - TODO: zmienić nazwy
-    val todoKolumna1: String? = null,
-    val todoKolumna2: String? = null,
-    val todoKolumna3: String? = null,
-    val todoKolumna4: String? = null
+    // 4 nowe pola tekstowe
+    val opis: String? = null,
+    val dodtkoweInformacje: String? = null,
+    val uwagi: String? = null,
+    val testy: String? = null
 )
 
 /**
