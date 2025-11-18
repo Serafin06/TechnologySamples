@@ -13,7 +13,7 @@ import java.time.temporal.ChronoUnit
  * Interface dla repository - łatwe mockowanie i testowanie
  */
 interface ProbkaRepository {
-    fun findProbkiZO(): List<ZO>
+    fun findProbkiZO(monthsBack: Long = 6): List<ZO>
     fun findZKByNumer(numer: Int, oddzial: Byte, rok: Byte): List<ZK>
     fun findZDByNumer(numer: Int, oddzial: Byte, rok: Byte): List<ZD>
     fun findZLByNumer(numer: Int, oddzial: Byte, rok: Byte): List<ZL>
@@ -26,15 +26,15 @@ interface ProbkaRepository {
  */
 class ProbkaRepositoryImpl(private val sessionFactory: org.hibernate.SessionFactory) : ProbkaRepository {
 
-    override fun findProbkiZO(): List<ZO> {
-        val sixMonthsAgo = LocalDateTime.now().minus(6, ChronoUnit.MONTHS)
+    override fun findProbkiZO(monthsBack: Long): List<ZO> {
+        val dateFrom = LocalDateTime.now().minus(monthsBack, ChronoUnit.MONTHS)
 
         return useSession { session ->
             session.createQuery(
                 "FROM ZO WHERE proba = 1 AND data >= :fromDate ORDER BY data DESC",
                 ZO::class.java
             ).apply {
-                setParameter("fromDate", sixMonthsAgo)
+                setParameter("fromDate", dateFrom)
             }.list()
         }
     }

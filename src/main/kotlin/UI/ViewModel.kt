@@ -41,7 +41,7 @@ class ProbkiViewModel(private val probkaService: ProbkaService) {
                 loadingProgress = 0.3f
 
                 probki = withContext(Dispatchers.IO) {
-                    probkaService.getProbki()
+                    probkaService.getProbki(filterState.dateRange.months)
                 }
 
                 loadingMessage = "Przetwarzanie danych..."
@@ -66,7 +66,6 @@ class ProbkiViewModel(private val probkaService: ProbkaService) {
 
     private fun applyFilters() {
         filteredProbki = probki.filter { probka ->
-            // Filtr wyszukiwania (numer, ART, receptura)
             val matchesSearch = if (filterState.searchQuery.isBlank()) {
                 true
             } else {
@@ -76,27 +75,27 @@ class ProbkiViewModel(private val probkaService: ProbkaService) {
                         probka.receptura?.lowercase()?.contains(query) == true
             }
 
-            // Filtr oddziału
             val matchesOddzial = filterState.oddzial?.let {
                 probka.oddzialNazwa == it
             } ?: true
 
-            // Filtr statusu ZO
             val matchesStanZO = filterState.stanZO?.let {
                 probka.statusZO?.stan == it
             } ?: true
 
-            // Filtr statusu ZK
             val matchesStanZK = filterState.stanZK?.let {
                 probka.statusZK?.stan == it
             } ?: true
 
-            // Filtr statusu ZD
             val matchesStanZD = filterState.stanZD?.let {
                 probka.statusZD?.stan == it
             } ?: true
 
-            matchesSearch && matchesOddzial && matchesStanZO && matchesStanZK && matchesStanZD
+            val matchesStanZL = filterState.stanZL?.let { // Nowe
+                probka.statusZL?.stan == it
+            } ?: true
+
+            matchesSearch && matchesOddzial && matchesStanZO && matchesStanZK && matchesStanZD && matchesStanZL
         }
     }
 

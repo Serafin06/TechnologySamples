@@ -142,7 +142,7 @@ fun ProbkaCard(
             }
 
             // ═══════════════════════════════════════════════════════
-            // 4️⃣ TODO KOLUMNY - Edytowalne pola (opcjonalne)
+            // 4️⃣ KOLUMNY - Edytowalne pola (opcjonalne)
             // ═══════════════════════════════════════════════════════
             if (editMode && onTechnologiaSave != null) {
                 Spacer(Modifier.height(12.dp))
@@ -150,59 +150,65 @@ fun ProbkaCard(
                 Spacer(Modifier.height(8.dp))
 
                 Text(
-                    "TODO - Edycja kolumn", // NAZWA: zmień nazwę sekcji
+                    "Notatki technologiczne",
                     fontWeight = FontWeight.Bold,
                     fontSize = 13.sp
                 )
 
                 Spacer(Modifier.height(8.dp))
 
-                // 4 edytowalne pola tekstowe
-                OutlinedTextField(
-                    value = technologia1,
-                    onValueChange = { technologia1 = it },
-                    label = { Text("TODO technologia 1") }, // ETYKIETA: zmień nazwę
+                // Pierwszy rząd - 2 kolumny obok siebie
+                Row(
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = false,
-                    maxLines = 2 // WYSOKOŚĆ: zmień liczbę linii
-                )
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedTextField(
+                        value = technologia1,
+                        onValueChange = { technologia1 = it },
+                        label = { Text("Uwagi 1") },
+                        modifier = Modifier.weight(1f),
+                        singleLine = false,
+                        maxLines = 3
+                    )
 
-                Spacer(Modifier.height(6.dp))
-
-                OutlinedTextField(
-                    value = technologia2,
-                    onValueChange = { technologia2 = it },
-                    label = { Text("TODO Technologia 2") },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = false,
-                    maxLines = 2
-                )
-
-                Spacer(Modifier.height(6.dp))
-
-                OutlinedTextField(
-                    value = technologia3,
-                    onValueChange = { technologia3 = it },
-                    label = { Text("TODO Technologia 3") },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = false,
-                    maxLines = 2
-                )
-
-                Spacer(Modifier.height(6.dp))
-
-                OutlinedTextField(
-                    value = technologia4,
-                    onValueChange = { technologia4 = it },
-                    label = { Text("TODO technologia 4") },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = false,
-                    maxLines = 2
-                )
+                    OutlinedTextField(
+                        value = technologia2,
+                        onValueChange = { technologia2 = it },
+                        label = { Text("Uwagi 2") },
+                        modifier = Modifier.weight(1f),
+                        singleLine = false,
+                        maxLines = 3
+                    )
+                }
 
                 Spacer(Modifier.height(8.dp))
 
-                // Przycisk zapisu
+                // Drugi rząd - 2 kolumny obok siebie
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedTextField(
+                        value = technologia3,
+                        onValueChange = { technologia3 = it },
+                        label = { Text("Uwagi 3") },
+                        modifier = Modifier.weight(1f),
+                        singleLine = false,
+                        maxLines = 3
+                    )
+
+                    OutlinedTextField(
+                        value = technologia4,
+                        onValueChange = { technologia4 = it },
+                        label = { Text("Uwagi 4") },
+                        modifier = Modifier.weight(1f),
+                        singleLine = false,
+                        maxLines = 3
+                    )
+                }
+
+                Spacer(Modifier.height(8.dp))
+
                 Button(
                     onClick = {
                         onTechnologiaSave(

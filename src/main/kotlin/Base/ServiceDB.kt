@@ -4,7 +4,7 @@ package pl.rafapp.techSam.Base
  * Interface serwisu - Single Responsibility Principle
  */
 interface ProbkaService {
-    fun getProbki(): List<ProbkaDTO>
+    fun getProbki(monthBack: Long = 6): List<ProbkaDTO>
     fun getProbkaDetails(numer: Int, oddzial: Byte, rok: Byte): ProbkaDTO?
     fun saveTechnologiaKolumny(numer: Int, k1: String?, k2: String?, k3: String?, k4: String?): Boolean
 }
@@ -18,8 +18,8 @@ class ProbkaServiceImpl(
     private val statusResolver: StatusResolver
 ) : ProbkaService {
 
-    override fun getProbki(): List<ProbkaDTO> {
-        val probkiZO = repository.findProbkiZO()
+    override fun getProbki(monthBack: Long): List<ProbkaDTO> {
+        val probkiZO = repository.findProbkiZO(monthBack)
 
         return probkiZO.map { zo ->
             val zkList = repository.findZKByNumer(zo.numer, zo.oddzial, zo.rok.toByte())
