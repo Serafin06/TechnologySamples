@@ -8,7 +8,7 @@ import java.time.LocalDateTime
 object AppColors {
     val Primary = Color(0xFF2196F3)
     val Secondary = Color(0xFF03DAC6)
-    val Background = Color(0xFFF5F5F5)
+    val Background = Color.LightGray
     val Surface = Color.White
     val Error = Color(0xFFB00020)
 

@@ -26,7 +26,7 @@ fun ProbkiList(
             Text(
                 "Znaleziono: ${probki.size} próbek",
                 style = MaterialTheme.typography.subtitle1,
-                color = Color.Gray,
+                color = AppColors.Primary,
                 modifier = Modifier.padding(vertical = 8.dp)
             )
         }

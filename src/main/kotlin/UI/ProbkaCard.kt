@@ -22,7 +22,7 @@ import pl.rafapp.techSam.Base.StatusInfo
  * 1. HEADER - numer, oddział, data (linie 30-50)
  * 2. DANE TECHNICZNE - receptura, grubości, szerokość (linie 52-70)
  * 3. STATUSY - ZO, ZK, ZD, ZL w jednej linii (linie 72-85)
- * 4. TODO KOLUMNY - 4 edytowalne pola (linie 87-120)
+ * 4. KOLUMNY - 4 edytowalne pola (linie 87-120)
  * 5. SZCZEGÓŁY - rozwijane info (linie 122-150)
  */
 @Composable
@@ -33,7 +33,7 @@ fun ProbkaCard(
     var expanded by remember { mutableStateOf(false) }
     var editMode by remember { mutableStateOf(false) }
 
-    // Lokalne stany dla TODO kolumn
+    // Lokalne stany dla kolumn technologia
     var technologia1 by remember { mutableStateOf(probka.opis ?: "") }
     var technologia2 by remember { mutableStateOf(probka.dodtkoweInformacje ?: "") }
     var technologia3 by remember { mutableStateOf(probka.uwagi ?: "") }
