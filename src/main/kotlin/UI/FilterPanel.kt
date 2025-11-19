@@ -25,19 +25,17 @@ fun FilterPanel(
 ) {
     var expanded by remember { mutableStateOf(true) }
 
-    val cardBackgroundColor = if (expanded) AppColors.Background else AppColors.Surface
-
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .padding(8.dp),
         elevation = 2.dp,
         shape = RoundedCornerShape(8.dp),
     ) {
         Column {
             // Header z przyciskiem zwiń/rozwiń
             Row(
-                modifier = Modifier.fillMaxWidth().background(AppColors.Surface).padding(6.dp),
+                modifier = Modifier.fillMaxWidth().background(AppColors.Surface).padding(4.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -73,8 +71,6 @@ fun FilterPanel(
                     singleLine = true
                 )
 
-                Spacer(Modifier.height(6.dp))
-
                 DateRangeDropdown(
                     selectedRange = filterState.dateRange,
                     onRangeSelected = { onFilterChange(filterState.copy(dateRange = it)) },
@@ -109,12 +105,12 @@ fun FilterPanel(
                     }
                 }
 
-                Spacer(Modifier.height(6.dp))
+                Spacer(Modifier.height(2.dp))
 
                 // Oddział i Status ZO
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(10.dp),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    horizontalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
                     OddzialDropdown(
                         selectedOddzial = filterState.oddzial,
@@ -130,7 +126,7 @@ fun FilterPanel(
                     )
                 }
 
-                Spacer(Modifier.height(6.dp))
+                Spacer(Modifier.height(2.dp))
 
                 // Statusy ZD, ZL, ZK
                 Row(
