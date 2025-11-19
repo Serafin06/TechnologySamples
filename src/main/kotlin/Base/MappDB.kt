@@ -18,9 +18,9 @@ class ProbkaMapper {
     ): ProbkaDTO {
         return ProbkaDTO(
             numer = zo.numer,
-            oddzial = zo.oddzial,
+            oddzial = zo.oddzialW,
             rok = zo.rok.toByte(),
-            oddzialNazwa = getOddzialNazwa(zo.oddzial),
+            oddzialNazwa = getOddzialNazwa(zo.oddzialW),
             dataZamowienia = zo.data,
             art = zo.art,
             receptura = zo.receptura1,
