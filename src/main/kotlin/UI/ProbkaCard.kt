@@ -1,5 +1,7 @@
 package pl.rafapp.techSam.UI
 
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.TooltipArea
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
@@ -8,8 +10,11 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import pl.rafapp.techSam.Base.ProbkaDTO
@@ -19,11 +24,12 @@ import pl.rafapp.techSam.Base.StatusInfo
  * Kompaktowa karta próbki z możliwością edycji
  *
  * SEKCJE DO CUSTOMIZACJI:
- * 1. HEADER - numer, oddział, data, ART, receptura, szer, ilosc, grubości (linie 30-80)
- * 2. NAZWA PRÓBKI - opis1 (linia 82-90)
- * 3. STATUSY + NOTATKI - statusy po prawej, notatki po lewej (linie 92-200)
- * 4. SZCZEGÓŁY - rozwijane info ze szczegółowymi statusami (linie 202-250)
+ * 1. HEADER - wszystkie dane w jednej linii (linie 30-70)
+ * 2. NAZWA PRÓBKI - opis1 (linia 72-80)
+ * 3. STATUSY (lewo 2x2) + NOTATKI (prawo w kolumnach) (linie 82-220)
+ * 4. SZCZEGÓŁY - rozwijane szczegółowe statusy (linie 222-270)
  */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ProbkaCard(
     probka: ProbkaDTO,
@@ -31,6 +37,7 @@ fun ProbkaCard(
 ) {
     var expanded by remember { mutableStateOf(false) }
     var editMode by remember { mutableStateOf(false) }
+    var notesExpanded by remember { mutableStateOf(false) }
 
     // Lokalne stany dla kolumn technologia
     var technologia1 by remember { mutableStateOf(probka.opis ?: "") }
@@ -46,133 +53,147 @@ fun ProbkaCard(
         Column(modifier = Modifier.padding(12.dp)) { // PADDING: główny padding karty
 
             // ═══════════════════════════════════════════════════════
-            // 1️⃣ HEADER - Kompaktowy z wszystkimi danymi technicznymi
+            // 1️⃣ HEADER - Wszystkie dane w jednej linii
             // ═══════════════════════════════════════════════════════
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Lewa część - dane techniczne
-                Column(modifier = Modifier.weight(1f)) {
-                    // Linia 1: Numer, Oddział, Data
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp) // ODSTĘP: między elementami
-                    ) {
+                // Lewa część - wszystkie dane techniczne w jednej linii
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp), // ODSTĘP: między elementami
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        "#${probka.numer}",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp // ROZMIAR: numer
+                    )
+                    Text(
+                        probka.oddzialNazwa,
+                        color = Color.Gray,
+                        fontSize = 12.sp // ROZMIAR: oddział
+                    )
+                    Text(
+                        probka.dataZamowienia.toString().take(10),
+                        color = Color.Gray,
+                        fontSize = 11.sp // ROZMIAR: data
+                    )
+                    probka.art?.let {
+                        Text(it, fontSize = 12.sp, color = Color.DarkGray)
+                    }
+                    probka.receptura?.let {
+                        Text(it, fontSize = 12.sp, color = Color.DarkGray)
+                    }
+                    probka.szerokosc?.let {
+                        Text("${it}mm", fontSize = 11.sp, color = Color.DarkGray)
+                    }
+                    probka.statusZO?.let {
                         Text(
-                            "#${probka.numer}",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp // ROZMIAR: numer zamówienia
-                        )
-                        Text(
-                            probka.oddzialNazwa,
-                            color = Color.Gray,
-                            fontSize = 13.sp // ROZMIAR: oddział
-                        )
-                        Text(
-                            probka.dataZamowienia.toString().take(10),
-                            color = Color.Gray,
-                            fontSize = 12.sp // ROZMIAR: data
+                            "${it.ilosc?.toInt() ?: 0}${probka.jm ?: ""}",
+                            fontSize = 11.sp,
+                            color = Color.DarkGray
                         )
                     }
-
-                    Spacer(Modifier.height(6.dp)) // ODSTĘP: między liniami danych
-
-                    // Linia 2: ART, Receptura, Szerokość, Ilość, Grubości
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp) // ODSTĘP: między danymi
-                    ) {
-                        probka.art?.let {
-                            Text(
-                                it,
-                                fontSize = 12.sp, // ROZMIAR: ART
-                                color = Color.DarkGray
-                            )
+                    // Grubości z jednostką
+                    listOfNotNull(probka.grubosc11, probka.grubosc21, probka.grubosc31)
+                        .filter { it.isNotBlank() }
+                        .joinToString("/")
+                        .takeIf { it.isNotBlank() }
+                        ?.let {
+                            Text("${it}μm", fontSize = 11.sp, color = Color.Gray) // ROZMIAR: grubości
                         }
-                        probka.receptura?.let {
-                            Text(
-                                it,
-                                fontSize = 12.sp, // ROZMIAR: receptura
-                                color = Color.DarkGray
-                            )
-                        }
-                        probka.szerokosc?.let {
-                            Text(
-                                "${it}mm",
-                                fontSize = 12.sp, // ROZMIAR: szerokość
-                                color = Color.DarkGray
-                            )
-                        }
-                        probka.statusZO?.let {
-                            Text(
-                                "${it.ilosc?.toInt() ?: 0} ${probka.jm ?: ""}",
-                                fontSize = 12.sp, // ROZMIAR: ilość
-                                color = Color.DarkGray
-                            )
-                        }
-                        // Grubości
-                        probka.grubosc11?.let {
-                            Text(
-                                it,
-                                fontSize = 11.sp, // ROZMIAR: grubości
-                                color = Color.Gray
-                            )
-                        }
-                        probka.grubosc21?.let {
-                            Text(
-                                it,
-                                fontSize = 11.sp,
-                                color = Color.Gray
-                            )
-                        }
-                        probka.grubosc31?.let {
-                            Text(
-                                it,
-                                fontSize = 11.sp,
-                                color = Color.Gray
-                            )
-                        }
-                    }
                 }
 
-                // Prawa część - akcje
+                // Prawa część - rozwijanie
                 IconButton(
                     onClick = { expanded = !expanded },
-                    modifier = Modifier.size(32.dp) // ROZMIAR: przycisk rozwijania
+                    modifier = Modifier.size(28.dp) // ROZMIAR: przycisk
                 ) {
                     Icon(
                         if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                         contentDescription = "Rozwiń",
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(16.dp)
                     )
                 }
             }
 
             // ═══════════════════════════════════════════════════════
-            // 2️⃣ NAZWA PRÓBKI - opis1
+            // 2️⃣ NAZWA PRÓBKI - nazwa
             // ═══════════════════════════════════════════════════════
             probka.nazwa?.let {
-                Spacer(Modifier.height(6.dp)) // ODSTĘP: przed nazwą próbki
+                Spacer(Modifier.height(4.dp)) // ODSTĘP: przed nazwą
                 Text(
                     it,
-                    fontSize = 13.sp, // ROZMIAR: nazwa próbki
+                    fontSize = 12.sp, // ROZMIAR: nazwa próbki
                     fontWeight = FontWeight.Medium,
                     color = Color.DarkGray
                 )
             }
 
-            Spacer(Modifier.height(10.dp)) // ODSTĘP: przed sekcją statusów i notatek
+            Spacer(Modifier.height(8.dp)) // ODSTĘP: przed sekcją główną
 
             // ═══════════════════════════════════════════════════════
-            // 3️⃣ STATUSY (prawo) + NOTATKI TECHNOLOGICZNE (lewo)
+            // 3️⃣ STATUSY (lewo 2x2) + NOTATKI (prawo w kolumnach)
             // ═══════════════════════════════════════════════════════
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp) // ODSTĘP: między statusami a notatkami
+                horizontalArrangement = Arrangement.spacedBy(12.dp) // ODSTĘP: statusy-notatki
             ) {
-                // LEWA STRONA - Notatki technologiczne (70% szerokości)
+                // LEWA STRONA - Statusy 2x2 (30%)
+                Column(
+                    modifier = Modifier.weight(0.2f),
+                    verticalArrangement = Arrangement.spacedBy(4.dp) // ODSTĘP: między rzędami statusów
+                ) {
+                    // Rząd 1
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp) // ODSTĘP: między statusami w rzędzie
+                    ) {
+                        probka.statusZO?.let {
+                            StatusBadge("Zlecenie", it, Modifier.weight(1f))
+                        }
+                        probka.statusZD?.let {
+                            StatusBadge("Drukowanie", it, Modifier.weight(1f))
+                        }
+                    }
+
+                    // Rząd 2
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        // ZL - pokaż wszystkie zlecenia lub puste miejsce
+                        if (probka.statusZL != null && probka.statusZL.isNotEmpty()) {
+                            if (probka.statusZL.size == 1) {
+                                StatusBadge("Laminacja", probka.statusZL[0], Modifier.weight(1f))
+                            } else {
+                                // 2 lub więcej zleceń - używamy ROW, żeby podzielić kostkę w poziomie
+                                Row(
+                                    modifier = Modifier.weight(1f), // Ta cała sekcja nadal zajmuje 50% głównego wiersza
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp) // Dodajemy odstęp między mniejszymi kostkami
+                                ) {
+                                    // Używamy Modifier.weight(1f) na KAŻDYM elemencie, żeby podzielić szerokość ROW po równo
+                                    probka.statusZL.take(2).forEachIndexed { index, status ->
+                                        StatusBadge(
+                                            "Laminacja ${index + 1}",
+                                            status,
+                                            Modifier.weight(1f) // Dzieli wewnętrzny Row na pół (50% / 50%)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        probka.statusZK?.let {
+                            StatusBadge("Krajarki", it, Modifier.weight(1f))
+                        }
+                    }
+                }
+
+                // PRAWA STRONA - Notatki w kolumnach (70%)
                 Column(modifier = Modifier.weight(0.7f)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -182,70 +203,93 @@ fun ProbkaCard(
                         Text(
                             "Notatki",
                             fontWeight = FontWeight.Bold,
-                            fontSize = 12.sp, // ROZMIAR: tytuł sekcji
+                            fontSize = 11.sp, // ROZMIAR: tytuł
                             color = Color.Gray
                         )
 
-                        if (onTechnologiaSave != null) {
-                            IconButton(
-                                onClick = { editMode = !editMode },
-                                modifier = Modifier.size(28.dp) // ROZMIAR: przycisk edycji
-                            ) {
-                                Icon(
-                                    if (editMode) Icons.Default.Close else Icons.Default.Edit,
-                                    contentDescription = "Edytuj",
-                                    modifier = Modifier.size(16.dp)
-                                )
+                        Row {
+                            if (!editMode) {
+                                IconButton(
+                                    onClick = { notesExpanded = !notesExpanded },
+                                    modifier = Modifier.size(24.dp)
+                                ) {
+                                    Icon(
+                                        if (notesExpanded) Icons.Default.UnfoldLess else Icons.Default.UnfoldMore,
+                                        contentDescription = "Rozwiń notatki",
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                }
+                            }
+
+                            if (onTechnologiaSave != null) {
+                                IconButton(
+                                    onClick = { editMode = !editMode },
+                                    modifier = Modifier.size(24.dp)
+                                ) {
+                                    Icon(
+                                        if (editMode) Icons.Default.Close else Icons.Default.Edit,
+                                        contentDescription = "Edytuj",
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                }
                             }
                         }
                     }
 
-                    Spacer(Modifier.height(6.dp))
+                    Spacer(Modifier.height(4.dp))
 
                     if (editMode && onTechnologiaSave != null) {
-                        // TRYB EDYCJI
+                        // TRYB EDYCJI - 2 kolumny
                         Column(
-                            verticalArrangement = Arrangement.spacedBy(6.dp) // ODSTĘP: między polami edycji
+                            verticalArrangement = Arrangement.spacedBy(4.dp) // ODSTĘP: między polami
                         ) {
-                            OutlinedTextField(
-                                value = technologia1,
-                                onValueChange = { technologia1 = it },
-                                label = { Text("Uwagi 1", fontSize = 10.sp) },
-                                modifier = Modifier.fillMaxWidth(),
-                                singleLine = false,
-                                maxLines = 2,
-                                textStyle = LocalTextStyle.current.copy(fontSize = 11.sp) // ROZMIAR: tekst w polu
-                            )
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                OutlinedTextField(
+                                    value = technologia1,
+                                    onValueChange = { technologia1 = it },
+                                    label = { Text("1", fontSize = 9.sp) },
+                                    modifier = Modifier.weight(1f),
+                                    singleLine = false,
+                                    maxLines = 2,
+                                    textStyle = LocalTextStyle.current.copy(fontSize = 10.sp) // ROZMIAR: tekst pola
+                                )
 
-                            OutlinedTextField(
-                                value = technologia2,
-                                onValueChange = { technologia2 = it },
-                                label = { Text("Uwagi 2", fontSize = 10.sp) },
-                                modifier = Modifier.fillMaxWidth(),
-                                singleLine = false,
-                                maxLines = 2,
-                                textStyle = LocalTextStyle.current.copy(fontSize = 11.sp)
-                            )
+                                OutlinedTextField(
+                                    value = technologia2,
+                                    onValueChange = { technologia2 = it },
+                                    label = { Text("2", fontSize = 9.sp) },
+                                    modifier = Modifier.weight(1f),
+                                    singleLine = false,
+                                    maxLines = 2,
+                                    textStyle = LocalTextStyle.current.copy(fontSize = 10.sp)
+                                )
+                            }
 
-                            OutlinedTextField(
-                                value = technologia3,
-                                onValueChange = { technologia3 = it },
-                                label = { Text("Uwagi 3", fontSize = 10.sp) },
-                                modifier = Modifier.fillMaxWidth(),
-                                singleLine = false,
-                                maxLines = 2,
-                                textStyle = LocalTextStyle.current.copy(fontSize = 11.sp)
-                            )
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                OutlinedTextField(
+                                    value = technologia3,
+                                    onValueChange = { technologia3 = it },
+                                    label = { Text("3", fontSize = 9.sp) },
+                                    modifier = Modifier.weight(1f),
+                                    singleLine = false,
+                                    maxLines = 2,
+                                    textStyle = LocalTextStyle.current.copy(fontSize = 10.sp)
+                                )
 
-                            OutlinedTextField(
-                                value = technologia4,
-                                onValueChange = { technologia4 = it },
-                                label = { Text("Uwagi 4", fontSize = 10.sp) },
-                                modifier = Modifier.fillMaxWidth(),
-                                singleLine = false,
-                                maxLines = 2,
-                                textStyle = LocalTextStyle.current.copy(fontSize = 11.sp)
-                            )
+                                OutlinedTextField(
+                                    value = technologia4,
+                                    onValueChange = { technologia4 = it },
+                                    label = { Text("4", fontSize = 9.sp) },
+                                    modifier = Modifier.weight(1f),
+                                    singleLine = false,
+                                    maxLines = 2,
+                                    textStyle = LocalTextStyle.current.copy(fontSize = 10.sp)
+                                )
+                            }
 
                             Button(
                                 onClick = {
@@ -258,52 +302,32 @@ fun ProbkaCard(
                                     editMode = false
                                 },
                                 modifier = Modifier.fillMaxWidth(),
-                                contentPadding = PaddingValues(vertical = 8.dp) // PADDING: przycisk zapisu
+                                contentPadding = PaddingValues(vertical = 6.dp) // PADDING: przycisk
                             ) {
-                                Icon(Icons.Default.Save, contentDescription = null, modifier = Modifier.size(14.dp))
-                                Spacer(Modifier.width(6.dp))
-                                Text("Zapisz", fontSize = 11.sp)
+                                Icon(Icons.Default.Save, contentDescription = null, modifier = Modifier.size(12.dp))
+                                Spacer(Modifier.width(4.dp))
+                                Text("Zapisz", fontSize = 10.sp)
                             }
                         }
                     } else {
-                        // TRYB PODGLĄDU
+                        // TRYB PODGLĄDU - 2 kolumny z tooltipami
                         Column(
-                            verticalArrangement = Arrangement.spacedBy(4.dp) // ODSTĘP: między notatkami
+                            verticalArrangement = Arrangement.spacedBy(3.dp) // ODSTĘP: między notatkami
                         ) {
-                            CompactNote("1", probka.opis ?: "-")
-                            CompactNote("2", probka.dodtkoweInformacje ?: "-")
-                            CompactNote("3", probka.uwagi ?: "-")
-                            CompactNote("4", probka.testy ?: "-")
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp) // ODSTĘP: między kolumnami
+                            ) {
+                                NoteWithTooltip("1", probka.opis ?: "-", notesExpanded, Modifier.weight(1f))
+                                NoteWithTooltip("2", probka.dodtkoweInformacje ?: "-", notesExpanded, Modifier.weight(1f))
+                            }
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                NoteWithTooltip("3", probka.uwagi ?: "-", notesExpanded, Modifier.weight(1f))
+                                NoteWithTooltip("4", probka.testy ?: "-", notesExpanded, Modifier.weight(1f))
+                            }
                         }
                     }
-                }
-
-                // PRAWA STRONA - Statusy (30% szerokości)
-                Column(
-                    modifier = Modifier.weight(0.3f),
-                    verticalArrangement = Arrangement.spacedBy(6.dp) // ODSTĘP: między statusami
-                ) {
-                    Text(
-                        "Statusy",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 12.sp, // ROZMIAR: tytuł sekcji
-                        color = Color.Gray
-                    )
-
-                    // Statusy jako duże kostki z kontrastem
-                    StatusBadge("ZO", probka.statusZO)
-                    StatusBadge("ZD", probka.statusZD)
-
-                    // ZL - pokaż wszystkie zlecenia
-                    if (probka.statusZL != null && probka.statusZL.isNotEmpty()) {
-                        probka.statusZL.forEachIndexed { index, status ->
-                            StatusBadge("ZL${index + 1}", status)
-                        }
-                    } else {
-                        StatusBadge("ZL", null)
-                    }
-
-                    StatusBadge("ZK", probka.statusZK)
                 }
             }
 
@@ -311,28 +335,28 @@ fun ProbkaCard(
             // 4️⃣ SZCZEGÓŁY - Rozwijane szczegółowe statusy
             // ═══════════════════════════════════════════════════════
             if (expanded) {
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(10.dp))
                 Divider()
                 Spacer(Modifier.height(8.dp))
 
                 Text(
                     "Szczegóły statusów",
                     fontWeight = FontWeight.Bold,
-                    fontSize = 13.sp
+                    fontSize = 12.sp
                 )
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(6.dp))
 
                 // Szczegółowe statusy z ilościami
-                probka.statusZO?.let { StatusDetailsExpanded("ZO", it) }
-                probka.statusZD?.let { StatusDetailsExpanded("ZD", it) }
+                probka.statusZO?.let { StatusDetailsExpanded("Zlecenie", it) }
+                probka.statusZD?.let { StatusDetailsExpanded("Drukowanie", it) }
 
                 if (probka.statusZL != null && probka.statusZL.isNotEmpty()) {
                     probka.statusZL.forEachIndexed { index, status ->
-                        StatusDetailsExpanded("ZL${index + 1}", status)
+                        StatusDetailsExpanded("Laminacja ${index + 1}", status)
                     }
                 }
 
-                probka.statusZK?.let { StatusDetailsExpanded("ZK", it) }
+                probka.statusZK?.let { StatusDetailsExpanded("Krajarki", it) }
             }
         }
     }
@@ -343,63 +367,85 @@ fun ProbkaCard(
 // ═══════════════════════════════════════════════════════════════
 
 /**
- * Kompaktowa notatka - numer + tekst
- * STYL: zmień rozmiary, kolory
+ * Notatka z tooltipem - rozwija się lub pokazuje pełny tekst przy najechaniu
+ * FUNKCJONALNOŚĆ: zmień maxLines dla domyślnego widoku
  */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun CompactNote(number: String, text: String) {
-    Row(
-        verticalAlignment = Alignment.Top,
-        horizontalArrangement = Arrangement.spacedBy(4.dp) // ODSTĘP: numer-tekst
+fun NoteWithTooltip(number: String, text: String, expanded: Boolean, modifier: Modifier = Modifier) {
+    TooltipArea(
+        tooltip = {
+            Surface(
+                modifier = Modifier.shadow(4.dp),
+                shape = RoundedCornerShape(4.dp),
+                color = Color(0xFF424242)
+            ) {
+                Text(
+                    text = text,
+                    modifier = Modifier.padding(8.dp),
+                    color = Color.White,
+                    fontSize = 10.sp
+                )
+            }
+        },
+        delayMillis = 300 // DELAY: opóźnienie pokazania tooltipa (ms)
     ) {
-        Text(
-            "$number.",
-            fontSize = 10.sp, // ROZMIAR: numer notatki
-            color = Color.Gray,
-            fontWeight = FontWeight.Bold
-        )
-        Text(
-            text,
-            fontSize = 11.sp, // ROZMIAR: tekst notatki
-            maxLines = 2,
-            modifier = Modifier.weight(1f)
-        )
+        Row(
+            modifier = modifier,
+            verticalAlignment = Alignment.Top,
+            horizontalArrangement = Arrangement.spacedBy(3.dp) // ODSTĘP: numer-tekst
+        ) {
+            Text(
+                "$number.",
+                fontSize = 9.sp, // ROZMIAR: numer
+                color = Color.Gray,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text,
+                fontSize = 10.sp, // ROZMIAR: tekst notatki
+                maxLines = if (expanded) Int.MAX_VALUE else 2, // LINIE: domyślnie 2
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f)
+            )
+        }
     }
 }
 
 /**
- * Duża kostka statusu z kontrastem - tylko kolor + nazwa
- * WYGLĄD: zmień kolory, zaokrąglenia, padding dla efektu wizualnego
+ * Kostka statusu - mała, kompaktowa, tylko z tekstem
+ * WYGLĄD: zmień kolory, zaokrąglenia, padding
  */
 @Composable
-fun StatusBadge(label: String, status: StatusInfo?) {
-    val (color, bgAlpha) = when (status?.stan) {
-        0.toByte() -> Color(0xFF4CAF50) to 0.25f // Wykonane - mocny zielony
-        1.toByte() -> Color(0xFF2196F3) to 0.25f // W realizacji - mocny niebieski
-        2.toByte() -> Color(0xFFFF9800) to 0.25f // Planowane - mocny pomarańczowy
+fun StatusBadge(label: String, status: StatusInfo, modifier: Modifier = Modifier) {
+    val (color, bgAlpha) = when (status.stan) {
+        0.toByte() -> Color(0xFF4CAF50) to 0.25f // Wykonane - zielony
+        1.toByte() -> Color(0xFF2196F3) to 0.25f // W realizacji - niebieski
+        2.toByte() -> Color(0xFFFF9800) to 0.25f // Planowane - pomarańczowy
         3.toByte() -> Color(0xFFFF5722) to 0.25f // Wstrzymane - czerwony
-        else -> Color.Gray to 0.15f // Brak/nieznany
+        else -> Color.Gray to 0.15f
     }
 
     Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(6.dp), // ZAOKRĄGLENIE: kostki statusu
+        modifier = modifier,
+        shape = RoundedCornerShape(4.dp), // ZAOKRĄGLENIE: kostki
         color = color.copy(alpha = bgAlpha)
     ) {
         Column(
-            modifier = Modifier.padding(8.dp), // PADDING: wewnątrz kostki statusu
+            modifier = Modifier.padding(6.dp), // PADDING: wewnątrz kostki (mniejszy)
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 label,
-                fontSize = 11.sp, // ROZMIAR: etykieta statusu
+                fontSize = 9.sp, // ROZMIAR: etykieta
                 fontWeight = FontWeight.Bold,
-                color = color
+                color = color,
+                maxLines = 1
             )
             Spacer(Modifier.height(2.dp))
             Text(
-                status?.stanNazwa ?: "Brak",
-                fontSize = 9.sp, // ROZMIAR: nazwa statusu
+                status.stanNazwa,
+                fontSize = 8.sp, // ROZMIAR: status
                 color = color,
                 maxLines = 1
             )
@@ -409,14 +455,14 @@ fun StatusBadge(label: String, status: StatusInfo?) {
 
 /**
  * Rozwinięte szczegóły statusu z ilościami
- * ZAWARTOŚĆ: zmień jakie dane wyświetlać
+ * ZAWARTOŚĆ: dostosuj wyświetlane informacje
  */
 @Composable
 fun StatusDetailsExpanded(label: String, status: StatusInfo) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 6.dp) // PADDING: odstęp między statusami
+            .padding(vertical = 4.dp) // PADDING: odstęp statusów
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -424,21 +470,20 @@ fun StatusDetailsExpanded(label: String, status: StatusInfo) {
         ) {
             Text(
                 "$label: ${status.stanNazwa}",
-                fontSize = 12.sp, // ROZMIAR: nazwa w szczegółach
+                fontSize = 11.sp, // ROZMIAR: nazwa
                 fontWeight = FontWeight.Medium
             )
             Text(
                 "${status.wykonana?.toInt() ?: 0} / ${status.ilosc?.toInt() ?: 0}",
-                fontSize = 12.sp, // ROZMIAR: ilości w szczegółach
+                fontSize = 11.sp, // ROZMIAR: ilości
                 color = Color.Gray
             )
         }
 
         status.terminZak?.let {
-            Spacer(Modifier.height(2.dp))
             Text(
                 "Termin: ${it.toString().take(10)}",
-                fontSize = 10.sp, // ROZMIAR: termin
+                fontSize = 9.sp, // ROZMIAR: termin
                 color = Color.Gray
             )
         }
@@ -446,7 +491,7 @@ fun StatusDetailsExpanded(label: String, status: StatusInfo) {
         status.dataZak?.let {
             Text(
                 "Zakończono: ${it.toString().take(10)}",
-                fontSize = 10.sp, // ROZMIAR: data zakończenia
+                fontSize = 9.sp, // ROZMIAR: data zakończenia
                 color = Color.Gray
             )
         }
