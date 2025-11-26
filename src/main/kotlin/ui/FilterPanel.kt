@@ -1,4 +1,4 @@
-package pl.rafapp.techSam.ui
+package ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -13,9 +13,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import pl.rafapp.techSam.ui.AppColors
-import pl.rafapp.techSam.ui.DateRange
-import pl.rafapp.techSam.ui.FilterState
+import ui.AppColors
+import ui.DateRange
+import ui.FilterState
 
 
 // 🔍 Filter Panel

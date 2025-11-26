@@ -1,4 +1,4 @@
-package pl.rafapp.techSam.ui
+package ui
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -11,8 +11,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import pl.rafapp.techSam.ui.AppColors
-import pl.rafapp.techSam.ui.DateRange
 import java.time.LocalDateTime
 
 // 🏢 Dropdown Components
@@ -129,7 +127,7 @@ fun StatusDropdown(
 @Composable
 fun DateRangeDropdown(
     selectedRange: DateRange,
-    onRangeSelected: (pl.rafapp.techSam.ui.DateRange) -> Unit,
+    onRangeSelected: (ui.DateRange) -> Unit,
     modifier: Modifier = Modifier
     ) {
     var expanded by remember { mutableStateOf(false) }
@@ -140,7 +138,7 @@ fun DateRangeDropdown(
             onValueChange = {},
             readOnly = true,
             label = { Text("Zakres danych") },
-            colors = TextFieldDefaults.outlinedTextFieldColors(backgroundColor = _root_ide_package_.pl.rafapp.techSam.ui.AppColors.Surface, disabledLabelColor = Color.Black),
+            colors = TextFieldDefaults.outlinedTextFieldColors(backgroundColor = _root_ide_package_.ui.AppColors.Surface, disabledLabelColor = Color.Black),
             trailingIcon = {
                 Icon(
                     Icons.Default.ArrowDropDown,
@@ -155,7 +153,7 @@ fun DateRangeDropdown(
             expanded = expanded,
             onDismissRequest = { expanded = false }
         ) {
-            _root_ide_package_.pl.rafapp.techSam.ui.DateRange.values().forEach { range ->
+            _root_ide_package_.ui.DateRange.values().forEach { range ->
                 DropdownMenuItem(
                     onClick = {
                         onRangeSelected(range)
@@ -184,7 +182,7 @@ fun DatePickerField(
         onValueChange = {},
         readOnly = true,
         label = { Text(label) },
-        colors = TextFieldDefaults.outlinedTextFieldColors(backgroundColor = _root_ide_package_.pl.rafapp.techSam.ui.AppColors.Surface, textColor = Color.Black),
+        colors = TextFieldDefaults.outlinedTextFieldColors(backgroundColor = _root_ide_package_.ui.AppColors.Surface, textColor = Color.Black),
         trailingIcon = {
             Row {
                 if (date != null) {

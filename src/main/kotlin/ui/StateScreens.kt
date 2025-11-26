@@ -1,4 +1,4 @@
-package pl.rafapp.techSam.ui
+package ui
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*

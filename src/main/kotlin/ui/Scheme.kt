@@ -1,4 +1,4 @@
-package pl.rafapp.techSam.ui
+package ui
 
 import androidx.compose.ui.graphics.Color
 import java.time.LocalDateTime

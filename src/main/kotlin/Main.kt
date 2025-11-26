@@ -1,5 +1,3 @@
-package pl.rafapp.techSam
-
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -9,8 +7,8 @@ import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import base.ProbkaServiceFactory
 import dataBase.HibernateConfig
-import pl.rafapp.techSam.ui.ProbkiScreen
-import pl.rafapp.techSam.ui.ProbkiViewModel
+import ui.ProbkiScreen
+import ui.ProbkiViewModel
 
 
 fun main() = application {

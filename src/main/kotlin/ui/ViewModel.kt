@@ -1,4 +1,4 @@
-package pl.rafapp.techSam.ui
+package ui
 
 import androidx.compose.runtime.*
 import base.ProbkaDTO
