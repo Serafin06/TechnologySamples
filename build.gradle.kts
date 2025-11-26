@@ -47,6 +47,10 @@ compose.desktop {
         mainClass = "pl.rafapp.techSam.MainKt"
 
         nativeDistributions {
+            modules("java.sql", "java.naming")
+        }
+
+        nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "TechSamples"
             packageVersion = "1.0.0"

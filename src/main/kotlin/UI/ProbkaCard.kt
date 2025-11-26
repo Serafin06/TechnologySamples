@@ -14,7 +14,6 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import pl.rafapp.techSam.Base.ProbkaDTO
@@ -201,7 +200,7 @@ fun ProbkaCard(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            "Notatki",
+                            "Notatki technologiczne",
                             fontWeight = FontWeight.Bold,
                             fontSize = 11.sp, // ROZMIAR: tytuł
                             color = Color.Gray
@@ -249,7 +248,7 @@ fun ProbkaCard(
                                 OutlinedTextField(
                                     value = technologia1,
                                     onValueChange = { technologia1 = it },
-                                    label = { Text("1", fontSize = 9.sp) },
+                                    label = { Text("Opis", fontSize = 9.sp) },
                                     modifier = Modifier.weight(1f),
                                     singleLine = false,
                                     maxLines = 2,
@@ -259,7 +258,7 @@ fun ProbkaCard(
                                 OutlinedTextField(
                                     value = technologia2,
                                     onValueChange = { technologia2 = it },
-                                    label = { Text("2", fontSize = 9.sp) },
+                                    label = { Text("Dodatkowe informacje", fontSize = 9.sp) },
                                     modifier = Modifier.weight(1f),
                                     singleLine = false,
                                     maxLines = 2,
@@ -273,7 +272,7 @@ fun ProbkaCard(
                                 OutlinedTextField(
                                     value = technologia3,
                                     onValueChange = { technologia3 = it },
-                                    label = { Text("3", fontSize = 9.sp) },
+                                    label = { Text("Uwagi", fontSize = 9.sp) },
                                     modifier = Modifier.weight(1f),
                                     singleLine = false,
                                     maxLines = 2,
@@ -283,7 +282,7 @@ fun ProbkaCard(
                                 OutlinedTextField(
                                     value = technologia4,
                                     onValueChange = { technologia4 = it },
-                                    label = { Text("4", fontSize = 9.sp) },
+                                    label = { Text("Testy", fontSize = 9.sp) },
                                     modifier = Modifier.weight(1f),
                                     singleLine = false,
                                     maxLines = 2,
@@ -317,14 +316,19 @@ fun ProbkaCard(
                             Row(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp) // ODSTĘP: między kolumnami
                             ) {
-                                NoteWithTooltip("1", probka.opis ?: "-", notesExpanded, Modifier.weight(1f))
-                                NoteWithTooltip("2", probka.dodtkoweInformacje ?: "-", notesExpanded, Modifier.weight(1f))
+                                NoteWithTooltip("Opis", probka.opis ?: "-", notesExpanded, Modifier.weight(1f))
+                                NoteWithTooltip(
+                                    "Dodatkowe informacje",
+                                    probka.dodtkoweInformacje ?: "-",
+                                    notesExpanded,
+                                    Modifier.weight(1f)
+                                )
                             }
                             Row(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                NoteWithTooltip("3", probka.uwagi ?: "-", notesExpanded, Modifier.weight(1f))
-                                NoteWithTooltip("4", probka.testy ?: "-", notesExpanded, Modifier.weight(1f))
+                                NoteWithTooltip("Uwagi", probka.uwagi ?: "-", notesExpanded, Modifier.weight(1f))
+                                NoteWithTooltip("Testy", probka.testy ?: "-", notesExpanded, Modifier.weight(1f))
                             }
                         }
                     }
@@ -372,7 +376,7 @@ fun ProbkaCard(
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun NoteWithTooltip(number: String, text: String, expanded: Boolean, modifier: Modifier = Modifier) {
+fun NoteWithTooltip(title: String, text: String, expanded: Boolean, modifier: Modifier = Modifier) {
     TooltipArea(
         tooltip = {
             Surface(
@@ -384,33 +388,42 @@ fun NoteWithTooltip(number: String, text: String, expanded: Boolean, modifier: M
                     text = text,
                     modifier = Modifier.padding(8.dp),
                     color = Color.White,
-                    fontSize = 10.sp
+                    fontSize = 10.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         },
         delayMillis = 300 // DELAY: opóźnienie pokazania tooltipa (ms)
     ) {
-        Row(
-            modifier = modifier,
-            verticalAlignment = Alignment.Top,
-            horizontalArrangement = Arrangement.spacedBy(3.dp) // ODSTĘP: numer-tekst
+        Column(
+            modifier = modifier, // Używamy przekazanego Modifier (np. Modifier.weight(1f))
+            verticalArrangement = Arrangement.spacedBy(1.dp) // Minimalny odstęp między nagłówkiem a treścią
         ) {
+            // 1. NAGŁÓWEK (Twoje pole 'number')
             Text(
-                "$number.",
-                fontSize = 9.sp, // ROZMIAR: numer
+                text = title, // Wyświetlamy nagłówek, np. "Dodatkowe informacje:"
+                fontSize = 9.sp,
                 color = Color.Gray,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                // --- KOREKTA ZAPOBIEGAJĄCA ŁAMANIU W PIONIE ---
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+                // ---------------------------------------------
             )
+
+            // 2. TREŚĆ NOTATKI (Twoje pole 'text')
             Text(
-                text,
-                fontSize = 10.sp, // ROZMIAR: tekst notatki
-                maxLines = if (expanded) Int.MAX_VALUE else 2, // LINIE: domyślnie 2
+                text = text,
+                fontSize = 10.sp,
+                maxLines = if (expanded) Int.MAX_VALUE else 2,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f)
+                // Usunąłem Modifier.weight(1f), ponieważ jest to już w głównym Column
             )
         }
     }
 }
+
 
 /**
  * Kostka statusu - mała, kompaktowa, tylko z tekstem
