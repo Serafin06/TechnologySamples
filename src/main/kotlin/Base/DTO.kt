@@ -20,6 +20,9 @@ data class ProbkaDTO(
     val grubosc21: String?,
     val grubosc31: String?,
     val szerokosc: Short?,
+    val ilosc: Double?,
+    val jm: String?,
+    val nazwa: String?,
 
     // Statusy
     val statusZO: StatusInfo?,
@@ -41,6 +44,7 @@ data class StatusInfo(
     val stan: Byte,
     val stanNazwa: String,
     val ilosc: Double?,
+    val jm: String?,
     val wykonana: Double?,
     val terminZak: LocalDateTime?,
     val dataZak: LocalDateTime?

@@ -13,7 +13,7 @@ import pl.rafapp.techSam.UI.*
 
 
 fun main() = application {
-    val windowState = rememberWindowState(width = 1800.dp, height = 900.dp)
+    val windowState = rememberWindowState(width = 1600.dp, height = 900.dp)
 
     Window(
         onCloseRequest = {

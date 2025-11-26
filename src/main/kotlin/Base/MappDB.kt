@@ -28,11 +28,15 @@ class ProbkaMapper {
             grubosc21 = zo.grubosc21,
             grubosc31 = zo.grubosc31,
             szerokosc = zo.szerokosc1,
+            ilosc = zo.ilosc,
+            jm = zo.jm1,
+            nazwa = zo.opis1,
 
             // Statusy z wszystkich tabel
             statusZO = createStatusInfo(
                 zo.stan,
                 zo.ilosc,
+                zo.jm1,
                 zo.wykonana,
                 zo.terminZak,
                 zo.dataZak,
@@ -42,6 +46,7 @@ class ProbkaMapper {
                 createStatusInfo(
                     zd.stan,
                     zd.ilosc,
+                    zd.jm1,
                     zd.wykonana,
                     zd.terminZak,
                     zd.dataZak,
@@ -49,13 +54,14 @@ class ProbkaMapper {
                 )
             },
             statusZL = zlList.map { zl ->
-                createStatusInfo(zl.stan, zl.ilosc, zl.wykonana, zl.terminZak, zl.dataZak, statusResolver)
+                createStatusInfo(zl.stan, zl.ilosc, zl.jm1, zl.wykonana, zl.terminZak, zl.dataZak, statusResolver)
             }.takeIf { it.isNotEmpty() },
 
             statusZK = zkList.firstOrNull()?.let { zk ->
                 createStatusInfo(
                     zk.stan,
                     zk.ilosc,
+                    zk.jm1,
                     zk.wykonana,
                     zk.terminZak,
                     zk.dataZak,
@@ -73,6 +79,7 @@ class ProbkaMapper {
     private fun createStatusInfo(
         stan: Byte,
         ilosc: Double?,
+        jm: String?,
         wykonana: Double?,
         terminZak: LocalDateTime?,
         dataZak: LocalDateTime?,
@@ -82,6 +89,7 @@ class ProbkaMapper {
             stan = stan,
             stanNazwa = statusResolver.getStatusName(stan),
             ilosc = ilosc,
+            jm = jm,
             wykonana = wykonana,
             terminZak = terminZak,
             dataZak = dataZak

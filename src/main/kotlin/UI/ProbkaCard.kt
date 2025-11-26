@@ -19,11 +19,10 @@ import pl.rafapp.techSam.Base.StatusInfo
  * Kompaktowa karta próbki z możliwością edycji
  *
  * SEKCJE DO CUSTOMIZACJI:
- * 1. HEADER - numer, oddział, data (linie 30-50)
- * 2. DANE TECHNICZNE - receptura, grubości, szerokość (linie 52-70)
- * 3. STATUSY - ZO, ZK, ZD, ZL w jednej linii (linie 72-85)
- * 4. KOLUMNY - 4 edytowalne pola (linie 87-120)
- * 5. SZCZEGÓŁY - rozwijane info (linie 122-150)
+ * 1. HEADER - numer, oddział, data, ART, receptura, szer, ilosc, grubości (linie 30-80)
+ * 2. NAZWA PRÓBKI - opis1 (linia 82-90)
+ * 3. STATUSY + NOTATKI - statusy po prawej, notatki po lewej (linie 92-200)
+ * 4. SZCZEGÓŁY - rozwijane info ze szczegółowymi statusami (linie 202-250)
  */
 @Composable
 fun ProbkaCard(
@@ -44,280 +43,272 @@ fun ProbkaCard(
         elevation = 2.dp,
         shape = RoundedCornerShape(8.dp)
     ) {
-        Column(modifier = Modifier.padding(12.dp)) { // PADDING: zmniejsz/zwiększ dla kompaktowości
+        Column(modifier = Modifier.padding(12.dp)) { // PADDING: główny padding karty
 
             // ═══════════════════════════════════════════════════════
-            // 1️⃣ HEADER - Numer, Oddział, Data
+            // 1️⃣ HEADER - Kompaktowy z wszystkimi danymi technicznymi
             // ═══════════════════════════════════════════════════════
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Lewa część - główne info
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text(
-                        "#${probka.numer}",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp // ROZMIAR: zmień dla większej/mniejszej czcionki
-                    )
-                    Spacer(Modifier.width(12.dp))
-                    Text(
-                        probka.oddzialNazwa,
-                        color = Color.Gray,
-                        fontSize = 14.sp
-                    )
-                    Spacer(Modifier.width(12.dp))
-                    Text(
-                        probka.dataZamowienia.toString().take(10),
-                        color = Color.Gray,
-                        fontSize = 12.sp
-                    )
-                }
+                // Lewa część - dane techniczne
+                Column(modifier = Modifier.weight(1f)) {
+                    // Linia 1: Numer, Oddział, Data
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp) // ODSTĘP: między elementami
+                    ) {
+                        Text(
+                            "#${probka.numer}",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp // ROZMIAR: numer zamówienia
+                        )
+                        Text(
+                            probka.oddzialNazwa,
+                            color = Color.Gray,
+                            fontSize = 13.sp // ROZMIAR: oddział
+                        )
+                        Text(
+                            probka.dataZamowienia.toString().take(10),
+                            color = Color.Gray,
+                            fontSize = 12.sp // ROZMIAR: data
+                        )
+                    }
 
-                // Prawa część - akcje
-                Row {
-                    if (onTechnologiaSave != null) {
-                        IconButton(
-                            onClick = { editMode = !editMode },
-                            modifier = Modifier.size(32.dp)
-                        ) {
-                            Icon(
-                                if (editMode) Icons.Default.Close else Icons.Default.Edit,
-                                contentDescription = "Edytuj",
-                                modifier = Modifier.size(18.dp)
+                    Spacer(Modifier.height(6.dp)) // ODSTĘP: między liniami danych
+
+                    // Linia 2: ART, Receptura, Szerokość, Ilość, Grubości
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp) // ODSTĘP: między danymi
+                    ) {
+                        probka.art?.let {
+                            Text(
+                                it,
+                                fontSize = 12.sp, // ROZMIAR: ART
+                                color = Color.DarkGray
+                            )
+                        }
+                        probka.receptura?.let {
+                            Text(
+                                it,
+                                fontSize = 12.sp, // ROZMIAR: receptura
+                                color = Color.DarkGray
+                            )
+                        }
+                        probka.szerokosc?.let {
+                            Text(
+                                "${it}mm",
+                                fontSize = 12.sp, // ROZMIAR: szerokość
+                                color = Color.DarkGray
+                            )
+                        }
+                        probka.statusZO?.let {
+                            Text(
+                                "${it.ilosc?.toInt() ?: 0} ${probka.jm ?: ""}",
+                                fontSize = 12.sp, // ROZMIAR: ilość
+                                color = Color.DarkGray
+                            )
+                        }
+                        // Grubości
+                        probka.grubosc11?.let {
+                            Text(
+                                it,
+                                fontSize = 11.sp, // ROZMIAR: grubości
+                                color = Color.Gray
+                            )
+                        }
+                        probka.grubosc21?.let {
+                            Text(
+                                it,
+                                fontSize = 11.sp,
+                                color = Color.Gray
+                            )
+                        }
+                        probka.grubosc31?.let {
+                            Text(
+                                it,
+                                fontSize = 11.sp,
+                                color = Color.Gray
                             )
                         }
                     }
+                }
 
-                    IconButton(
-                        onClick = { expanded = !expanded },
-                        modifier = Modifier.size(32.dp)
-                    ) {
-                        Icon(
-                            if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                            contentDescription = "Rozwiń",
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
+                // Prawa część - akcje
+                IconButton(
+                    onClick = { expanded = !expanded },
+                    modifier = Modifier.size(32.dp) // ROZMIAR: przycisk rozwijania
+                ) {
+                    Icon(
+                        if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                        contentDescription = "Rozwiń",
+                        modifier = Modifier.size(18.dp)
+                    )
                 }
             }
 
-            Spacer(Modifier.height(8.dp)) // ODSTĘP: zmień dla większej/mniejszej przerwy
-
             // ═══════════════════════════════════════════════════════
-            // 2️⃣ DANE TECHNICZNE - Receptura, ART, Grubości
+            // 2️⃣ NAZWA PRÓBKI - opis1
             // ═══════════════════════════════════════════════════════
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp) // ODSTĘP: między elementami
-            ) {
-                probka.art?.let {
-                    CompactInfo("ART", it, Modifier.weight(1f))
-                }
-                probka.receptura?.let {
-                    CompactInfo("Receptura", it, Modifier.weight(1f))
-                }
-                probka.szerokosc?.let {
-                    CompactInfo("Szer.", "${it}mm", Modifier.weight(0.7f))
-                }
-            }
-
-            Spacer(Modifier.height(8.dp))
-
-            // ═══════════════════════════════════════════════════════
-            // 3️⃣ STATUSY - ZO, ZK, ZD, ZL w kompaktowej formie
-            // ═══════════════════════════════════════════════════════
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                MiniStatusChip("ZO", probka.statusZO, Modifier.weight(1f))
-                MiniStatusChip("ZD", probka.statusZD, Modifier.weight(1f))
-
-                // ZL - pokaż wszystkie zlecenia lub "-"
-                if (probka.statusZL != null && probka.statusZL.isNotEmpty()) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        probka.statusZL.forEachIndexed { index, status ->
-                            MiniStatusChip("ZL${index + 1}", status, Modifier.fillMaxWidth())
-                            if (index < probka.statusZL.size - 1) Spacer(Modifier.height(4.dp))
-                        }
-                    }
-                } else {
-                    Surface(
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(4.dp),
-                        color = Color.Gray.copy(alpha = 0.1f)
-                    ) {
-                        Box(
-                            modifier = Modifier.padding(6.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text("ZL: -", fontSize = 10.sp, color = Color.Gray)
-                        }
-                    }
-                }
-
-                MiniStatusChip("ZK", probka.statusZK, Modifier.weight(1f))
-            }
-
-            Spacer(Modifier.height(12.dp))
-
-            // ═══════════════════════════════════════════════════════
-            // 4️⃣ KOLUMNY - Edytowalne pola (opcjonalne)
-            // ═══════════════════════════════════════════════════════
-            Divider()
-            Spacer(Modifier.height(8.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            probka.nazwa?.let {
+                Spacer(Modifier.height(6.dp)) // ODSTĘP: przed nazwą próbki
                 Text(
-                    "Notatki technologiczne",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 13.sp
+                    it,
+                    fontSize = 13.sp, // ROZMIAR: nazwa próbki
+                    fontWeight = FontWeight.Medium,
+                    color = Color.DarkGray
                 )
-
-                if (onTechnologiaSave != null) {
-                    IconButton(
-                        onClick = { editMode = !editMode },
-                        modifier = Modifier.size(32.dp)
-                    ) {
-                        Icon(
-                            if (editMode) Icons.Default.Close else Icons.Default.Edit,
-                            contentDescription = "Edytuj",
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
-                }
             }
 
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(10.dp)) // ODSTĘP: przed sekcją statusów i notatek
 
-            if (editMode && onTechnologiaSave != null) {
-                // Tryb edycji - pola tekstowe
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    OutlinedTextField(
-                        value = technologia1,
-                        onValueChange = { technologia1 = it },
-                        label = { Text("Uwagi 1") },
-                        modifier = Modifier.weight(1f),
-                        singleLine = false,
-                        maxLines = 3
-                    )
+            // ═══════════════════════════════════════════════════════
+            // 3️⃣ STATUSY (prawo) + NOTATKI TECHNOLOGICZNE (lewo)
+            // ═══════════════════════════════════════════════════════
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp) // ODSTĘP: między statusami a notatkami
+            ) {
+                // LEWA STRONA - Notatki technologiczne (70% szerokości)
+                Column(modifier = Modifier.weight(0.7f)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            "Notatki",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 12.sp, // ROZMIAR: tytuł sekcji
+                            color = Color.Gray
+                        )
 
-                    OutlinedTextField(
-                        value = technologia2,
-                        onValueChange = { technologia2 = it },
-                        label = { Text("Uwagi 2") },
-                        modifier = Modifier.weight(1f),
-                        singleLine = false,
-                        maxLines = 3
-                    )
+                        if (onTechnologiaSave != null) {
+                            IconButton(
+                                onClick = { editMode = !editMode },
+                                modifier = Modifier.size(28.dp) // ROZMIAR: przycisk edycji
+                            ) {
+                                Icon(
+                                    if (editMode) Icons.Default.Close else Icons.Default.Edit,
+                                    contentDescription = "Edytuj",
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(Modifier.height(6.dp))
+
+                    if (editMode && onTechnologiaSave != null) {
+                        // TRYB EDYCJI
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(6.dp) // ODSTĘP: między polami edycji
+                        ) {
+                            OutlinedTextField(
+                                value = technologia1,
+                                onValueChange = { technologia1 = it },
+                                label = { Text("Uwagi 1", fontSize = 10.sp) },
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = false,
+                                maxLines = 2,
+                                textStyle = LocalTextStyle.current.copy(fontSize = 11.sp) // ROZMIAR: tekst w polu
+                            )
+
+                            OutlinedTextField(
+                                value = technologia2,
+                                onValueChange = { technologia2 = it },
+                                label = { Text("Uwagi 2", fontSize = 10.sp) },
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = false,
+                                maxLines = 2,
+                                textStyle = LocalTextStyle.current.copy(fontSize = 11.sp)
+                            )
+
+                            OutlinedTextField(
+                                value = technologia3,
+                                onValueChange = { technologia3 = it },
+                                label = { Text("Uwagi 3", fontSize = 10.sp) },
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = false,
+                                maxLines = 2,
+                                textStyle = LocalTextStyle.current.copy(fontSize = 11.sp)
+                            )
+
+                            OutlinedTextField(
+                                value = technologia4,
+                                onValueChange = { technologia4 = it },
+                                label = { Text("Uwagi 4", fontSize = 10.sp) },
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = false,
+                                maxLines = 2,
+                                textStyle = LocalTextStyle.current.copy(fontSize = 11.sp)
+                            )
+
+                            Button(
+                                onClick = {
+                                    onTechnologiaSave(
+                                        technologia1.ifBlank { null },
+                                        technologia2.ifBlank { null },
+                                        technologia3.ifBlank { null },
+                                        technologia4.ifBlank { null }
+                                    )
+                                    editMode = false
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                contentPadding = PaddingValues(vertical = 8.dp) // PADDING: przycisk zapisu
+                            ) {
+                                Icon(Icons.Default.Save, contentDescription = null, modifier = Modifier.size(14.dp))
+                                Spacer(Modifier.width(6.dp))
+                                Text("Zapisz", fontSize = 11.sp)
+                            }
+                        }
+                    } else {
+                        // TRYB PODGLĄDU
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(4.dp) // ODSTĘP: między notatkami
+                        ) {
+                            CompactNote("1", probka.opis ?: "-")
+                            CompactNote("2", probka.dodtkoweInformacje ?: "-")
+                            CompactNote("3", probka.uwagi ?: "-")
+                            CompactNote("4", probka.testy ?: "-")
+                        }
+                    }
                 }
 
-                Spacer(Modifier.height(8.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                // PRAWA STRONA - Statusy (30% szerokości)
+                Column(
+                    modifier = Modifier.weight(0.3f),
+                    verticalArrangement = Arrangement.spacedBy(6.dp) // ODSTĘP: między statusami
                 ) {
-                    OutlinedTextField(
-                        value = technologia3,
-                        onValueChange = { technologia3 = it },
-                        label = { Text("Uwagi 3") },
-                        modifier = Modifier.weight(1f),
-                        singleLine = false,
-                        maxLines = 3
+                    Text(
+                        "Statusy",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 12.sp, // ROZMIAR: tytuł sekcji
+                        color = Color.Gray
                     )
 
-                    OutlinedTextField(
-                        value = technologia4,
-                        onValueChange = { technologia4 = it },
-                        label = { Text("Uwagi 4") },
-                        modifier = Modifier.weight(1f),
-                        singleLine = false,
-                        maxLines = 3
-                    )
-                }
+                    // Statusy jako duże kostki z kontrastem
+                    StatusBadge("ZO", probka.statusZO)
+                    StatusBadge("ZD", probka.statusZD)
 
-                Spacer(Modifier.height(8.dp))
+                    // ZL - pokaż wszystkie zlecenia
+                    if (probka.statusZL != null && probka.statusZL.isNotEmpty()) {
+                        probka.statusZL.forEachIndexed { index, status ->
+                            StatusBadge("ZL${index + 1}", status)
+                        }
+                    } else {
+                        StatusBadge("ZL", null)
+                    }
 
-                Button(
-                    onClick = {
-                        onTechnologiaSave(
-                            technologia1.ifBlank { null },
-                            technologia2.ifBlank { null },
-                            technologia3.ifBlank { null },
-                            technologia4.ifBlank { null }
-                        )
-                        editMode = false
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(Icons.Default.Save, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text("Zapisz")
-                }
-            } else {
-                // Tryb podglądu - tylko tekst
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text("Uwagi 1:", fontSize = 10.sp, color = Color.Gray)
-                        Text(
-                            probka.opis ?: "-",
-                            fontSize = 12.sp,
-                            maxLines = 2
-                        )
-                    }
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text("Uwagi 2:", fontSize = 10.sp, color = Color.Gray)
-                        Text(
-                            probka.dodtkoweInformacje ?: "-",
-                            fontSize = 12.sp,
-                            maxLines = 2
-                        )
-                    }
-                }
-
-                Spacer(Modifier.height(8.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text("Uwagi 3:", fontSize = 10.sp, color = Color.Gray)
-                        Text(
-                            probka.uwagi ?: "-",
-                            fontSize = 12.sp,
-                            maxLines = 2
-                        )
-                    }
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text("Uwagi 4:", fontSize = 10.sp, color = Color.Gray)
-                        Text(
-                            probka.testy ?: "-",
-                            fontSize = 12.sp,
-                            maxLines = 2
-                        )
-                    }
+                    StatusBadge("ZK", probka.statusZK)
                 }
             }
 
             // ═══════════════════════════════════════════════════════
-            // 5️⃣ SZCZEGÓŁY - Rozwijane dodatkowe info
+            // 4️⃣ SZCZEGÓŁY - Rozwijane szczegółowe statusy
             // ═══════════════════════════════════════════════════════
             if (expanded) {
                 Spacer(Modifier.height(12.dp))
@@ -325,36 +316,23 @@ fun ProbkaCard(
                 Spacer(Modifier.height(8.dp))
 
                 Text(
-                    "Szczegóły techniczne",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 13.sp
-                )
-                Spacer(Modifier.height(6.dp))
-
-                // Grubości
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    DetailItem("Grubość 1", probka.grubosc11 ?: "-")
-                    DetailItem("Grubość 2", probka.grubosc21 ?: "-")
-                    DetailItem("Grubość 3", probka.grubosc31 ?: "-")
-                }
-
-                Spacer(Modifier.height(12.dp))
-                Text(
                     "Szczegóły statusów",
                     fontWeight = FontWeight.Bold,
                     fontSize = 13.sp
                 )
-                Spacer(Modifier.height(6.dp))
+                Spacer(Modifier.height(8.dp))
 
-                // Rozwinięte statusy
-                probka.statusZO?.let { status -> StatusDetails("ZO", status) }
-                probka.statusZK?.let { status -> StatusDetails("ZK", status) }
-                probka.statusZD?.let { status -> StatusDetails("ZD", status) }
-                probka.statusZL?.firstOrNull()?.let { status -> StatusDetails("ZL", status) }
+                // Szczegółowe statusy z ilościami
+                probka.statusZO?.let { StatusDetailsExpanded("ZO", it) }
+                probka.statusZD?.let { StatusDetailsExpanded("ZD", it) }
 
+                if (probka.statusZL != null && probka.statusZL.isNotEmpty()) {
+                    probka.statusZL.forEachIndexed { index, status ->
+                        StatusDetailsExpanded("ZL${index + 1}", status)
+                    }
+                }
+
+                probka.statusZK?.let { StatusDetailsExpanded("ZK", it) }
             }
         }
     }
@@ -364,75 +342,113 @@ fun ProbkaCard(
 // 🧩 Komponenty pomocnicze
 // ═══════════════════════════════════════════════════════════════
 
-    /**
-     * Kompaktowe info - label + wartość w jednej linii
-     * STYL: zmień kolory, rozmiary czcionek
-     */
-    @Composable
-    fun CompactInfo(label: String, value: String, modifier: Modifier = Modifier) {
-        Column(modifier = modifier) {
+/**
+ * Kompaktowa notatka - numer + tekst
+ * STYL: zmień rozmiary, kolory
+ */
+@Composable
+fun CompactNote(number: String, text: String) {
+    Row(
+        verticalAlignment = Alignment.Top,
+        horizontalArrangement = Arrangement.spacedBy(4.dp) // ODSTĘP: numer-tekst
+    ) {
+        Text(
+            "$number.",
+            fontSize = 10.sp, // ROZMIAR: numer notatki
+            color = Color.Gray,
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            text,
+            fontSize = 11.sp, // ROZMIAR: tekst notatki
+            maxLines = 2,
+            modifier = Modifier.weight(1f)
+        )
+    }
+}
+
+/**
+ * Duża kostka statusu z kontrastem - tylko kolor + nazwa
+ * WYGLĄD: zmień kolory, zaokrąglenia, padding dla efektu wizualnego
+ */
+@Composable
+fun StatusBadge(label: String, status: StatusInfo?) {
+    val (color, bgAlpha) = when (status?.stan) {
+        0.toByte() -> Color(0xFF4CAF50) to 0.25f // Wykonane - mocny zielony
+        1.toByte() -> Color(0xFF2196F3) to 0.25f // W realizacji - mocny niebieski
+        2.toByte() -> Color(0xFFFF9800) to 0.25f // Planowane - mocny pomarańczowy
+        3.toByte() -> Color(0xFFFF5722) to 0.25f // Wstrzymane - czerwony
+        else -> Color.Gray to 0.15f // Brak/nieznany
+    }
+
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(6.dp), // ZAOKRĄGLENIE: kostki statusu
+        color = color.copy(alpha = bgAlpha)
+    ) {
+        Column(
+            modifier = Modifier.padding(8.dp), // PADDING: wewnątrz kostki statusu
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             Text(
                 label,
-                fontSize = 10.sp, // ROZMIAR: etykieta
-                color = Color.Gray
+                fontSize = 11.sp, // ROZMIAR: etykieta statusu
+                fontWeight = FontWeight.Bold,
+                color = color
             )
+            Spacer(Modifier.height(2.dp))
             Text(
-                value,
-                fontSize = 13.sp, // ROZMIAR: wartość
+                status?.stanNazwa ?: "Brak",
+                fontSize = 9.sp, // ROZMIAR: nazwa statusu
+                color = color,
+                maxLines = 1
+            )
+        }
+    }
+}
+
+/**
+ * Rozwinięte szczegóły statusu z ilościami
+ * ZAWARTOŚĆ: zmień jakie dane wyświetlać
+ */
+@Composable
+fun StatusDetailsExpanded(label: String, status: StatusInfo) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp) // PADDING: odstęp między statusami
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                "$label: ${status.stanNazwa}",
+                fontSize = 12.sp, // ROZMIAR: nazwa w szczegółach
                 fontWeight = FontWeight.Medium
             )
+            Text(
+                "${status.wykonana?.toInt() ?: 0} / ${status.ilosc?.toInt() ?: 0}",
+                fontSize = 12.sp, // ROZMIAR: ilości w szczegółach
+                color = Color.Gray
+            )
+        }
+
+        status.terminZak?.let {
+            Spacer(Modifier.height(2.dp))
+            Text(
+                "Termin: ${it.toString().take(10)}",
+                fontSize = 10.sp, // ROZMIAR: termin
+                color = Color.Gray
+            )
+        }
+
+        status.dataZak?.let {
+            Text(
+                "Zakończono: ${it.toString().take(10)}",
+                fontSize = 10.sp, // ROZMIAR: data zakończenia
+                color = Color.Gray
+            )
         }
     }
-
-
-    /**
-     * Mini chip statusu - bardzo kompaktowy
-     * WYGLĄD: zmień kolory, padding, zaokrąglenia
-     */
-    @Composable
-    fun MiniStatusChip(label: String, status: StatusInfo?, modifier: Modifier = Modifier) {
-        val color = when (status?.stan) {
-            0.toByte() -> Color(0xFF4CAF50) // Wykonane - zielony
-            1.toByte() -> Color(0xFF2196F3) // W realizacji - niebieski
-            2.toByte() -> Color(0xFFFF9800) // Planowane - pomarańczowy
-            else -> Color.Gray
-        }
-
-        Surface(
-            modifier = modifier,
-            shape = RoundedCornerShape(4.dp), // ZAOKRĄGLENIE: zmień dla bardziej/mniej zaokrąglonych
-            color = color.copy(alpha = 0.1f)
-        ) {
-            Column(
-                modifier = Modifier.padding(6.dp), // PADDING: wewnętrzny odstęp
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    label,
-                    fontSize = 10.sp, // ROZMIAR: etykieta
-                    fontWeight = FontWeight.Bold,
-                    color = color
-                )
-                status?.let {
-                    Text(
-                        "${it.wykonana?.toInt() ?: 0}/${it.ilosc?.toInt() ?: 0}",
-                        fontSize = 9.sp, // ROZMIAR: postęp
-                        color = color
-                    )
-                }
-            }
-        }
-    }
-
-    /**
-     * Szczegółowy element - dla rozwijalnej sekcji
-     */
-    @Composable
-    fun DetailItem(label: String, value: String) {
-        Column {
-            Text(label, fontSize = 10.sp, color = Color.Gray)
-            Text(value, fontSize = 12.sp)
-        }
-    }
-
-
+}

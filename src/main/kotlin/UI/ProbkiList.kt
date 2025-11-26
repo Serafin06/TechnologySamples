@@ -7,6 +7,7 @@ import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import pl.rafapp.techSam.Base.ProbkaDTO
 
@@ -27,6 +28,7 @@ fun ProbkiList(
                 "Znaleziono: ${probki.size} próbek",
                 style = MaterialTheme.typography.subtitle1,
                 color = AppColors.Primary,
+                fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(vertical = 8.dp)
             )
         }

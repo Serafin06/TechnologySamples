@@ -69,6 +69,9 @@ data class ZL(
     @Column(name = "ILOSC")
     val ilosc: Double?,
 
+    @Column(name = "JM1")
+    val jm1: String?,
+
     @Column(name = "WYKONANA")
     val wykonana: Double?,
 
