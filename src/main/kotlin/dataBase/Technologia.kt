@@ -1,4 +1,4 @@
-package pl.rafapp.techSam.DataBase
+package dataBase
 
 import jakarta.persistence.*
 

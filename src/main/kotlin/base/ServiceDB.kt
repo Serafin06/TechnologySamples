@@ -1,4 +1,6 @@
-package pl.rafapp.techSam.Base
+package base
+
+import dataBase.Technologia
 
 /**
  * Interface serwisu - Single Responsibility Principle
@@ -60,7 +62,7 @@ class ProbkaServiceImpl(
                 dodatkoweInfo = k2,
                 uwagi = k3,
                 testy = k4
-            ) ?: pl.rafapp.techSam.DataBase.Technologia(
+            ) ?: Technologia(
                 numer = numer,
                 opis = k1,
                 dodatkoweInfo = k2,

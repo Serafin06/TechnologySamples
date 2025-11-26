@@ -1,6 +1,10 @@
-package pl.rafapp.techSam.Base
+package base
 
-import pl.rafapp.techSam.DataBase.*
+import dataBase.Technologia
+import dataBase.ZD
+import dataBase.ZK
+import dataBase.ZL
+import dataBase.ZO
 import java.time.LocalDateTime
 
 /**

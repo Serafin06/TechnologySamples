@@ -7,9 +7,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
-import pl.rafapp.techSam.Base.ProbkaServiceFactory
-import pl.rafapp.techSam.DataBase.HibernateConfig
-import pl.rafapp.techSam.UI.*
+import base.ProbkaServiceFactory
+import dataBase.HibernateConfig
+import pl.rafapp.techSam.ui.ProbkiScreen
+import pl.rafapp.techSam.ui.ProbkiViewModel
 
 
 fun main() = application {

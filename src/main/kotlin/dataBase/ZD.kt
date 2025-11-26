@@ -1,24 +1,24 @@
-package pl.rafapp.techSam.DataBase
+package dataBase
 
 import jakarta.persistence.*
 import java.time.LocalDateTime
 
 @Entity
-@Table(name = "ZK")
-data class ZK(
+@Table(name = "ZD")
+data class ZD(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ID")
     val id: Int? = null,
-
-    @Column(name = "NUMER", nullable = false)
-    val numer: Int,
 
     @Column(name = "ODDZIAL", nullable = false)
     val oddzial: Byte,
 
     @Column(name = "ODDZIAL_W", nullable = false)
     val oddzialW: Byte,
+
+    @Column(name = "NUMER", nullable = false)
+    val numer: Int,
 
     @Column(name = "ROK", nullable = false)
     val rok: Byte,
@@ -29,29 +29,17 @@ data class ZK(
     @Column(name = "Z2", nullable = false)
     val z2: Boolean,
 
+    @Column(name = "ID_MASZYNA", nullable = false)
+    val idMaszyna: Short,
+
     @Column(name = "PRODUKT_1", nullable = false)
     val produkt1: Byte,
 
-    @Column(name = "P_ILOSC_1", length = 20)
+    @Column(name = "P_ILOSC_1", length = 30)
     val pIlosc1: String? = null,
 
-    @Column(name = "JEZYK", nullable = false)
-    val jezyk: Byte,
-
-    @Column(name = "WydrukEZ", nullable = false)
-    val wydrukEZ: Byte,
-
-    @Column(name = "MARPOL", length = 20)
-    val marpol: String? = null,
-
-    @Column(name = "`ORDER`", length = 20)
-    val order: String? = null,
-
-    @Column(name = "ART", length = 20)
-    val art: String? = null,
-
     @Column(name = "ID_ARTYKULU1")
-    val idArtykulu1: Byte? = null,
+    val idArtykulu1: Int? = null,
 
     @Column(name = "ID_PRO1", nullable = false)
     val idPro1: Byte,
@@ -158,26 +146,20 @@ data class ZK(
     @Column(name = "KOLORW_2", length = 20)
     val kolorW2: String? = null,
 
-    @Column(name = "ID_MASZYNA", nullable = false)
-    val idMaszyna: Int,
+    @Column(name = "ID_KARTA")
+    val idKarta: Int? = null,
 
-    @Column(name = "ILOSC_NA_ROLCE", length = 100)
-    val iloscNaRolce: String? = null,
-
-    @Column(name = "SREDNICA_NAWOJU", length = 100)
+    @Column(name = "SREDNICA_NAWOJU", length = 30)
     val srednicaNawoju: String? = null,
 
-    @Column(name = "UWAGI", columnDefinition = "varchar(max)")
+    @Column(name = "WAGA_NAWOJU", length = 30)
+    val wagaNawoju: String? = null,
+
+    @Column(name = "UWAGI", length = 2000)
     val uwagi: String? = null,
 
-    @Column(name = "PAKOWANIE", length = 100)
+    @Column(name = "PAKOWANIE", length = 30)
     val pakowanie: String? = null,
-
-    @Column(name = "PALETA")
-    val paleta: Byte? = null,
-
-    @Column(name = "KOD_NAWOJU", nullable = false)
-    val kodNawoju: Byte,
 
     @Column(name = "ILOSC")
     val ilosc: Double? = null,
@@ -225,13 +207,13 @@ data class ZK(
     val dataZatwierdzal: LocalDateTime? = null,
 
     @Column(name = "KOLEJNOSC")
-    val kolejnosc: Byte? = null,
-
-    @Column(name = "OSTATNI", nullable = false, length = 2000)
-    val ostatni: String,
+    val kolejnosc: Short? = null,
 
     @Column(name = "STAN", nullable = false)
     val stan: Byte,
+
+    @Column(name = "OSTATNI", nullable = false, length = 2200)
+    val ostatni: String,
 
     @Column(name = "SEMAFOR", nullable = false)
     val semafor: Boolean,

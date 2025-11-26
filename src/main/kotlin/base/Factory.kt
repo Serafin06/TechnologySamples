@@ -1,10 +1,12 @@
-package pl.rafapp.techSam.Base
+package base
+
+import org.hibernate.SessionFactory
 
 // Factory do tworzenia serwisów - Dependency Inversion Principle
 
 object ProbkaServiceFactory {
 
-    fun createProbkaService(sessionFactory: org.hibernate.SessionFactory): ProbkaService {
+    fun createProbkaService(sessionFactory: SessionFactory): ProbkaService {
         val repository = ProbkaRepositoryImpl(sessionFactory)
         val mapper = ProbkaMapper()
         val statusResolver = StatusResolver()

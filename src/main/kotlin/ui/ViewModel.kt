@@ -1,8 +1,9 @@
-package pl.rafapp.techSam.UI
+package pl.rafapp.techSam.ui
 
 import androidx.compose.runtime.*
+import base.ProbkaDTO
+import base.ProbkaService
 import kotlinx.coroutines.*
-import pl.rafapp.techSam.Base.*
 
 
 class ProbkiViewModel(private val probkaService: ProbkaService) {

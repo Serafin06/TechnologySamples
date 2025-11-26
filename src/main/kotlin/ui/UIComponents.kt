@@ -1,4 +1,4 @@
-package pl.rafapp.techSam.UI
+package pl.rafapp.techSam.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -9,15 +9,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import pl.rafapp.techSam.Base.StatusInfo
+import base.StatusInfo
 
 
 @Composable
-fun InfoRow(label: String, value: String, icon: androidx.compose.ui.graphics.vector.ImageVector) {
+fun InfoRow(label: String, value: String, icon: ImageVector) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.padding(vertical = 4.dp)

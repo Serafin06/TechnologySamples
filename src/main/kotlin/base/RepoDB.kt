@@ -1,7 +1,12 @@
-package pl.rafapp.techSam.Base
+package base
 
-import pl.rafapp.techSam.DataBase.*
+import dataBase.Technologia
+import dataBase.ZD
+import dataBase.ZK
+import dataBase.ZL
+import dataBase.ZO
 import org.hibernate.Session
+import org.hibernate.SessionFactory
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
@@ -24,7 +29,7 @@ interface ProbkaRepository {
 /**
  * Implementacja repository używająca Hibernate
  */
-class ProbkaRepositoryImpl(private val sessionFactory: org.hibernate.SessionFactory) : ProbkaRepository {
+class ProbkaRepositoryImpl(private val sessionFactory: SessionFactory) : ProbkaRepository {
 
     override fun findProbkiZO(monthsBack: Long): List<ZO> {
         val dateFrom = LocalDateTime.now().minus(monthsBack, ChronoUnit.MONTHS)

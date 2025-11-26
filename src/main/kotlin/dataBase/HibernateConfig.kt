@@ -1,7 +1,5 @@
-package pl.rafapp.techSam.DataBase
+package dataBase
 
-import io.github.cdimascio.dotenv.Dotenv
-import io.github.cdimascio.dotenv.DotenvException
 import io.github.cdimascio.dotenv.dotenv
 import org.hibernate.SessionFactory
 import org.hibernate.cfg.Configuration

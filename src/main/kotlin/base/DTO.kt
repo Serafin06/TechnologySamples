@@ -1,4 +1,4 @@
-package pl.rafapp.techSam.Base
+package base
 
 import java.time.LocalDateTime
 

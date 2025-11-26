@@ -1,4 +1,4 @@
-package pl.rafapp.techSam.UI
+package pl.rafapp.techSam.ui
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.TooltipArea
@@ -16,8 +16,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import pl.rafapp.techSam.Base.ProbkaDTO
-import pl.rafapp.techSam.Base.StatusInfo
+import base.ProbkaDTO
+import base.StatusInfo
 
 /**
  * Kompaktowa karta próbki z możliwością edycji
