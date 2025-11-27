@@ -19,11 +19,12 @@ import java.time.temporal.ChronoUnit
  */
 interface ProbkaRepository {
     fun findProbkiZO(monthsBack: Long = 6): List<ZO>
-    fun findZKByNumer(numer: Int, oddzial: Byte, rok: Byte): List<ZK>
-    fun findZDByNumer(numer: Int, oddzial: Byte, rok: Byte): List<ZD>
-    fun findZLByNumer(numer: Int, oddzial: Byte, rok: Byte): List<ZL>
+    fun findZKByNumer(numer: Int): List<ZK>
+    fun findZDByNumer(numer: Int): List<ZD>
+    fun findZLByNumer(numer: Int): List<ZL>
     fun findTechnologiaNumer(numer: Int): Technologia?
     fun saveTechnologia(technologia: Technologia): Technologia
+    fun testConnection()
 }
 
 /**
@@ -44,41 +45,36 @@ class ProbkaRepositoryImpl(private val sessionFactory: SessionFactory) : ProbkaR
         }
     }
 
-    override fun findZKByNumer(numer: Int, oddzial: Byte, rok: Byte): List<ZK> {
+    override fun findZKByNumer(numer: Int): List<ZK> {
         return useSession { session ->
             session.createQuery(
-                "FROM ZK WHERE numer = :numer AND oddzial = :oddzial AND rok = :rok",
+                "FROM ZK WHERE numer = :numer",
                 ZK::class.java
             ).apply {
                 setParameter("numer", numer)
-                setParameter("oddzial", oddzial)
-                setParameter("rok", rok)
             }.list()
         }
     }
 
-    override fun findZDByNumer(numer: Int, oddzial: Byte, rok: Byte): List<ZD> {
+    override fun findZDByNumer(numer: Int): List<ZD> {
         return useSession { session ->
             session.createQuery(
-                "FROM ZD WHERE numer = :numer AND oddzial = :oddzial AND rok = :rok",
+                "FROM ZD WHERE numer = :numer",
                 ZD::class.java
             ).apply {
                 setParameter("numer", numer)
-                setParameter("oddzial", oddzial)
-                setParameter("rok", rok)
             }.list()
         }
     }
 
-    override fun findZLByNumer(numer: Int, oddzial: Byte, rok: Byte): List<ZL> {
+    override fun findZLByNumer(numer: Int): List<ZL> {
         return useSession { session ->
             session.createQuery(
-                "FROM ZL WHERE numer = :numer AND oddzial = :oddzial AND rok = :rok",
+                "FROM ZL WHERE numer = :numer",
                 ZL::class.java
             ).apply {
                 setParameter("numer", numer)
-                setParameter("oddzial", oddzial)
-                setParameter("rok", rok)
+
             }.list()
         }
     }
@@ -105,6 +101,20 @@ class ProbkaRepositoryImpl(private val sessionFactory: SessionFactory) : ProbkaR
                 transaction.rollback()
                 throw e
             }
+        }
+    }
+
+    override fun testConnection() {
+        val session = sessionFactory.openSession()
+        try {
+            session.beginTransaction()
+            session.createNativeQuery("SELECT 1").singleResult
+            session.transaction.commit()
+        } catch (ex: Exception) {
+            session.transaction.rollback()
+            throw ex
+        } finally {
+            session.close()
         }
     }
 

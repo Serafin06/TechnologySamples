@@ -4,6 +4,13 @@ import androidx.compose.runtime.*
 import base.ProbkaDTO
 import base.ProbkaService
 import kotlinx.coroutines.*
+import java.time.LocalDateTime
+
+enum class ConnectionStatus {
+    CONNECTED,      // Zielony
+    DISCONNECTED,   // Czerwony
+    CHECKING        // Szary
+}
 
 
 class ProbkiViewModel(private val probkaService: ProbkaService) {
@@ -108,8 +115,82 @@ class ProbkiViewModel(private val probkaService: ProbkaService) {
             loadProbki() // Odśwież dane
         }
     }
+    fun saveTechnologiaKolumnyAsync(
+        numer: Int,
+        k1: String?,
+        k2: String?,
+        k3: String?,
+        k4: String?
+    ) {
+        // Zapis w tle, bez blokowania UI
+        coroutineScope.launch(Dispatchers.IO) {
+            try {
+                probkaService.saveTechnologiaKolumny(numer, k1, k2, k3, k4)
+
+                // Odśwież tylko tę jedną próbkę zamiast wszystkich
+                val updated = probkaService.getProbkaDetails(numer)
+                if (updated != null) {
+                    withContext(Dispatchers.Main) {
+                        val index = probki.indexOfFirst {
+                            it.numer == numer
+                        }
+                        if (index >= 0) {
+                            probki = probki.toMutableList().apply {
+                                set(index, updated)
+                            }
+                            applyFilters()
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                errorMessage = "Błąd zapisu: ${e.message}"
+            }
+        }
+    }
+
+    var connectionStatus by mutableStateOf(ConnectionStatus.CHECKING)
+        private set
+
+    var lastConnectionCheck by mutableStateOf<LocalDateTime?>(null)
+        private set
+
+    private val connectionCheckScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+
+    init {
+        // Uruchom automatyczne sprawdzanie co 5 minut
+        startConnectionMonitoring()
+    }
+
+    private fun startConnectionMonitoring() {
+        connectionCheckScope.launch {
+            while (true) {
+                checkDatabaseConnection()
+                delay(5 * 60 * 1000L) // 5 minut
+            }
+        }
+    }
+
+    fun checkDatabaseConnection() {
+        connectionCheckScope.launch {
+            connectionStatus = ConnectionStatus.CHECKING
+
+            try {
+                val isConnected = probkaService.testConnection()
+                connectionStatus = if (isConnected) {
+                    ConnectionStatus.CONNECTED
+                } else {
+                    ConnectionStatus.DISCONNECTED
+                }
+                lastConnectionCheck = LocalDateTime.now()
+            } catch (e: Exception) {
+                connectionStatus = ConnectionStatus.DISCONNECTED
+                lastConnectionCheck = LocalDateTime.now()
+            }
+        }
+    }
 
     fun dispose() {
         coroutineScope.cancel()
+        connectionCheckScope.cancel()
     }
 }

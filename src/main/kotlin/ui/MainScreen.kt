@@ -19,7 +19,9 @@ fun ProbkiScreen(viewModel: ProbkiViewModel) {
         )
     ) {
         Scaffold(
-            topBar = { TopAppBar() }
+            topBar = { TopAppBar(connectionStatus = viewModel.connectionStatus,
+                    lastCheck = viewModel.lastConnectionCheck,
+                    onConnectionCheck = { viewModel.checkDatabaseConnection() }) }
         ) { padding ->
             Column(
                 modifier = Modifier
@@ -45,7 +47,7 @@ fun ProbkiScreen(viewModel: ProbkiViewModel) {
                     else -> ProbkiList(
                         probki = viewModel.filteredProbki,
                         onTechnologiaSave = { probka, k1, k2, k3, k4 ->
-                            viewModel.saveTechnologiaKolumny(
+                            viewModel.saveTechnologiaKolumnyAsync(
                                 numer = probka.numer,
                                 k1 = k1,
                                 k2 = k2,
