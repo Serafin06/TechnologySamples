@@ -34,8 +34,8 @@ data class Technologia(
     val produce: Boolean? = null,
 
     @Column(name = "Send")
-    val send: Boolean? = null,
+    var send: Boolean? = null,
 
     @Column(name = "Tested")
-    val tested: Boolean? = null
+    var tested: Boolean? = null
 )

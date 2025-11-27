@@ -6,6 +6,7 @@ import java.time.LocalDateTime
  * DTO próbki - zawiera dane z ZO, ZK, ZD, ZL oraz Technologia
  */
 data class ProbkaDTO(
+
     // Podstawowe info
     val numer: Int,
     val oddzial: Byte,

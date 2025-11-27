@@ -9,7 +9,12 @@ interface ProbkaService {
     fun getProbki(monthBack: Long = 6): List<ProbkaDTO>
     fun getProbkaDetails(numer: Int): ProbkaDTO?
     fun saveTechnologiaKolumny(numer: Int, k1: String?, k2: String?, k3: String?, k4: String?, produce: Boolean?, send: Boolean?, tested: Boolean?): Boolean
+    fun updateFlag(numer: Int, flagType: FlagType, value: Boolean): Boolean
     fun testConnection(): Boolean
+}
+
+enum class FlagType {
+    SEND, TESTED
 }
 
 /**
@@ -78,6 +83,28 @@ class ProbkaServiceImpl(
                 produce = produce,
                 send = send,
                 tested = tested
+            )
+
+            repository.saveTechnologia(technologia)
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    override fun updateFlag(numer: Int, flagType: FlagType, value: Boolean): Boolean {
+        return try {
+            val existing = repository.findTechnologiaNumer(numer)
+
+            val technologia = existing?.apply {
+                when (flagType) {
+                    FlagType.SEND -> send = value
+                    FlagType.TESTED -> tested = value
+                }
+            } ?: Technologia(
+                numer = numer,
+                send = if (flagType == FlagType.SEND) value else null,
+                tested = if (flagType == FlagType.TESTED) value else null
             )
 
             repository.saveTechnologia(technologia)

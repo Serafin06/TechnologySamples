@@ -20,6 +20,14 @@ class ProbkaMapper {
         technologia: Technologia?,
         statusResolver: StatusResolver
     ): ProbkaDTO {
+
+        // Automatyczna flaga 'produce' z statusu ZO
+        val produceFlag = when (zo.stan) {
+            0.toByte() -> true  // Wykonane
+            1.toByte(), 2.toByte() -> false  // W realizacji, Planowane
+            else -> null  // Inne statusy
+        }
+
         return ProbkaDTO(
             numer = zo.numer,
             oddzial = zo.oddzialW,

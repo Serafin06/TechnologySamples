@@ -2,6 +2,7 @@ package ui
 
 import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.PathHitTester
+import base.FlagType
 import base.ProbkaDTO
 import base.ProbkaService
 import kotlinx.coroutines.*
@@ -196,5 +197,31 @@ class ProbkiViewModel(private val probkaService: ProbkaService) {
     fun dispose() {
         coroutineScope.cancel()
         connectionCheckScope.cancel()
+    }
+
+    fun updateFlagAsync(numer: Int, oddzial: Byte, rok: Byte, flagType: FlagType, value: Boolean) {
+        coroutineScope.launch(Dispatchers.IO) {
+            try {
+                probkaService.updateFlag(numer, flagType, value)
+
+                // Odśwież tylko tę próbkę
+                val updated = probkaService.getProbkaDetails(numer)
+                if (updated != null) {
+                    withContext(Dispatchers.Main) {
+                        val index = probki.indexOfFirst {
+                            it.numer == numer && it.oddzial == oddzial && it.rok == rok
+                        }
+                        if (index >= 0) {
+                            probki = probki.toMutableList().apply {
+                                set(index, updated)
+                            }
+                            applyFilters()
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                errorMessage = "Błąd aktualizacji flagi: ${e.message}"
+            }
+        }
     }
 }
