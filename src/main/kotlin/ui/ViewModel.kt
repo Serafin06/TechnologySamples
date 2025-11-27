@@ -1,6 +1,7 @@
 package ui
 
 import androidx.compose.runtime.*
+import androidx.compose.ui.graphics.PathHitTester
 import base.ProbkaDTO
 import base.ProbkaService
 import kotlinx.coroutines.*
@@ -109,9 +110,9 @@ class ProbkiViewModel(private val probkaService: ProbkaService) {
     }
 
     fun saveTechnologiaKolumny(numer: Int,
-                        k1: String?, k2: String?, k3: String?, k4: String?) {
+                        k1: String?, k2: String?, k3: String?, k4: String?, produce: Boolean?, send: Boolean?, tested: Boolean?) {
         coroutineScope.launch {
-            probkaService.saveTechnologiaKolumny(numer, k1, k2, k3, k4)
+            probkaService.saveTechnologiaKolumny(numer, k1, k2, k3, k4, produce, send, tested)
             loadProbki() // Odśwież dane
         }
     }
@@ -120,12 +121,15 @@ class ProbkiViewModel(private val probkaService: ProbkaService) {
         k1: String?,
         k2: String?,
         k3: String?,
-        k4: String?
+        k4: String?,
+        produce: Boolean?,
+        send: Boolean?,
+        tested: Boolean?
     ) {
         // Zapis w tle, bez blokowania UI
         coroutineScope.launch(Dispatchers.IO) {
             try {
-                probkaService.saveTechnologiaKolumny(numer, k1, k2, k3, k4)
+                probkaService.saveTechnologiaKolumny(numer, k1, k2, k3, k4, produce, send, tested)
 
                 // Odśwież tylko tę jedną próbkę zamiast wszystkich
                 val updated = probkaService.getProbkaDetails(numer)

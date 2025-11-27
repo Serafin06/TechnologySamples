@@ -1,7 +1,6 @@
 package ui
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.TooltipArea
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
@@ -10,14 +9,11 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import base.ProbkaDTO
-import base.StatusInfo
 
 /**
  * Kompaktowa karta próbki z możliwością edycji
@@ -43,6 +39,19 @@ fun ProbkaCard(
     var technologia2 by remember { mutableStateOf(probka.dodtkoweInformacje ?: "") }
     var technologia3 by remember { mutableStateOf(probka.uwagi ?: "") }
     var technologia4 by remember { mutableStateOf(probka.testy ?: "") }
+
+    // flaga 'Wyprodukowano' (P) jest automatyczna - musi brać z bazy, ale tu obliczamy stan wizualny
+    val isFinished = probka.statusZO?.stan == 0.toByte()
+    val flagProduce = if (isFinished) true else false // Prawda (Zielony) jeśli wykonane, Fałsz (Czerwony) w innym wypadku
+
+    // Flagi 'Wysłano' (W) i 'Przetestowano' (T) są ręczne - muszą mieć 'remember' i pobierać z DTO.
+    var flagSend by remember(probka.send) { mutableStateOf(probka.send) }
+    var flagTested by remember(probka.tested) { mutableStateOf(probka.tested) }
+
+    // Stany do obsługi popupu potwierdzenia
+    var showDialog by remember { mutableStateOf(false) }
+    var dialogTitle by remember { mutableStateOf("") }
+    var onConfirmAction by remember { mutableStateOf<() -> Unit>({}) }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -366,147 +375,3 @@ fun ProbkaCard(
     }
 }
 
-// ═══════════════════════════════════════════════════════════════
-// 🧩 Komponenty pomocnicze
-// ═══════════════════════════════════════════════════════════════
-
-/**
- * Notatka z tooltipem - rozwija się lub pokazuje pełny tekst przy najechaniu
- * FUNKCJONALNOŚĆ: zmień maxLines dla domyślnego widoku
- */
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-fun NoteWithTooltip(title: String, text: String, expanded: Boolean, modifier: Modifier = Modifier) {
-    TooltipArea(
-        tooltip = {
-            Surface(
-                modifier = Modifier.shadow(4.dp),
-                shape = RoundedCornerShape(4.dp),
-                color = Color(0xFF424242)
-            ) {
-                Text(
-                    text = text,
-                    modifier = Modifier.padding(8.dp),
-                    color = Color.White,
-                    fontSize = 10.sp,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-        },
-        delayMillis = 300 // DELAY: opóźnienie pokazania tooltipa (ms)
-    ) {
-        Column(
-            modifier = modifier, // Używamy przekazanego Modifier (np. Modifier.weight(1f))
-            verticalArrangement = Arrangement.spacedBy(1.dp) // Minimalny odstęp między nagłówkiem a treścią
-        ) {
-            // 1. NAGŁÓWEK (Twoje pole 'number')
-            Text(
-                text = title, // Wyświetlamy nagłówek, np. "Dodatkowe informacje:"
-                fontSize = 9.sp,
-                color = Color.Gray,
-                fontWeight = FontWeight.Bold,
-                // --- KOREKTA ZAPOBIEGAJĄCA ŁAMANIU W PIONIE ---
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-                // ---------------------------------------------
-            )
-
-            // 2. TREŚĆ NOTATKI (Twoje pole 'text')
-            Text(
-                text = text,
-                fontSize = 10.sp,
-                maxLines = if (expanded) Int.MAX_VALUE else 2,
-                overflow = TextOverflow.Ellipsis,
-                // Usunąłem Modifier.weight(1f), ponieważ jest to już w głównym Column
-            )
-        }
-    }
-}
-
-
-/**
- * Kostka statusu - mała, kompaktowa, tylko z tekstem
- * WYGLĄD: zmień kolory, zaokrąglenia, padding
- */
-@Composable
-fun StatusBadge(label: String, status: StatusInfo, modifier: Modifier = Modifier) {
-    val (color, bgAlpha) = when (status.stan) {
-        0.toByte() -> Color(0xFF4CAF50) to 0.25f // Wykonane - zielony
-        1.toByte() -> Color(0xFF2196F3) to 0.25f // W realizacji - niebieski
-        2.toByte() -> Color(0xFFFF9800) to 0.25f // Planowane - pomarańczowy
-        3.toByte() -> Color(0xFFFF5722) to 0.25f // Wstrzymane - czerwony
-        else -> Color.Gray to 0.15f
-    }
-
-    Surface(
-        modifier = modifier,
-        shape = RoundedCornerShape(4.dp), // ZAOKRĄGLENIE: kostki
-        color = color.copy(alpha = bgAlpha)
-    ) {
-        Column(
-            modifier = Modifier.padding(6.dp), // PADDING: wewnątrz kostki (mniejszy)
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                label,
-                fontSize = 9.sp, // ROZMIAR: etykieta
-                fontWeight = FontWeight.Bold,
-                color = color,
-                maxLines = 1
-            )
-            Spacer(Modifier.height(2.dp))
-            Text(
-                status.stanNazwa,
-                fontSize = 8.sp, // ROZMIAR: status
-                color = color,
-                maxLines = 1
-            )
-        }
-    }
-}
-
-/**
- * Rozwinięte szczegóły statusu z ilościami
- * ZAWARTOŚĆ: dostosuj wyświetlane informacje
- */
-@Composable
-fun StatusDetailsExpanded(label: String, status: StatusInfo) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp) // PADDING: odstęp statusów
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                "$label: ${status.stanNazwa}",
-                fontSize = 11.sp, // ROZMIAR: nazwa
-                fontWeight = FontWeight.Medium
-            )
-            Text(
-                "${status.wykonana?.toInt() ?: 0} / ${status.ilosc?.toInt() ?: 0}",
-                fontSize = 11.sp, // ROZMIAR: ilości
-                color = Color.Gray
-            )
-        }
-
-        status.terminZak?.let {
-            Text(
-                "Termin: ${it.toString().take(10)}",
-                fontSize = 9.sp, // ROZMIAR: termin
-                color = Color.Gray
-            )
-        }
-
-        status.dataZak?.let {
-            Text(
-                "Zakończono: ${it.toString().take(10)}",
-                fontSize = 9.sp, // ROZMIAR: data zakończenia
-                color = Color.Gray
-            )
-        }
-    }
-}

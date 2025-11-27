@@ -30,11 +30,14 @@ data class ProbkaDTO(
     val statusZL: List<StatusInfo>?,
     val statusZK: StatusInfo?,
 
-    // 4 nowe pola tekstowe
+    // tabela technologia - mozliwy zapis i update danych
     val opis: String? = null,
     val dodtkoweInformacje: String? = null,
     val uwagi: String? = null,
-    val testy: String? = null
+    val testy: String? = null,
+    val produce: Boolean? = null,
+    val send: Boolean? = null,
+    val tested: Boolean? = null
 )
 
 /**

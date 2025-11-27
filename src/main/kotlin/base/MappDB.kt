@@ -76,7 +76,10 @@ class ProbkaMapper {
             opis = technologia?.opis,
             dodtkoweInformacje = technologia?.dodatkoweInfo,
             uwagi = technologia?.uwagi,
-            testy = technologia?.testy
+            testy = technologia?.testy,
+            produce = technologia?.produce,
+            send = technologia?.send,
+            tested = technologia?.tested
         )
     }
 

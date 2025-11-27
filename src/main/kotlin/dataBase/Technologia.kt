@@ -28,5 +28,14 @@ data class Technologia(
     var uwagi: String? = null,
 
     @Column(name = "Testy", length = 500)
-    var testy: String? = null
+    var testy: String? = null,
+
+    @Column(name = "Produce")
+    val produce: Boolean? = null,
+
+    @Column(name = "Send")
+    val send: Boolean? = null,
+
+    @Column(name = "Tested")
+    val tested: Boolean? = null
 )

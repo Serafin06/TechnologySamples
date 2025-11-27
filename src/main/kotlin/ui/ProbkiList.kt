@@ -1,16 +1,19 @@
 package ui
 
+import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.material.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import base.ProbkaDTO
-import ui.AppColors
 
 // 📜 Probki List
 
@@ -34,20 +37,31 @@ fun ProbkiList(
             )
         }
 
+        val listState = rememberLazyListState()
+
         // Lista
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+        Box(
+            modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)
         ) {
-            items(probki) { probka ->
-                ProbkaCard(
-                    probka = probka,
-                    onTechnologiaSave = { k1, k2, k3, k4 ->
-                        onTechnologiaSave(probka, k1, k2, k3, k4)
-                    }
-                )
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(probki) { probka ->
+                    ProbkaCard(
+                        probka = probka,
+                        onTechnologiaSave = { k1, k2, k3, k4 ->
+                            onTechnologiaSave(probka, k1, k2, k3, k4)
+                        }
+                    )
+                }
             }
+            VerticalScrollbar(
+                modifier = Modifier.fillMaxHeight().align(Alignment.CenterEnd),
+                adapter = rememberScrollbarAdapter(scrollState = listState)
+            )
         }
     }
 }
