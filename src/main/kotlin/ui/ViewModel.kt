@@ -47,8 +47,16 @@ class ProbkiViewModel(private val probkaService: ProbkaService) {
             errorMessage = null
 
             try {
+                loadingMessage = "Inicjalizacja flag..."
+                loadingProgress = 0.2f
+
+                // Najpierw zainicjalizuj flagi
+                withContext(Dispatchers.IO) {
+                    probkaService.initializeProduceFlags()
+                }
+
                 loadingMessage = "Ładowanie próbek ZO..."
-                loadingProgress = 0.3f
+                loadingProgress = 0.4f
 
                 probki = withContext(Dispatchers.IO) {
                     val monthsNonNull = filterState.dateRange.months ?: 6L

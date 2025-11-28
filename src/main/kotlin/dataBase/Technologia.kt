@@ -30,12 +30,12 @@ data class Technologia(
     @Column(name = "Testy", length = 500)
     var testy: String? = null,
 
-    @Column(name = "Produce")
+    @Column(name = "PRODUCE")
     val produce: Boolean? = null,
 
-    @Column(name = "Send")
+    @Column(name = "SEND")
     var send: Boolean? = null,
 
-    @Column(name = "Tested")
+    @Column(name = "TESTED")
     var tested: Boolean? = null
 )
