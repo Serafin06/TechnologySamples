@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import base.FlagType
 import base.ProbkaDTO
 
 // 📜 Probki List
@@ -20,7 +21,8 @@ import base.ProbkaDTO
 @Composable
 fun ProbkiList(
     probki: List<ProbkaDTO>,
-    onTechnologiaSave: (ProbkaDTO, String?, String?, String?, String?) -> Unit
+    onTechnologiaSave: (Int, String?, String?, String?, String?) -> Unit,
+    onFlagUpdate: (Int, FlagType, Boolean) -> Unit
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         // Header z licznikiem
@@ -53,7 +55,10 @@ fun ProbkiList(
                     ProbkaCard(
                         probka = probka,
                         onTechnologiaSave = { k1, k2, k3, k4 ->
-                            onTechnologiaSave(probka, k1, k2, k3, k4)
+                            onTechnologiaSave(probka.numer, k1, k2, k3, k4)
+                        },
+                        onFlagUpdate = { flagType, value ->
+                            onFlagUpdate(probka.numer, flagType, value)
                         }
                     )
                 }

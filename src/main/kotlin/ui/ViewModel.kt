@@ -111,9 +111,9 @@ class ProbkiViewModel(private val probkaService: ProbkaService) {
     }
 
     fun saveTechnologiaKolumny(numer: Int,
-                        k1: String?, k2: String?, k3: String?, k4: String?, produce: Boolean?, send: Boolean?, tested: Boolean?) {
+                        k1: String?, k2: String?, k3: String?, k4: String?) {
         coroutineScope.launch {
-            probkaService.saveTechnologiaKolumny(numer, k1, k2, k3, k4, produce, send, tested)
+            probkaService.saveTechnologiaKolumny(numer, k1, k2, k3, k4)
             loadProbki() // Odśwież dane
         }
     }
@@ -123,14 +123,11 @@ class ProbkiViewModel(private val probkaService: ProbkaService) {
         k2: String?,
         k3: String?,
         k4: String?,
-        produce: Boolean?,
-        send: Boolean?,
-        tested: Boolean?
     ) {
         // Zapis w tle, bez blokowania UI
         coroutineScope.launch(Dispatchers.IO) {
             try {
-                probkaService.saveTechnologiaKolumny(numer, k1, k2, k3, k4, produce, send, tested)
+                probkaService.saveTechnologiaKolumny(numer, k1, k2, k3, k4)
 
                 // Odśwież tylko tę jedną próbkę zamiast wszystkich
                 val updated = probkaService.getProbkaDetails(numer)
@@ -199,7 +196,7 @@ class ProbkiViewModel(private val probkaService: ProbkaService) {
         connectionCheckScope.cancel()
     }
 
-    fun updateFlagAsync(numer: Int, oddzial: Byte, rok: Byte, flagType: FlagType, value: Boolean) {
+    fun updateFlagAsync(numer: Int,flagType: FlagType, value: Boolean) {
         coroutineScope.launch(Dispatchers.IO) {
             try {
                 probkaService.updateFlag(numer, flagType, value)
@@ -209,7 +206,7 @@ class ProbkiViewModel(private val probkaService: ProbkaService) {
                 if (updated != null) {
                     withContext(Dispatchers.Main) {
                         val index = probki.indexOfFirst {
-                            it.numer == numer && it.oddzial == oddzial && it.rok == rok
+                            it.numer == numer
                         }
                         if (index >= 0) {
                             probki = probki.toMutableList().apply {

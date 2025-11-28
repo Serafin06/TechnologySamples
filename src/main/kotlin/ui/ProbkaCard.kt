@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import base.FlagType
 import base.ProbkaDTO
 
 /**
@@ -28,7 +29,9 @@ import base.ProbkaDTO
 @Composable
 fun ProbkaCard(
     probka: ProbkaDTO,
-    onTechnologiaSave: ((String?, String?, String?, String?) -> Unit)? = null
+    onTechnologiaSave: ((String?, String?, String?, String?) -> Unit)? = null,
+    onFlagUpdate: ((FlagType, Boolean) -> Unit)? = null
+
 ) {
     var expanded by remember { mutableStateOf(false) }
     var editMode by remember { mutableStateOf(false) }
@@ -115,10 +118,53 @@ fun ProbkaCard(
                         }
                 }
 
-                // Prawa część - rozwijanie
+                // Pokazuj flagi tylko dla próbek w realizacji lub planowanych (nie wykonanych)
+                if (probka.produce == false) {
+                    // Flaga Wyprodukowano (automatyczna - tylko podgląd)
+                    FlagIndicator(
+                        label = "P",
+                        state = probka.produce,
+                        enabled = false,
+                        tooltip = "Wyprodukowano"
+                    )
+
+                    // Flaga Wysłano (ręczna)
+                    FlagIndicator(
+                        label = "W",
+                        state = probka.send,
+                        enabled = true,
+                        tooltip = "Wysłano do klienta",
+                        onClick = {
+                            showDialog = true
+                            dialogTitle = "Czy próbka została wysłana do klienta?"
+                            onConfirmAction = {
+                                onFlagUpdate?.invoke(FlagType.SEND, !(probka.send ?: false))
+                                showDialog = false
+                            }
+                        }
+                    )
+
+                    // Flaga Przetestowano (ręczna)
+                    FlagIndicator(
+                        label = "T",
+                        state = probka.tested,
+                        enabled = true,
+                        tooltip = "Przetestowano u klienta",
+                        onClick = {
+                            showDialog = true
+                            dialogTitle = "Czy próbka została przetestowana u klienta?"
+                            onConfirmAction = {
+                                onFlagUpdate?.invoke(FlagType.TESTED, !(probka.tested ?: false))
+                                showDialog = false
+                            }
+                        }
+                    )
+                }
+
+                // Przycisk rozwijania
                 IconButton(
                     onClick = { expanded = !expanded },
-                    modifier = Modifier.size(28.dp) // ROZMIAR: przycisk
+                    modifier = Modifier.size(28.dp)
                 ) {
                     Icon(
                         if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
@@ -127,6 +173,7 @@ fun ProbkaCard(
                     )
                 }
             }
+
 
             // ═══════════════════════════════════════════════════════
             // 2️⃣ NAZWA PRÓBKI - nazwa
@@ -241,6 +288,23 @@ fun ProbkaCard(
                                     )
                                 }
                             }
+                        }
+                        if (showDialog) {
+                            AlertDialog(
+                                onDismissRequest = { showDialog = false },
+                                title = { Text("Potwierdzenie") },
+                                text = { Text(dialogTitle) },
+                                confirmButton = {
+                                    Button(onClick = onConfirmAction) {
+                                        Text("Tak")
+                                    }
+                                },
+                                dismissButton = {
+                                    TextButton(onClick = { showDialog = false }) {
+                                        Text("Anuluj")
+                                    }
+                                }
+                            )
                         }
                     }
 

@@ -46,14 +46,11 @@ fun ProbkiScreen(viewModel: ProbkiViewModel) {
                     viewModel.filteredProbki.isEmpty() -> EmptyScreen()
                     else -> ProbkiList(
                         probki = viewModel.filteredProbki,
-                        onTechnologiaSave = { probka, k1, k2, k3, k4 ->
-                            viewModel.saveTechnologiaKolumnyAsync(
-                                numer = probka.numer,
-                                k1 = k1,
-                                k2 = k2,
-                                k3 = k3,
-                                k4 = k4
-                            )
+                        onTechnologiaSave = { numer, k1, k2, k3, k4 ->
+                            viewModel.saveTechnologiaKolumnyAsync(numer, k1, k2, k3, k4)
+                        },
+                        onFlagUpdate = { numer, flagType, value ->
+                            viewModel.updateFlagAsync(numer, flagType, value)
                         }
                     )
                 }

@@ -8,7 +8,7 @@ import dataBase.Technologia
 interface ProbkaService {
     fun getProbki(monthBack: Long = 6): List<ProbkaDTO>
     fun getProbkaDetails(numer: Int): ProbkaDTO?
-    fun saveTechnologiaKolumny(numer: Int, k1: String?, k2: String?, k3: String?, k4: String?, produce: Boolean?, send: Boolean?, tested: Boolean?): Boolean
+    fun saveTechnologiaKolumny(numer: Int, k1: String?, k2: String?, k3: String?, k4: String?): Boolean
     fun updateFlag(numer: Int, flagType: FlagType, value: Boolean): Boolean
     fun testConnection(): Boolean
 }
@@ -59,9 +59,6 @@ class ProbkaServiceImpl(
         k2: String?,
         k3: String?,
         k4: String?,
-        produce: Boolean?,
-        send: Boolean?,
-        tested: Boolean?
     ): Boolean {
         return try {
             val existing = repository.findTechnologiaNumer(numer)
@@ -71,18 +68,12 @@ class ProbkaServiceImpl(
                 dodatkoweInfo = k2,
                 uwagi = k3,
                 testy = k4,
-                produce = produce,
-                send = send,
-                tested = tested
             ) ?: Technologia(
                 numer = numer,
                 opis = k1,
                 dodatkoweInfo = k2,
                 uwagi = k3,
                 testy = k4,
-                produce = produce,
-                send = send,
-                tested = tested
             )
 
             repository.saveTechnologia(technologia)

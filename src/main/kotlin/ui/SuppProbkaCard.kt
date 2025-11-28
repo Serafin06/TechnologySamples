@@ -2,13 +2,17 @@ package ui
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.TooltipArea
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
@@ -164,6 +168,67 @@ fun StatusDetailsExpanded(label: String, status: StatusInfo) {
                 fontSize = 9.sp, // ROZMIAR: data zakończenia
                 color = Color.Gray
             )
+        }
+    }
+}
+/**
+ * Wskaźnik flagi - mała kostka z literą
+ * KOLORY: 🟢 true (zielony), 🔴 false (czerwony), ⚫ null (szary)
+ */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun FlagIndicator(
+    label: String,
+    state: Boolean?,
+    enabled: Boolean,
+    tooltip: String,
+    onClick: (() -> Unit)? = null
+) {
+    val color = when (state) {
+        true -> Color(0xFF4CAF50)   // Zielony
+        false -> Color(0xFFF44336)  // Czerwony
+        null -> Color.Gray          // Szary
+    }
+
+    TooltipArea(
+        tooltip = {
+            Surface(
+                modifier = Modifier.shadow(4.dp),
+                shape = RoundedCornerShape(4.dp),
+                color = Color(0xFF424242)
+            ) {
+                Text(
+                    text = tooltip,
+                    modifier = Modifier.padding(6.dp),
+                    color = Color.White,
+                    fontSize = 10.sp
+                )
+            }
+        },
+        delayMillis = 300
+    ) {
+        Surface(
+            modifier = Modifier
+                .size(24.dp) // ROZMIAR: wielkość kostki flagi
+                .then(
+                    if (enabled && onClick != null) {
+                        Modifier.clickable { onClick() }
+                    } else Modifier
+                ),
+            shape = RoundedCornerShape(4.dp), // ZAOKRĄGLENIE: flagi
+            color = color.copy(alpha = 0.3f)
+        ) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                Text(
+                    label,
+                    fontSize = 12.sp, // ROZMIAR: litera
+                    fontWeight = FontWeight.Bold,
+                    color = color
+                )
+            }
         }
     }
 }
