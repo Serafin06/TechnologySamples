@@ -1,5 +1,6 @@
 package base
 
+import dataBase.Kontrahent
 import dataBase.Technologia
 import dataBase.ZD
 import dataBase.ZK
@@ -18,6 +19,7 @@ class ProbkaMapper {
         zlList: List<ZL>,
         zkList: List<ZK>,
         technologia: Technologia?,
+        kontrahent: Kontrahent?,
         statusResolver: StatusResolver
     ): ProbkaDTO {
 
@@ -34,6 +36,7 @@ class ProbkaMapper {
             rok = zo.rok.toByte(),
             oddzialNazwa = getOddzialNazwa(zo.oddzialW),
             dataZamowienia = zo.data,
+            kontrahentNazwa = kontrahent?.nazwa ?: "Nieznany",
             art = zo.art,
             receptura = zo.receptura1,
             grubosc11 = zo.grubosc11,

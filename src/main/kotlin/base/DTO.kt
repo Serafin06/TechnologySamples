@@ -13,6 +13,7 @@ data class ProbkaDTO(
     val rok: Byte,
     val oddzialNazwa: String,
     val dataZamowienia: LocalDateTime,
+    val kontrahentNazwa: String,
 
     // Dane techniczne z ZO
     val art: String?,

@@ -172,17 +172,33 @@ fun ProbkaCard(
 
 
             // ═══════════════════════════════════════════════════════
-            // 2️⃣ NAZWA PRÓBKI - nazwa
+            // 2️⃣ KONTRAHENT + NAZWA PRÓBKI
             // ═══════════════════════════════════════════════════════
-            probka.nazwa?.let {
-                Spacer(Modifier.height(4.dp)) // ODSTĘP: przed nazwą
+            // Nazwa kontrahenta
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp) // ODSTĘP: kontrahent-nazwa
+            ) {
+                // Kontrahent
                 Text(
-                    it, fontSize = 12.sp, // ROZMIAR: nazwa próbki
-                    fontWeight = FontWeight.Medium, color = Color.DarkGray
+                    probka.kontrahentNazwa,
+                    fontSize = 15.sp, // ROZMIAR: kontrahent
+                    fontWeight = FontWeight.Bold,
+                    color = AppColors.Primary // KOLOR: niebieski
                 )
+
+                // Nazwa próbki (jeśli istnieje)
+                probka.nazwa?.let {
+                    Text(
+                        it,
+                        fontSize = 12.sp, // ROZMIAR: nazwa próbki
+                        fontWeight = FontWeight.Medium,
+                        color = Color.DarkGray
+                    )
+                }
             }
 
-            Spacer(Modifier.height(8.dp)) // ODSTĘP: przed sekcją główną
+            Spacer(Modifier.height(4.dp)) // ODSTĘP: przed sekcją główną
 
             // ═══════════════════════════════════════════════════════
             // 3️⃣ STATUSY (lewo 2x2) + NOTATKI (prawo w kolumnach)

@@ -1,5 +1,6 @@
 package base
 
+import dataBase.Kontrahent
 import dataBase.Technologia
 import dataBase.ZD
 import dataBase.ZK
@@ -24,6 +25,7 @@ interface ProbkaRepository {
     fun findZLByNumer(numer: Int): List<ZL>
     fun findTechnologiaNumer(numer: Int): Technologia?
     fun saveTechnologia(technologia: Technologia): Technologia
+    //fun findKontrahentById(id: Int): Kontrahent?
     fun testConnection()
 }
 
@@ -103,6 +105,19 @@ class ProbkaRepositoryImpl(private val sessionFactory: SessionFactory) : ProbkaR
             }
         }
     }
+
+    /*
+    override fun findKontrahentById(id: Int): Kontrahent? {
+        return useSession { session ->
+            session.createQuery(
+                "FROM Kontrahent WHERE idKontrahenta = :id",
+                Kontrahent ::class.java
+            ).apply {
+                setParameter("id", id)
+            }.uniqueResultOptional().orElse(null)
+        }
+    }
+    */
 
     override fun testConnection() {
         val session = sessionFactory.openSession()
