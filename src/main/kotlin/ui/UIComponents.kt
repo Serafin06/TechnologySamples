@@ -124,10 +124,10 @@ fun StatusDetails(label: String, status: StatusInfo) {
 
 fun getStatusColor(stan: Byte): Color {
     return when (stan.toInt()) {
-        0 -> AppColors.StatusNew
+        0 -> AppColors.StatusCompleted
         1 -> AppColors.StatusInProgress
-        2 -> AppColors.StatusCompleted
-        3 -> AppColors.StatusPaused
+        2 -> AppColors.StatusCancel
+        3 -> AppColors.StatusPlaned
         4 -> AppColors.StatusCancelled
         else -> Color.Gray
     }

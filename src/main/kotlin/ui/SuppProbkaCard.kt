@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
@@ -26,6 +27,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import base.StatusInfo
+import kotlin.comparisons.then
 
 // ═══════════════════════════════════════════════════════════════
 // 🧩 Komponenty pomocnicze
@@ -93,10 +95,10 @@ fun NoteWithTooltip(title: String, text: String, expanded: Boolean, modifier: Mo
 @Composable
 fun StatusBadge(label: String, status: StatusInfo, modifier: Modifier = Modifier) {
     val (color, bgAlpha) = when (status.stan) {
-        0.toByte() -> Color(0xFF4CAF50) to 0.25f // Wykonane - zielony
-        1.toByte() -> Color(0xFF2196F3) to 0.25f // W realizacji - niebieski
-        2.toByte() -> Color(0xFFFF9800) to 0.25f // Planowane - pomarańczowy
-        3.toByte() -> Color(0xFFFF5722) to 0.25f // Wstrzymane - czerwony
+        0.toByte() -> AppColors.StatusCompleted to 0.25f // Wykonane - zielony
+        1.toByte() -> AppColors.StatusInProgress to 0.25f // W realizacji - niebieski
+        2.toByte() -> AppColors.StatusPlaned to 0.25f // Planowane - pomarańczowy
+        3.toByte() -> AppColors.StatusCancelled to 0.25f // Wstrzymane - czerwony
         else -> Color.Gray to 0.15f
     }
 
@@ -173,7 +175,7 @@ fun StatusDetailsExpanded(label: String, status: StatusInfo) {
 }
 /**
  * Wskaźnik flagi - mała kostka z literą
- * KOLORY: 🟢 true (zielony), 🔴 false (czerwony), ⚫ null (szary)
+ * KOLORY: 🟢 true (zielony),  false (czerwony), ⚫ null (szary)
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -181,13 +183,21 @@ fun FlagIndicator(
     label: String,
     state: Boolean?,
     enabled: Boolean,
-    tooltip: String,
+    tooltipTrue: String,
+    tooltipFalse: String,
+    tooltipNull: String,
     onClick: (() -> Unit)? = null
 ) {
     val color = when (state) {
-        true -> Color(0xFF4CAF50)   // Zielony
-        false -> Color(0xFFF44336)  // Czerwony
-        null -> Color.Gray          // Szary
+        true -> AppColors.StatusCompleted   // Zielony
+        false -> AppColors.StatusPlaned  // zolty
+        null -> AppColors.StatusCancel  // Szary
+    }
+
+    val tooltip = when (state) {
+        true -> tooltipTrue
+        false -> tooltipFalse
+        null -> tooltipNull
     }
 
     TooltipArea(
@@ -207,15 +217,15 @@ fun FlagIndicator(
         },
         delayMillis = 300
     ) {
+        val clickableMod = if (enabled && onClick != null) {
+            Modifier.clickable { onClick() }
+        } else Modifier
+
         Surface(
             modifier = Modifier
-                .size(24.dp) // ROZMIAR: wielkość kostki flagi
-                .then(
-                    if (enabled && onClick != null) {
-                        Modifier.clickable { onClick() }
-                    } else Modifier
-                ),
-            shape = RoundedCornerShape(4.dp), // ZAOKRĄGLENIE: flagi
+                .then(clickableMod)
+                .size(28.dp),
+            shape = CircleShape,
             color = color.copy(alpha = 0.3f)
         ) {
             Box(
@@ -223,10 +233,13 @@ fun FlagIndicator(
                 modifier = Modifier.fillMaxSize()
             ) {
                 Text(
-                    label,
-                    fontSize = 12.sp, // ROZMIAR: litera
+                    text = label,
+                    fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
-                    color = color
+                    color = color,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    softWrap = false
                 )
             }
         }

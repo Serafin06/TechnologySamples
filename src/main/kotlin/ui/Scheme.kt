@@ -12,10 +12,10 @@ object AppColors {
     val Surface = Color.White
     val Error = Color(0xFFB00020)
 
-    val StatusNew = Color(0xFF4CAF50)
+    val StatusCompleted = Color(0xFF4CAF50)
     val StatusInProgress = Color(0xFF2196F3)
-    val StatusCompleted = Color(0xFF9E9E9E)
-    val StatusPaused = Color(0xFFFF9800)
+    val StatusCancel = Color(0xFF9E9E9E)
+    val StatusPlaned = Color(0xFFFF9800)
     val StatusCancelled = Color(0xFFF44336)
 }
 
