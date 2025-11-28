@@ -15,7 +15,7 @@ enum class ConnectionStatus {
 }
 
 
-class ProbkiViewModel(private val probkaService: ProbkaService) {
+class ProbkiViewModel(val probkaService: ProbkaService) {
 
     private val coroutineScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
 

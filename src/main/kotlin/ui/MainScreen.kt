@@ -31,6 +31,8 @@ fun ProbkiScreen(viewModel: ProbkiViewModel) {
             ) {
                 // Filtry
                 FilterPanel(
+                    coroutineScope = rememberCoroutineScope(),
+                    probkaService = viewModel.probkaService,
                     filterState = viewModel.filterState,
                     onFilterChange = { viewModel.updateFilter(it) },
                     onRefresh = { viewModel.loadProbki() } // Usuń scope.launch

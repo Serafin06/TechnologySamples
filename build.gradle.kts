@@ -39,6 +39,9 @@ dependencies {
     // szyfrowanie hasel
     implementation("io.github.cdimascio:dotenv-kotlin:6.4.1")
 
+    // export do Excela
+    implementation("org.apache.poi:poi-ooxml:5.2.5")
+
     testImplementation(kotlin("test"))
 }
 

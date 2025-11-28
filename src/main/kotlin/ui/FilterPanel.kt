@@ -13,6 +13,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import base.ProbkaService
+import base.StatusResolver
+import kotlinx.coroutines.CoroutineScope
+import report.ExportType
+import report.generujRaportAkcja
 import ui.AppColors
 import ui.DateRange
 import ui.FilterState
@@ -24,6 +29,8 @@ import ui.FilterState
 fun FilterPanel(
     filterState: FilterState,
     onFilterChange: (FilterState) -> Unit,
+    coroutineScope: CoroutineScope,
+    probkaService: ProbkaService,
     onRefresh: () -> Unit
 ) {
     var expanded by remember { mutableStateOf(true) }
@@ -46,6 +53,36 @@ fun FilterPanel(
                     Icon(Icons.AutoMirrored.Filled.ManageSearch, contentDescription = null, tint = AppColors.Primary)
                     Spacer(Modifier.width(4.dp))
                     Text("Filtry", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                }
+
+                Row {
+                    // --- 💾 SEKCJA Raporty ---
+                    var showExportMenu by remember { mutableStateOf(false) }
+
+                    Box {
+                        IconButton(onClick = { showExportMenu = true }) {
+                            Icon(Icons.Default.Save, contentDescription = "Eksportuj raport", tint = AppColors.Primary)
+                        }
+
+                        DropdownMenu(
+                            expanded = showExportMenu,
+                            onDismissRequest = { showExportMenu = false }
+                        ) {
+                            DropdownMenuItem(onClick = {
+                                showExportMenu = false
+                                generujRaportAkcja(coroutineScope, ExportType.EXCEL, probkaService)
+                            }) {
+                                Text("Eksportuj do Excel (.xlsx)")
+                            }
+
+                            DropdownMenuItem(onClick = {
+                                showExportMenu = false
+                                generujRaportAkcja(coroutineScope, ExportType.PDF, probkaService)
+                            }) {
+                                Text("Eksportuj do PDF (Wkrótce)")
+                            }
+                        }
+                    }
                 }
 
                 Row {

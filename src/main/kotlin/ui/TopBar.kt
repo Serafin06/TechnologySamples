@@ -74,8 +74,8 @@ fun TopAppBar(
                         .padding(8.dp),
                     shape = CircleShape,
                     color = when (connectionStatus) {
-                        ConnectionStatus.CONNECTED -> Color(0xFF4CAF50) // Zielony
-                        ConnectionStatus.DISCONNECTED -> Color(0xFFF44336) // Czerwony
+                        ConnectionStatus.CONNECTED -> AppColors.StatusCompleted // Zielony
+                        ConnectionStatus.DISCONNECTED -> AppColors.Error // Czerwony
                         ConnectionStatus.CHECKING -> Color.Gray // Szary
                     }
                 ) {
