@@ -1,6 +1,7 @@
 package base
 
 import org.hibernate.SessionFactory
+import report.ReportRepoImpl
 
 // Factory do tworzenia serwisów - Dependency Inversion Principle
 
@@ -8,9 +9,10 @@ object ProbkaServiceFactory {
 
     fun createProbkaService(sessionFactory: SessionFactory): ProbkaService {
         val repository = ProbkaRepositoryImpl(sessionFactory)
+        val reportRepository = ReportRepoImpl(sessionFactory)
         val mapper = ProbkaMapper()
         val statusResolver = StatusResolver()
 
-        return ProbkaServiceImpl(repository, mapper, statusResolver)
+        return ProbkaServiceImpl(repository, reportRepository, mapper, statusResolver)
     }
 }

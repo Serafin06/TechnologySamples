@@ -40,9 +40,8 @@ class ReportService(
                 kontrahent = dto.kontrahentNazwa,
                 nazwaProbki = dto.nazwa ?: "",
 
-                statusZO = dto.statusZO?.stanNazwa ?: "Brak",
                 terminZO = dto.statusZO?.terminZak?.format(dateFormatter) ?: "-",
-
+                statusZK = dto.statusZK?.stanNazwa ?: "-",
                 statusZD = dto.statusZD?.stanNazwa ?: "-",
 
                 // Formatowanie ZL: "NazwaStatusu" (lub puste jeśli brak)

@@ -1,6 +1,8 @@
 package base
 
 import dataBase.Technologia
+import report.ReportDTO
+import report.ReportRepository
 
 /**
  * Interface serwisu - Single Responsibility Principle
@@ -11,6 +13,7 @@ interface ProbkaService {
     fun saveTechnologiaKolumny(numer: Int, k1: String?, k2: String?, k3: String?, k4: String?): Boolean
     fun updateFlag(numer: Int, flagType: FlagType, value: Boolean): Boolean
     fun initializeProduceFlags()
+    fun getReportData(): List<ReportDTO>
     fun testConnection(): Boolean
 }
 
@@ -23,6 +26,7 @@ enum class FlagType {
  */
 class ProbkaServiceImpl(
     private val repository: ProbkaRepository,
+    private val reportRepository: ReportRepository,
     private val mapper: ProbkaMapper,
     private val statusResolver: StatusResolver
 ) : ProbkaService {
@@ -155,6 +159,9 @@ class ProbkaServiceImpl(
         }
     }
 
+    override fun getReportData(): List<ReportDTO> {
+        return reportRepository.findOpenOrdersForTychy()
+    }
 
     override fun testConnection(): Boolean {
         return try {
