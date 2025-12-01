@@ -47,7 +47,7 @@ dependencies {
 
 compose.desktop {
     application {
-        mainClass = "pl.rafapp.techSam.MainKt"
+        mainClass = "MainKt"
 
         nativeDistributions {
             modules("java.sql", "java.naming")
