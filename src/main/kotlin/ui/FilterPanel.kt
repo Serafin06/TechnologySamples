@@ -84,8 +84,6 @@ fun FilterPanel(
                         }
                     }
 
-
-
                     IconButton(onClick = onRefresh) {
                         Icon(Icons.Default.Refresh, contentDescription = "Odśwież", tint = AppColors.Primary)
                     }

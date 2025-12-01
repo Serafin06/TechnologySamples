@@ -43,6 +43,7 @@ class ReportService(
                 terminZO = dto.statusZO?.terminZak?.format(dateFormatter) ?: "-",
                 statusZK = dto.statusZK?.stanNazwa ?: "-",
                 statusZD = dto.statusZD?.stanNazwa ?: "-",
+                statusZK = dto.statusZK?.stanNazwa ?: "-",
 
                 // Formatowanie ZL: "NazwaStatusu" (lub puste jeśli brak)
                 statusZL1 = zl1?.stanNazwa ?: "-",

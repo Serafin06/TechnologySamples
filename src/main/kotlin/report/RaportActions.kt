@@ -7,8 +7,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.swing.Swing
 import kotlinx.coroutines.withContext
 import java.io.File
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 import javax.swing.JFileChooser
 import javax.swing.filechooser.FileNameExtensionFilter
 
@@ -16,40 +14,52 @@ enum class ExportType { EXCEL, PDF }
 
 fun generujRaportAkcja(
     scope: CoroutineScope,
-    exportType: ExportType,
+    type: ExportType,
     probkaService: ProbkaService
 ) {
-    scope.launch {
-        try {
-            // Pokaż progress
-            // viewModel.showProgress("Generowanie raportu...")
+    scope.launch(Dispatchers.Swing) { // Uruchamiamy w wątku Swing/UI
+        val fileChooser = JFileChooser()
 
-            val dane = withContext(Dispatchers.IO) {
-                probkaService.getReportData() // Nowa metoda w service
+        // Ustawienie domyślnej nazwy pliku i filtra
+        val extension = if (type == ExportType.EXCEL) "xlsx" else "pdf"
+        fileChooser.selectedFile = File("Raport_Tychy_Otwarte.$extension")
+        fileChooser.fileFilter = FileNameExtensionFilter("Pliki $type (*.$extension)", extension)
+
+        val result = fileChooser.showSaveDialog(null) // Otwiera okno dialogowe zapisu
+
+        if (result == JFileChooser.APPROVE_OPTION) {
+            val sciezkaDocelowa = fileChooser.selectedFile.absolutePath
+            val finalPath = if (!sciezkaDocelowa.endsWith(".$extension")) {
+                "$sciezkaDocelowa.$extension" // Dodaj rozszerzenie, jeśli użytkownik pominął
+            } else {
+                sciezkaDocelowa
             }
 
-            val generator = when (exportType) {
-                ExportType.EXCEL -> ReportExcelGenerator()
-                ExportType.PDF -> ReportExcelGenerator()
+            // Uruchomienie ciężkiej operacji w tle (Dispatchers.IO)
+            launch {
+                withContext(Dispatchers.IO) {
+                    println("Rozpoczynanie generowania raportu do: $finalPath")
+
+                    val raportService = ReportService(probkaService)
+                    val generator: ReportGenerator = when(type) {
+                        ExportType.EXCEL -> ExcelReportGenerator()
+                        ExportType.PDF -> ExcelReportGenerator() // TODO: Zmień na PdfRaportGenerator
+                    }
+
+                    try {
+                        val filtr = RaportFilter.tychyOtwarte()
+                        val dane = raportService.przygotujDaneDoRaportu(filtr)
+                        generator.generujReport(dane, finalPath)
+                        println("Sukces! Raport zapisany.")
+                        // Tutaj można np. wywołać funkcję do wyświetlenia Toast w UI
+                    } catch (e: Exception) {
+                        println("Błąd generowania raportu: ${e.message}")
+                        e.printStackTrace()
+                    }
+                }
             }
-
-            val sciezka = withContext(Dispatchers.IO) {
-                val timestamp = LocalDateTime.now().format(
-                    DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")
-                )
-                val extension = if (exportType == ExportType.EXCEL) "xlsx" else "pdf"
-                "raport_$timestamp.$extension"
-            }
-
-            val plik = withContext(Dispatchers.IO) {
-                generator.generujReport(dane, sciezka)
-            }
-
-            // Pokaż sukces
-            println("Raport wygenerowany: ${plik.absolutePath}")
-
-        } catch (e: Exception) {
-            println("Błąd generowania raportu: ${e.message}")
+        } else {
+            println("Anulowano zapis pliku.")
         }
     }
-    }
+}
