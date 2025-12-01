@@ -1,7 +1,6 @@
 package report
 
 import base.ProbkaService
-import base.StatusResolver
 import java.time.format.DateTimeFormatter
 
 class ReportService(

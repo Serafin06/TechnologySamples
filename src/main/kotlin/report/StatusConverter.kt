@@ -25,3 +25,33 @@ object StatusConverter {
             else -> IndexedColors.GREY_25_PERCENT
         }
 }
+
+
+object StatusExtractor {
+    /**
+     * Zwraca symbol: "W","P","R","A" lub "" (jeśli nie rozpoznano).
+     * Przyjmuje dowolny tekst (np. "Wykonane", "W", "Planowane", "W realizacji", "Anulowane", "0 - Wykonane" itp.)
+     */
+    fun extractSymbol(statusText: String?): String {
+        if (statusText == null) return ""
+
+        val s = statusText.trim().lowercase()
+
+        // Jeśli już jest pojedynczy symbol
+        if (s == "w" || s == "p" || s == "r" || s == "a") return s.uppercase()
+
+        return when {
+            "wykon" in s -> "W"          // wykonane, wykonany
+            "zakończ" in s || "zakoncz" in s -> "W"
+            "plan" in s -> "P"           // planowane, plan
+            "realiz" in s -> "R"         // w realizacji, realizacja
+            "anul" in s -> "A"           // anulowane, anulacja
+            // proste dopasowanie kodów liczbowych w tekście
+            Regex("""\b0\b""").containsMatchIn(s) -> "W"
+            Regex("""\b1\b""").containsMatchIn(s) -> "R"
+            Regex("""\b2\b""").containsMatchIn(s) -> "P"
+            Regex("""\b4\b""").containsMatchIn(s) -> "A"
+            else -> ""
+        }
+    }
+}
