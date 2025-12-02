@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.sp
 import base.ProbkaService
 import base.StatusResolver
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import report.ExportType
 import report.generujRaportAkcja
 import ui.AppColors
@@ -34,6 +35,20 @@ fun FilterPanel(
     onRefresh: () -> Unit
 ) {
     var expanded by remember { mutableStateOf(true) }
+    var showDialogState by remember { mutableStateOf<String?>(null) }
+
+    // Definicja funkcji, która będzie wywołana po zakończeniu eksportu
+    val onExportComplete: (Boolean, String) -> Unit = { success, path ->
+        // Uruchomienie z powrotem w wątku Compose/Swing
+        coroutineScope.launch {
+            if (success) {
+                showDialogState = "Sukces! Raport zapisano w:\n$path"
+            } else {
+                showDialogState = "Błąd! Nie udało się zapisać raportu."
+            }
+        }
+    }
+
 
     Card(
         modifier = Modifier
@@ -70,14 +85,15 @@ fun FilterPanel(
                         ) {
                             DropdownMenuItem(onClick = {
                                 showExportMenu = false
-                                generujRaportAkcja(coroutineScope, ExportType.EXCEL, probkaService)
+                                // przekazujemy callback, który ustawi stan dialogu
+                                generujRaportAkcja(coroutineScope, ExportType.EXCEL, probkaService, onExportComplete)
                             }) {
                                 Text("Eksportuj do Excel (.xlsx)")
                             }
 
                             DropdownMenuItem(onClick = {
                                 showExportMenu = false
-                                generujRaportAkcja(coroutineScope, ExportType.PDF, probkaService)
+                                generujRaportAkcja(coroutineScope, ExportType.PDF, probkaService, onExportComplete)
                             }) {
                                 Text("Eksportuj do PDF")
                             }
@@ -209,6 +225,23 @@ fun FilterPanel(
                 }
             }
         }
+    }
+    showDialogState?.let { message ->
+        AlertDialog(
+            onDismissRequest = { showDialogState = null },
+            title = {
+                Text(
+                    text = if (message.startsWith("Sukces")) "Eksport zakończony pomyślnie 🎉" else "Wystąpił błąd ❌",
+                    color = if (message.startsWith("Sukces")) AppColors.Primary else AppColors.Error
+                )
+            },
+            text = { Text(message) },
+            confirmButton = {
+                Button(onClick = { showDialogState = null }) {
+                    Text("OK")
+                }
+            }
+        )
     }
 }
 

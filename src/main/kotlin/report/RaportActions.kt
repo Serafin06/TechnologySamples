@@ -15,7 +15,8 @@ enum class ExportType { EXCEL, PDF }
 fun generujRaportAkcja(
     scope: CoroutineScope,
     type: ExportType,
-    probkaService: ProbkaService
+    probkaService: ProbkaService,
+    onComplete: (success: Boolean, path: String) -> Unit
 ) {
     scope.launch(Dispatchers.Swing) { // Uruchamiamy w wątku Swing/UI
         val fileChooser = JFileChooser()
@@ -51,15 +52,21 @@ fun generujRaportAkcja(
                         val dane = raportService.przygotujDaneDoRaportu(filtr)
                         generator.generujReport(dane, finalPath)
                         println("Sukces! Raport zapisany.")
-                        // Tutaj można np. wywołać funkcję do wyświetlenia Toast w UI
+
+                        // 💡 WYWOŁANIE CALLBACK PO SUKCESIE
+                        onComplete(true, finalPath)
+
                     } catch (e: Exception) {
                         println("Błąd generowania raportu: ${e.message}")
                         e.printStackTrace()
+
+                        // 💡 WYWOŁANIE CALLBACK PO BŁĘDZIE
+                        onComplete(false, finalPath)
                     }
                 }
             }
         } else {
-            println("Anulowano zapis pliku.")
+            onComplete(false, "Anulowano")
         }
     }
 }
