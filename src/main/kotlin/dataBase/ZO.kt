@@ -165,5 +165,30 @@ data class ZO(
     val semafor: Boolean,
 
     @Column(name = "SEMAFOR2")
-    val semafor2: Int? = null
+    val semafor2: Int? = null,
+
+    // 💡 NOWE RELACJE JPA DLA OPTYMALIZACJI (JOIN FETCH)
+
+    // 1. Relacja do Technologia (Zakładamy, że jest to 0/1 do 1)
+    // Mapowanie przez kolumnę 'numer' w obu encjach
+    @OneToMany(fetch = FetchType.LAZY)
+    @JoinColumn(name = "NUMER", referencedColumnName = "NUMER", insertable = false, updatable = false)
+    val technologia: Set<Technologia>? = null,
+
+    // 2. Relacja do ZD (Drukowanie)
+    @OneToMany(fetch = FetchType.LAZY)
+    @JoinColumn(name = "NUMER", referencedColumnName = "NUMER", insertable = false, updatable = false)
+    val statusZD: Set<ZD>? = null,
+
+    // 3. Relacja do ZK (Krajarki)
+    @OneToMany(fetch = FetchType.LAZY)
+    @JoinColumn(name = "NUMER", referencedColumnName = "NUMER", insertable = false, updatable = false)
+    val statusZK: Set<ZK>? = null,
+
+    // 4. Relacja do ZL (Laminacja)
+    // ZL może mieć wiele pozycji (ZL1, ZL2, ...) stąd List<ZL>
+    @OneToMany(fetch = FetchType.LAZY)
+    @JoinColumn(name = "NUMER", referencedColumnName = "NUMER", insertable = false, updatable = false)
+    val statusZL: Set<ZL>? = null
+
 )
