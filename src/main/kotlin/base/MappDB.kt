@@ -1,11 +1,13 @@
 package base
 
+import androidx.compose.ui.graphics.painter.BitmapPainter
 import dataBase.Kontrahent
 import dataBase.Technologia
 import dataBase.ZD
 import dataBase.ZK
 import dataBase.ZL
 import dataBase.ZO
+import java.math.BigDecimal
 import java.time.LocalDateTime
 
 /**
@@ -148,3 +150,5 @@ class StatusResolver {
         (statusMap as MutableMap)[stan] = nazwa
     }
 }
+
+fun Int.toBigDecimalId(): BigDecimal = BigDecimal.valueOf(this.toLong())

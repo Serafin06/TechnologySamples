@@ -9,6 +9,7 @@ import dataBase.ZO
 import org.hibernate.Session
 import org.hibernate.SessionFactory
 import report.RaportFilter
+import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
@@ -26,8 +27,7 @@ interface ProbkaRepository {
     fun findZLByNumer(numer: Int): List<ZL>
     fun findTechnologiaNumer(numer: Int): Technologia?
     fun saveTechnologia(technologia: Technologia): Technologia
-
-    //fun findKontrahentById(id: Int): Kontrahent?
+    fun findKontrahentById(id: Int): Kontrahent?
     fun findReportData(filter: RaportFilter): List<ZO>
     fun testConnection()
 }
@@ -109,18 +109,17 @@ class ProbkaRepositoryImpl(private val sessionFactory: SessionFactory) : ProbkaR
         }
     }
 
-    /*
     override fun findKontrahentById(id: Int): Kontrahent? {
+        val idBig = id.toBigDecimalId()
         return useSession { session ->
             session.createQuery(
                 "FROM Kontrahent WHERE idKontrahenta = :id",
                 Kontrahent ::class.java
             ).apply {
-                setParameter("id", id)
+                setParameter("id",  idBig)
             }.uniqueResultOptional().orElse(null)
         }
     }
-    */
 
     override fun findReportData(filter: RaportFilter): List<ZO> {
         // Domyślny zakres 12 miesięcy, tak jak w oryginalnym kodzie

@@ -43,9 +43,9 @@ class ProbkaServiceImpl(
             val zlList = repository.findZLByNumer(zo.numer)
             val zkList = repository.findZKByNumer(zo.numer)
             val technologia = repository.findTechnologiaNumer(zo.numer)
-            //val kontrahent = repository.findKontrahentById(zo.idKontrahenta)
+            val kontrahent = repository.findKontrahentById(zo.idKontrahenta)
 
-            mapper.toProbkaDTO(zo, zdList, zlList, zkList,  technologia, null, statusResolver)
+            mapper.toProbkaDTO(zo, zdList, zlList, zkList,  technologia, kontrahent, statusResolver)
         }
     }
 
@@ -59,9 +59,9 @@ class ProbkaServiceImpl(
         val zlList = repository.findZLByNumer(numer)
         val zkList = repository.findZKByNumer(numer)
         val technologia = repository.findTechnologiaNumer(numer)
-        //val kontrahent = repository.findKontrahentById(zo.idKontrahenta)
+        val kontrahent = repository.findKontrahentById(zo.idKontrahenta)
 
-        return mapper.toProbkaDTO(zo, zdList, zlList,zkList, technologia, null,statusResolver)
+        return mapper.toProbkaDTO(zo, zdList, zlList,zkList, technologia, kontrahent, statusResolver)
     }
 
     override fun saveTechnologiaKolumny(
