@@ -79,7 +79,7 @@ fun FilterPanel(
                                 showExportMenu = false
                                 generujRaportAkcja(coroutineScope, ExportType.PDF, probkaService)
                             }) {
-                                Text("Eksportuj do PDF (Wkrótce)")
+                                Text("Eksportuj do PDF")
                             }
                         }
                     }

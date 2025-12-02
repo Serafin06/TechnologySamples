@@ -43,7 +43,7 @@ fun generujRaportAkcja(
                     val raportService = ReportService(probkaService)
                     val generator: ReportGenerator = when(type) {
                         ExportType.EXCEL -> ExcelReportGenerator()
-                        ExportType.PDF -> ExcelReportGenerator() // TODO: Zmień na PdfRaportGenerator
+                        ExportType.PDF -> PdfReportGenerator()
                     }
 
                     try {

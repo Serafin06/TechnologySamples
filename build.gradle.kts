@@ -41,6 +41,8 @@ dependencies {
 
     // export do Excela
     implementation("org.apache.poi:poi-ooxml:5.2.5")
+    // PDF
+    implementation("com.itextpdf:itextpdf:5.5.13.3")
 
     testImplementation(kotlin("test"))
 }
