@@ -4,7 +4,6 @@ import dataBase.Technologia
 import report.RaportFilter
 import report.ReportDTO
 import java.time.format.DateTimeFormatter
-import dataBase.ZO
 import report.StatusConverter
 
 /**
@@ -181,7 +180,7 @@ class ProbkaServiceImpl(
 
             report.ReportDTO(
                 numerZlecenia = zo.numer,
-                kontrahent = "Nieznany",
+                kontrahent = zo.kontrahent?.nazwa ?: "Nieznany",
                 nazwaProbki = zo.opis1 ?: "",
 
                 // Statusy (używamy statusu z ZO dla statusZO, ale w ReportDTO jest on usuwany w Excelu,

@@ -189,6 +189,9 @@ data class ZO(
     // ZL może mieć wiele pozycji (ZL1, ZL2, ...) stąd List<ZL>
     @OneToMany(fetch = FetchType.LAZY)
     @JoinColumn(name = "NUMER", referencedColumnName = "NUMER", insertable = false, updatable = false)
-    val statusZL: Set<ZL>? = null
+    val statusZL: Set<ZL>? = null,
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ID_KONTRAHENTA", referencedColumnName = "ID_KONTRAHENTA", insertable = false, updatable = false)
+    var kontrahent: Kontrahent? = null
 )

@@ -9,7 +9,6 @@ import dataBase.ZO
 import org.hibernate.Session
 import org.hibernate.SessionFactory
 import report.RaportFilter
-import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
@@ -28,6 +27,7 @@ interface ProbkaRepository {
     fun findTechnologiaNumer(numer: Int): Technologia?
     fun saveTechnologia(technologia: Technologia): Technologia
     fun findKontrahentById(id: Int): Kontrahent?
+    fun findKontrahenciByIds(ids: Collection<Int>): Map<Int, Kontrahent>
     fun findReportData(filter: RaportFilter): List<ZO>
     fun testConnection()
 }
@@ -121,46 +121,62 @@ class ProbkaRepositoryImpl(private val sessionFactory: SessionFactory) : ProbkaR
         }
     }
 
+    override fun findKontrahenciByIds(ids: Collection<Int>): Map<Int, Kontrahent> {
+        if (ids.isEmpty()) return emptyMap()
+        val idsBig = ids.map { it.toBigDecimalId() }
+        return useSession { session ->
+            val list = session.createQuery(
+                "FROM Kontrahent WHERE idKontrahenta IN :ids",
+                Kontrahent::class.java
+            ).setParameter("ids", idsBig).resultList
+            list.associateBy { it.idKontrahenta.intValueExact() } // klucz Int
+        }
+    }
+
     override fun findReportData(filter: RaportFilter): List<ZO> {
-        // Domyślny zakres 12 miesięcy, tak jak w oryginalnym kodzie
         val dateFrom = LocalDateTime.now().minus(12, ChronoUnit.MONTHS)
 
         val hql = StringBuilder()
         hql.append("SELECT zo FROM ZO zo ")
-        // Teraz te pola istnieją w Encji ZO i są ładowane jednym zapytaniem
         hql.append("LEFT JOIN FETCH zo.statusZD zd ")
         hql.append("LEFT JOIN FETCH zo.statusZK zk ")
         hql.append("LEFT JOIN FETCH zo.statusZL zl ")
-        hql.append("LEFT JOIN FETCH zo.technologia t ") // Używamy 'technologia'
+        hql.append("LEFT JOIN FETCH zo.technologia t ")
         hql.append("WHERE zo.proba = 1 AND zo.data >= :fromDate ")
 
-        // Dodajemy filtry bezpośrednio do HQL (filtr Oddziału)
         if (filter.oddzialNazwa != null) {
             hql.append("AND zo.oddzialW = :oddzialWCode ")
         }
-
-        // Dodajemy filtr 'tylkoOtwarte' (statusy 1 i 2)
         if (filter.tylkoOtwarte) {
             hql.append("AND zo.stan IN (1, 2) ")
         }
-
         hql.append("ORDER BY zo.data DESC")
 
         return useSession { session ->
-            session.createQuery(hql.toString(), ZO::class.java).apply {
+            val list = session.createQuery(hql.toString(), ZO::class.java).apply {
                 setParameter("fromDate", dateFrom)
                 if (filter.oddzialNazwa != null) {
-                    // 💡 MUSIMY PRZETŁUMACZYĆ NAZWĘ NA KOD LICZBOWY
                     val oddzialCode = when (filter.oddzialNazwa) {
                         "Tychy" -> 12.toByte()
                         "Ignatki" -> 11.toByte()
                         else -> throw IllegalArgumentException("Nieznana nazwa oddziału dla filtra: ${filter.oddzialNazwa}")
                     }
                     setParameter("oddzialWCode", oddzialCode)
-
                 }
-                // Hibernate/JPA automatycznie obsłuży dociągnięte kolekcje (ZK, ZL)
-            }.list()
+            }.resultList
+
+            // --- BATCH: zbierz unikalne id kontrahentów (Int)
+            val kontrahentIds: Set<Int> = list.mapNotNull { it.idKontrahenta }.toSet()
+
+            // pobierz wszystkie kontrahenty jednym zapytaniem i zmapuj na Int -> Kontrahent
+            val kontrahentMap: Map<Int, Kontrahent> = findKontrahenciByIds(kontrahentIds)
+
+            // przypisz kontrahenta do każdego ZO (transient pole)
+            list.forEach { zo ->
+                zo.kontrahent = kontrahentMap[zo.idKontrahenta]
+            }
+
+            list
         }
     }
 
