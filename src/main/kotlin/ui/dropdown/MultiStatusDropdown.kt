@@ -46,12 +46,12 @@ fun MultiStatusDropdown(
                     if (selectedStatuses.isNotEmpty()) {
                         IconButton(
                             onClick = { onStatusesChange(emptySet()) },
-                            modifier = Modifier.Companion.size(24.dp)
+                            modifier = Modifier.size(24.dp)
                         ) {
                             Icon(
                                 Icons.Default.Clear,
                                 contentDescription = "Wyczyść",
-                                modifier = Modifier.Companion.size(16.dp)
+                                modifier = Modifier.size(16.dp)
                             )
                         }
                     }
@@ -63,7 +63,7 @@ fun MultiStatusDropdown(
                     }
                 }
             },
-            modifier = Modifier.Companion.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth()
         )
 
         DropdownMenu(
@@ -82,16 +82,16 @@ fun MultiStatusDropdown(
                     }
                 ) {
                     Row(
-                        verticalAlignment = Alignment.Companion.CenterVertically,
+                        verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.Companion.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         Checkbox(
                             checked = selectedStatuses.contains(code),
                             onCheckedChange = null
                         )
                         StatusBadge(code, compact = true)
-                        Spacer(Modifier.Companion.width(4.dp))
+                        Spacer(Modifier.width(4.dp))
                         Text(name)
                     }
                 }
