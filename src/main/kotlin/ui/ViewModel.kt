@@ -98,23 +98,39 @@ class ProbkiViewModel(val probkaService: ProbkaService) {
                 probka.oddzialNazwa == it
             } ?: true
 
-            val matchesStanZO = filterState.stanZO?.let {
-                probka.statusZO?.stan == it
-            } ?: true
+            val matchesKontrahent = if (filterState.selectedKontrahenci.isEmpty()) {
+                true
+            } else {
+                filterState.selectedKontrahenci.contains(probka.kontrahentNazwa)
+            }
 
-            val matchesStanZK = filterState.stanZK?.let {
-                probka.statusZK?.stan == it
-            } ?: true
+            // WSZYSTKIE statusy jako multi-select
+            val matchesStanZO = if (filterState.selectedStatusZO.isEmpty()) {
+                true
+            } else {
+                probka.statusZO?.stan in filterState.selectedStatusZO
+            }
 
-            val matchesStanZD = filterState.stanZD?.let {
-                probka.statusZD?.stan == it
-            } ?: true
+            val matchesStanZK = if (filterState.selectedStatusZK.isEmpty()) {
+                true
+            } else {
+                probka.statusZK?.stan in filterState.selectedStatusZK
+            }
 
-            val matchesStanZL = filterState.stanZL?.let { expectedStan ->
-                probka.statusZL?.any { it.stan == expectedStan } ?: false
-            } ?: true
+            val matchesStanZD = if (filterState.selectedStatusZD.isEmpty()) {
+                true
+            } else {
+                probka.statusZD?.stan in filterState.selectedStatusZD
+            }
 
-            matchesSearch && matchesOddzial && matchesStanZO && matchesStanZK && matchesStanZD && matchesStanZL
+            val matchesStanZL = if (filterState.selectedStatusZL.isEmpty()) {
+                true
+            } else {
+                probka.statusZL?.any { it.stan in filterState.selectedStatusZL } == true
+            }
+
+            matchesSearch && matchesOddzial && matchesKontrahent &&
+                    matchesStanZO && matchesStanZK && matchesStanZD && matchesStanZL
         }
     }
 

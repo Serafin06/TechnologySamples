@@ -7,7 +7,7 @@ import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import base.ProbkaServiceFactory
 import dataBase.HibernateConfig
-import ui.ProbkiScreen
+import ui.panels.ProbkiScreen
 import ui.ProbkiViewModel
 
 

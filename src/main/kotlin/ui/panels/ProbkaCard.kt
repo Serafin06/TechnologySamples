@@ -1,4 +1,4 @@
-package ui
+package ui.panels
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
@@ -15,6 +15,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import base.FlagType
 import base.ProbkaDTO
+import ui.AppColors
+import ui.FlagIndicator
+import ui.NoteWithTooltip
+import ui.StatusBadge
+import ui.StatusDetailsExpanded
 
 /**
  * Kompaktowa karta próbki z możliwością edycji
@@ -49,55 +54,59 @@ fun ProbkaCard(
     var onConfirmAction by remember { mutableStateOf<() -> Unit>({}) }
 
     Card(
-        modifier = Modifier.fillMaxWidth(), elevation = 2.dp, shape = RoundedCornerShape(8.dp)
+        modifier = Modifier.Companion.fillMaxWidth(), elevation = 2.dp, shape = RoundedCornerShape(8.dp)
     ) {
-        Column(modifier = Modifier.padding(12.dp)) { // PADDING: główny padding karty
+        Column(modifier = Modifier.Companion.padding(12.dp)) { // PADDING: główny padding karty
 
             // ═══════════════════════════════════════════════════════
             // 1️⃣ HEADER - Wszystkie dane w jednej linii
             // ═══════════════════════════════════════════════════════
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.Companion.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.Companion.CenterVertically
             ) {
                 // Lewa część - wszystkie dane techniczne w jednej linii
                 Row(
-                    verticalAlignment = Alignment.CenterVertically,
+                    verticalAlignment = Alignment.Companion.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(10.dp), // ODSTĘP: między elementami
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.Companion.weight(1f)
                 ) {
                     Text(
-                        "#${probka.numer}", fontWeight = FontWeight.Bold, fontSize = 15.sp // ROZMIAR: numer
+                        "#${probka.numer}", fontWeight = FontWeight.Companion.Bold, fontSize = 15.sp // ROZMIAR: numer
                     )
                     Text(
-                        probka.oddzialNazwa, color = Color.Gray, fontSize = 12.sp // ROZMIAR: oddział
+                        probka.oddzialNazwa, color = Color.Companion.Gray, fontSize = 12.sp // ROZMIAR: oddział
                     )
                     Text(
-                        probka.dataZamowienia.toString().take(10), color = Color.Gray, fontSize = 11.sp // ROZMIAR: data
+                        probka.dataZamowienia.toString().take(10),
+                        color = Color.Companion.Gray,
+                        fontSize = 11.sp // ROZMIAR: data
                     )
                     probka.art?.let {
-                        Text(it, fontSize = 12.sp, color = Color.DarkGray)
+                        Text(it, fontSize = 12.sp, color = Color.Companion.DarkGray)
                     }
                     probka.receptura?.let {
-                        Text(it, fontSize = 12.sp, color = Color.DarkGray)
+                        Text(it, fontSize = 12.sp, color = Color.Companion.DarkGray)
                     }
                     probka.szerokosc?.let {
-                        Text("${it}mm", fontSize = 11.sp, color = Color.DarkGray)
+                        Text("${it}mm", fontSize = 11.sp, color = Color.Companion.DarkGray)
                     }
                     probka.statusZO?.let {
                         Text(
-                            "${it.ilosc?.toInt() ?: 0}${probka.jm ?: ""}", fontSize = 11.sp, color = Color.DarkGray
+                            "${it.ilosc?.toInt() ?: 0}${probka.jm ?: ""}",
+                            fontSize = 11.sp,
+                            color = Color.Companion.DarkGray
                         )
                     }
                     // Grubości z jednostką
                     listOfNotNull(probka.grubosc11, probka.grubosc21, probka.grubosc31).filter { it.isNotBlank() }
                         .joinToString("/").takeIf { it.isNotBlank() }?.let {
-                            Text("${it}μm", fontSize = 11.sp, color = Color.Gray) // ROZMIAR: grubości
+                            Text("${it}μm", fontSize = 11.sp, color = Color.Companion.Gray) // ROZMIAR: grubości
                         }
                 }
                 Row(
-                    verticalAlignment = Alignment.CenterVertically,
+                    verticalAlignment = Alignment.Companion.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     // Flaga Wyprodukowano (automatyczna - tylko podgląd)
@@ -159,12 +168,12 @@ fun ProbkaCard(
                     // Przycisk rozwijania
                     IconButton(
                         onClick = { expanded = !expanded },
-                        modifier = Modifier.size(28.dp)
+                        modifier = Modifier.Companion.size(28.dp)
                     ) {
                         Icon(
                             if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                             contentDescription = "Rozwiń",
-                            modifier = Modifier.size(16.dp)
+                            modifier = Modifier.Companion.size(16.dp)
                         )
                     }
                 }
@@ -176,14 +185,14 @@ fun ProbkaCard(
             // ═══════════════════════════════════════════════════════
             // Nazwa kontrahenta
             Row(
-                verticalAlignment = Alignment.CenterVertically,
+                verticalAlignment = Alignment.Companion.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp) // ODSTĘP: kontrahent-nazwa
             ) {
                 // Kontrahent
                 Text(
                     probka.kontrahentNazwa,
                     fontSize = 15.sp, // ROZMIAR: kontrahent
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.Companion.Bold,
                     color = AppColors.Primary // KOLOR: niebieski
                 )
 
@@ -192,51 +201,51 @@ fun ProbkaCard(
                     Text(
                         it,
                         fontSize = 12.sp, // ROZMIAR: nazwa próbki
-                        fontWeight = FontWeight.Medium,
-                        color = Color.DarkGray
+                        fontWeight = FontWeight.Companion.Medium,
+                        color = Color.Companion.DarkGray
                     )
                 }
             }
 
-            Spacer(Modifier.height(4.dp)) // ODSTĘP: przed sekcją główną
+            Spacer(Modifier.Companion.height(4.dp)) // ODSTĘP: przed sekcją główną
 
             // ═══════════════════════════════════════════════════════
             // 3️⃣ STATUSY (lewo 2x2) + NOTATKI (prawo w kolumnach)
             // ═══════════════════════════════════════════════════════
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.Companion.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp) // ODSTĘP: statusy-notatki
             ) {
                 // LEWA STRONA - Statusy 2x2 (30%)
                 Column(
-                    modifier = Modifier.weight(0.2f),
+                    modifier = Modifier.Companion.weight(0.2f),
                     verticalArrangement = Arrangement.spacedBy(4.dp) // ODSTĘP: między rzędami statusów
                 ) {
                     // Rząd 1
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.Companion.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(4.dp) // ODSTĘP: między statusami w rzędzie
                     ) {
                         probka.statusZO?.let {
-                            StatusBadge("Zlecenie", it, Modifier.weight(1f))
+                            StatusBadge("Zlecenie", it, Modifier.Companion.weight(1f))
                         }
                         probka.statusZD?.let {
-                            StatusBadge("Drukowanie", it, Modifier.weight(1f))
+                            StatusBadge("Drukowanie", it, Modifier.Companion.weight(1f))
                         }
                     }
 
                     // Rząd 2
                     Row(
-                        modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        modifier = Modifier.Companion.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         // ZL - pokaż wszystkie zlecenia lub puste miejsce
                         if (probka.statusZL != null && probka.statusZL.isNotEmpty()) {
                             if (probka.statusZL.size == 1) {
-                                StatusBadge("Laminacja", probka.statusZL[0], Modifier.weight(1f))
+                                StatusBadge("Laminacja", probka.statusZL[0], Modifier.Companion.weight(1f))
                             } else {
                                 // 2 lub więcej zleceń - używamy ROW, żeby podzielić kostkę w poziomie
                                 Row(
-                                    modifier = Modifier.weight(1f), // Ta cała sekcja nadal zajmuje 50% głównego wiersza
+                                    modifier = Modifier.Companion.weight(1f), // Ta cała sekcja nadal zajmuje 50% głównego wiersza
                                     horizontalArrangement = Arrangement.spacedBy(4.dp) // Dodajemy odstęp między mniejszymi kostkami
                                 ) {
                                     // Używamy Modifier.weight(1f) na KAŻDYM elemencie, żeby podzielić szerokość ROW po równo
@@ -244,7 +253,7 @@ fun ProbkaCard(
                                         StatusBadge(
                                             "Laminacja ${index + 1}",
                                             status,
-                                            Modifier.weight(1f) // Dzieli wewnętrzny Row na pół (50% / 50%)
+                                            Modifier.Companion.weight(1f) // Dzieli wewnętrzny Row na pół (50% / 50%)
                                         )
                                     }
                                 }
@@ -252,44 +261,47 @@ fun ProbkaCard(
                         }
 
                         probka.statusZK?.let {
-                            StatusBadge("Krajarki", it, Modifier.weight(1f))
+                            StatusBadge("Krajarki", it, Modifier.Companion.weight(1f))
                         }
                     }
                 }
 
                 // PRAWA STRONA - Notatki w kolumnach (70%)
-                Column(modifier = Modifier.weight(0.7f)) {
+                Column(modifier = Modifier.Companion.weight(0.7f)) {
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.Companion.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.Companion.CenterVertically
                     ) {
                         Text(
-                            "Notatki technologiczne", fontWeight = FontWeight.Bold, fontSize = 11.sp, // ROZMIAR: tytuł
-                            color = Color.Gray
+                            "Notatki technologiczne",
+                            fontWeight = FontWeight.Companion.Bold,
+                            fontSize = 11.sp, // ROZMIAR: tytuł
+                            color = Color.Companion.Gray
                         )
 
                         Row {
                             if (!editMode) {
                                 IconButton(
-                                    onClick = { notesExpanded = !notesExpanded }, modifier = Modifier.size(24.dp)
+                                    onClick = { notesExpanded = !notesExpanded },
+                                    modifier = Modifier.Companion.size(24.dp)
                                 ) {
                                     Icon(
                                         if (notesExpanded) Icons.Default.UnfoldLess else Icons.Default.UnfoldMore,
                                         contentDescription = "Rozwiń notatki",
-                                        modifier = Modifier.size(14.dp)
+                                        modifier = Modifier.Companion.size(14.dp)
                                     )
                                 }
                             }
 
                             if (onTechnologiaSave != null) {
                                 IconButton(
-                                    onClick = { editMode = !editMode }, modifier = Modifier.size(24.dp)
+                                    onClick = { editMode = !editMode }, modifier = Modifier.Companion.size(24.dp)
                                 ) {
                                     Icon(
                                         if (editMode) Icons.Default.Close else Icons.Default.Edit,
                                         contentDescription = "Edytuj",
-                                        modifier = Modifier.size(14.dp)
+                                        modifier = Modifier.Companion.size(14.dp)
                                     )
                                 }
                             }
@@ -312,7 +324,7 @@ fun ProbkaCard(
                         }
                     }
 
-                    Spacer(Modifier.height(4.dp))
+                    Spacer(Modifier.Companion.height(4.dp))
 
                     if (editMode && onTechnologiaSave != null) {
                         // TRYB EDYCJI - 2 kolumny
@@ -326,7 +338,7 @@ fun ProbkaCard(
                                     value = technologia1,
                                     onValueChange = { technologia1 = it },
                                     label = { Text("Opis", fontSize = 9.sp) },
-                                    modifier = Modifier.weight(1f),
+                                    modifier = Modifier.Companion.weight(1f),
                                     singleLine = false,
                                     maxLines = 2,
                                     textStyle = LocalTextStyle.current.copy(fontSize = 10.sp) // ROZMIAR: tekst pola
@@ -336,7 +348,7 @@ fun ProbkaCard(
                                     value = technologia2,
                                     onValueChange = { technologia2 = it },
                                     label = { Text("Dodatkowe informacje", fontSize = 9.sp) },
-                                    modifier = Modifier.weight(1f),
+                                    modifier = Modifier.Companion.weight(1f),
                                     singleLine = false,
                                     maxLines = 2,
                                     textStyle = LocalTextStyle.current.copy(fontSize = 10.sp)
@@ -350,7 +362,7 @@ fun ProbkaCard(
                                     value = technologia3,
                                     onValueChange = { technologia3 = it },
                                     label = { Text("Uwagi", fontSize = 9.sp) },
-                                    modifier = Modifier.weight(1f),
+                                    modifier = Modifier.Companion.weight(1f),
                                     singleLine = false,
                                     maxLines = 2,
                                     textStyle = LocalTextStyle.current.copy(fontSize = 10.sp)
@@ -360,7 +372,7 @@ fun ProbkaCard(
                                     value = technologia4,
                                     onValueChange = { technologia4 = it },
                                     label = { Text("Testy", fontSize = 9.sp) },
-                                    modifier = Modifier.weight(1f),
+                                    modifier = Modifier.Companion.weight(1f),
                                     singleLine = false,
                                     maxLines = 2,
                                     textStyle = LocalTextStyle.current.copy(fontSize = 10.sp)
@@ -376,11 +388,15 @@ fun ProbkaCard(
                                         technologia4.ifBlank { null })
                                     editMode = false
                                 },
-                                modifier = Modifier.fillMaxWidth(),
+                                modifier = Modifier.Companion.fillMaxWidth(),
                                 contentPadding = PaddingValues(vertical = 6.dp) // PADDING: przycisk
                             ) {
-                                Icon(Icons.Default.Save, contentDescription = null, modifier = Modifier.size(12.dp))
-                                Spacer(Modifier.width(4.dp))
+                                Icon(
+                                    Icons.Default.Save,
+                                    contentDescription = null,
+                                    modifier = Modifier.Companion.size(12.dp)
+                                )
+                                Spacer(Modifier.Companion.width(4.dp))
                                 Text("Zapisz", fontSize = 10.sp)
                             }
                         }
@@ -392,19 +408,34 @@ fun ProbkaCard(
                             Row(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp) // ODSTĘP: między kolumnami
                             ) {
-                                NoteWithTooltip("Opis", probka.opis ?: "-", notesExpanded, Modifier.weight(1f))
+                                NoteWithTooltip(
+                                    "Opis",
+                                    probka.opis ?: "-",
+                                    notesExpanded,
+                                    Modifier.Companion.weight(1f)
+                                )
                                 NoteWithTooltip(
                                     "Dodatkowe informacje",
                                     probka.dodtkoweInformacje ?: "-",
                                     notesExpanded,
-                                    Modifier.weight(1f)
+                                    Modifier.Companion.weight(1f)
                                 )
                             }
                             Row(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                NoteWithTooltip("Uwagi", probka.uwagi ?: "-", notesExpanded, Modifier.weight(1f))
-                                NoteWithTooltip("Testy", probka.testy ?: "-", notesExpanded, Modifier.weight(1f))
+                                NoteWithTooltip(
+                                    "Uwagi",
+                                    probka.uwagi ?: "-",
+                                    notesExpanded,
+                                    Modifier.Companion.weight(1f)
+                                )
+                                NoteWithTooltip(
+                                    "Testy",
+                                    probka.testy ?: "-",
+                                    notesExpanded,
+                                    Modifier.Companion.weight(1f)
+                                )
                             }
                         }
                     }
@@ -416,14 +447,14 @@ fun ProbkaCard(
             // 4️⃣ SZCZEGÓŁY - Rozwijane szczegółowe statusy
             // ═══════════════════════════════════════════════════════
             if (expanded) {
-                Spacer(Modifier.height(10.dp))
+                Spacer(Modifier.Companion.height(10.dp))
                 Divider()
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.Companion.height(8.dp))
 
                 Text(
-                    "Szczegóły statusów", fontWeight = FontWeight.Bold, fontSize = 12.sp
+                    "Szczegóły statusów", fontWeight = FontWeight.Companion.Bold, fontSize = 12.sp
                 )
-                Spacer(Modifier.height(6.dp))
+                Spacer(Modifier.Companion.height(6.dp))
 
                 // Szczegółowe statusy z ilościami
                 probka.statusZO?.let { StatusDetailsExpanded("Zlecenie", it) }
@@ -440,5 +471,3 @@ fun ProbkaCard(
         }
     }
 }
-
-

@@ -24,10 +24,13 @@ object AppColors {
 data class FilterState(
     val searchQuery: String = "",
     val oddzial: String? = null,
-    val stanZO: Byte? = null,
-    val stanZK: Byte? = null,
-    val stanZD: Byte? = null,
-    val stanZL: Byte? = null,
+
+    val selectedStatusZO: Set<Byte> = emptySet(),
+    val selectedStatusZK: Set<Byte> = emptySet(),
+    val selectedStatusZD: Set<Byte> = emptySet(),
+    val selectedStatusZL: Set<Byte> = emptySet(),
+    val selectedKontrahenci: Set<String> = emptySet(),
+
     val dateRange: DateRange = DateRange.SIX_MONTHS,
     val customDateFrom: LocalDateTime? = null,
     val customDateTo: LocalDateTime? = null

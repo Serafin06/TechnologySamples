@@ -15,6 +15,7 @@ interface ProbkaService {
     fun saveTechnologiaKolumny(numer: Int, k1: String?, k2: String?, k3: String?, k4: String?): Boolean
     fun updateFlag(numer: Int, flagType: FlagType, value: Boolean): Boolean
     fun initializeProduceFlags()
+    fun getAvailableKontrahenci(): List<String>
     fun getDaneDoRaportu(filter: RaportFilter): List<ReportDTO>
     fun testConnection(): Boolean
 }
@@ -160,6 +161,19 @@ class ProbkaServiceImpl(
                 repository.saveTechnologia(updated)
             }
         }
+    }
+
+    override fun getAvailableKontrahenci(): List<String> {
+        val probkiZO = repository.findProbkiZO()
+        val uniqueIds = probkiZO.map { it.idKontrahenta }.distinct()
+
+        // Użyj istniejącej metody findKontrahenciByIds
+        val kontrahenciMap = repository.findKontrahenciByIds(uniqueIds)
+
+        return kontrahenciMap.values
+            .mapNotNull { it.nazwa }
+            .distinct()
+            .sorted()
     }
 
     override fun getDaneDoRaportu(filter: RaportFilter): List<report.ReportDTO> {

@@ -47,10 +47,10 @@ class PdfReportGenerator : ReportGenerator {
 
         // Nagłówki
         val headers = listOf(
-            "Numer", "Kontrahent", "Nazwa Próbki",
-            "Termin", "Drukowanie", "Laminacja 1", "Laminacja 2", "Krajarki",
-            "Art", "Receptura", "Szerokość",
-            "Grubość 1", "Grubość 2", "Grubość 3",
+            "Numer zlecenia", "Kontrahent", "Nazwa",
+            "Termin", "Druk", "Lam1", "Lam2", "Krajarki",
+            "KIW", "Receptura", "Szerokość",
+            "Grubość1", "Grubość2", "Grubość3",
             "Opis", "Info Dodatkowe"
         )
 

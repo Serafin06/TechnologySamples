@@ -1,4 +1,4 @@
-package ui
+package ui.panels
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -14,7 +14,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import base.ProbkaService
-import base.StatusResolver
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import report.ExportType
@@ -22,9 +21,11 @@ import report.generujRaportAkcja
 import ui.AppColors
 import ui.DateRange
 import ui.FilterState
-
-
-// 🔍 Filter Panel
+import ui.dropdown.DatePickerField
+import ui.dropdown.DateRangeDropdown
+import ui.dropdown.KontrahentDropdown
+import ui.dropdown.MultiStatusDropdown
+import ui.dropdown.OddzialDropdown
 
 @Composable
 fun FilterPanel(
@@ -51,7 +52,7 @@ fun FilterPanel(
 
 
     Card(
-        modifier = Modifier
+        modifier = Modifier.Companion
             .fillMaxWidth()
             .padding(8.dp),
         elevation = 2.dp,
@@ -60,14 +61,14 @@ fun FilterPanel(
         Column {
             // Header z przyciskiem zwiń/rozwiń
             Row(
-                modifier = Modifier.fillMaxWidth().background(AppColors.Surface).padding(4.dp),
+                modifier = Modifier.Companion.fillMaxWidth().background(AppColors.Surface).padding(4.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
+                verticalAlignment = Alignment.Companion.CenterVertically,
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(verticalAlignment = Alignment.Companion.CenterVertically) {
                     Icon(Icons.AutoMirrored.Filled.ManageSearch, contentDescription = null, tint = AppColors.Primary)
-                    Spacer(Modifier.width(4.dp))
-                    Text("Filtry", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Spacer(Modifier.Companion.width(4.dp))
+                    Text("Filtry", fontWeight = FontWeight.Companion.Bold, fontSize = 16.sp)
                 }
 
                 Row {
@@ -120,7 +121,7 @@ fun FilterPanel(
                     onValueChange = { onFilterChange(filterState.copy(searchQuery = it)) },
                     label = { Text("Szukaj (numer, ART, receptura)") },
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                    modifier = Modifier.fillMaxWidth().padding(10.dp),
+                    modifier = Modifier.Companion.fillMaxWidth().padding(10.dp),
                     colors = TextFieldDefaults.outlinedTextFieldColors(backgroundColor = AppColors.Surface),
                     singleLine = true
                 )
@@ -128,15 +129,15 @@ fun FilterPanel(
                 DateRangeDropdown(
                     selectedRange = filterState.dateRange,
                     onRangeSelected = { onFilterChange(filterState.copy(dateRange = it)) },
-                    modifier = Modifier.fillMaxWidth().padding(10.dp),
+                    modifier = Modifier.Companion.fillMaxWidth().padding(10.dp),
                 )
 
                 // Jeśli wybrano CUSTOM, pokaż pola dat
                 if (filterState.dateRange == DateRange.CUSTOM) {
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.Companion.height(8.dp))
 
                     Row(
-                        modifier = Modifier.fillMaxWidth().padding(10.dp),
+                        modifier = Modifier.Companion.fillMaxWidth().padding(10.dp),
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         DatePickerField(
@@ -145,7 +146,7 @@ fun FilterPanel(
                             onDateChange = {
                                 onFilterChange(filterState.copy(customDateFrom = it))
                             },
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.Companion.weight(1f)
                         )
 
                         DatePickerField(
@@ -154,72 +155,83 @@ fun FilterPanel(
                             onDateChange = {
                                 onFilterChange(filterState.copy(customDateTo = it))
                             },
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.Companion.weight(1f)
                         )
                     }
                 }
 
-                Spacer(Modifier.height(2.dp))
+                Spacer(Modifier.Companion.height(2.dp))
 
-                // Oddział i Status ZO
+                // Oddział, kontahent i Status ZO
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(10.dp),
+                    modifier = Modifier.Companion.fillMaxWidth().padding(10.dp),
                     horizontalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
                     OddzialDropdown(
                         selectedOddzial = filterState.oddzial,
                         onOddzialSelected = { onFilterChange(filterState.copy(oddzial = it)) },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.Companion.weight(1f)
                     )
 
-                    StatusDropdown(
-                        label = "Status ZO",
-                        selectedStatus = filterState.stanZO,
-                        onStatusSelected = { onFilterChange(filterState.copy(stanZO = it)) },
-                        modifier = Modifier.weight(1f)
+                    KontrahentDropdown(
+                        availableKontrahenci = probkaService.getAvailableKontrahenci(), // Dodaj tę metodę
+                        selectedKontrahenci = filterState.selectedKontrahenci,
+                        onKontrahenciChange = { onFilterChange(filterState.copy(selectedKontrahenci = it)) },
+                        modifier = Modifier.Companion.weight(1f)
                     )
+
+                    MultiStatusDropdown(
+                        label = "Status Zlecenia",
+                        selectedStatuses = filterState.selectedStatusZO,
+                        onStatusesChange = { onFilterChange(filterState.copy(selectedStatusZO = it)) },
+                        modifier = Modifier.Companion.weight(1f)
+                    )
+
+
                 }
 
-                Spacer(Modifier.height(2.dp))
+                Spacer(Modifier.Companion.height(2.dp))
 
                 // Statusy ZD, ZL, ZK
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(10.dp),
+                    modifier = Modifier.Companion.fillMaxWidth().padding(10.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    StatusDropdown(
-                        label = "Status ZK",
-                        selectedStatus = filterState.stanZK,
-                        onStatusSelected = { onFilterChange(filterState.copy(stanZK = it)) },
-                        modifier = Modifier.weight(1f)
+                    MultiStatusDropdown(
+                        label = "Status Drukarnia",
+                        selectedStatuses = filterState.selectedStatusZD,
+                        onStatusesChange = { onFilterChange(filterState.copy(selectedStatusZD = it)) },
+                        modifier = Modifier.Companion.weight(1f)
                     )
 
-                    StatusDropdown(
-                        label = "Status ZD",
-                        selectedStatus = filterState.stanZD,
-                        onStatusSelected = { onFilterChange(filterState.copy(stanZD = it)) },
-                        modifier = Modifier.weight(1f)
+                    MultiStatusDropdown(
+                        label = "Status Laminacja",
+                        selectedStatuses = filterState.selectedStatusZL,
+                        onStatusesChange = { onFilterChange(filterState.copy(selectedStatusZL = it)) },
+                        modifier = Modifier.Companion.weight(1f)
                     )
 
-                    StatusDropdown(
-                        label = "Status ZL",
-                        selectedStatus = filterState.stanZL,
-                        onStatusSelected = { onFilterChange(filterState.copy(stanZL = it)) },
-                        modifier = Modifier.weight(1f)
+                    MultiStatusDropdown(
+                        label = "Status Krajarki",
+                        selectedStatuses = filterState.selectedStatusZK,
+                        onStatusesChange = { onFilterChange(filterState.copy(selectedStatusZK = it)) },
+                        modifier = Modifier.Companion.weight(1f)
                     )
+
+
                 }
 
-                Spacer(Modifier.height(6.dp))
+                Spacer(Modifier.Companion.height(6.dp))
 
                 // Przycisk czyszczenia filtrów
                 if (filterState != FilterState()) {
-                    Spacer(Modifier.height(12.dp))
+                    Spacer(Modifier.Companion.height(12.dp))
                     TextButton(
                         onClick = { onFilterChange(FilterState()) },
-                        modifier = Modifier.align(Alignment.End)
+                        modifier = Modifier.Companion.align(Alignment.Companion.End)
                     ) {
-                        Icon(Icons.Default.Clear, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(Modifier.width(4.dp))
+                        Icon(Icons.Default.Clear, contentDescription = null, modifier = Modifier.Companion.size(16.dp))
+                        Spacer(Modifier.Companion.width(4.dp))
                         Text("Wyczyść filtry")
                     }
                 }
@@ -244,4 +256,3 @@ fun FilterPanel(
         )
     }
 }
-

@@ -1,10 +1,17 @@
-package ui
+package ui.panels
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.material.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Scaffold
+import androidx.compose.material.lightColors
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import ui.AppColors
+import ui.ProbkiViewModel
 
 @Composable
 fun ProbkiScreen(viewModel: ProbkiViewModel) {
@@ -19,12 +26,15 @@ fun ProbkiScreen(viewModel: ProbkiViewModel) {
         )
     ) {
         Scaffold(
-            topBar = { TopAppBar(connectionStatus = viewModel.connectionStatus,
+            topBar = {
+                TopAppBar(
+                    connectionStatus = viewModel.connectionStatus,
                     lastCheck = viewModel.lastConnectionCheck,
-                    onConnectionCheck = { viewModel.checkDatabaseConnection() }) }
+                    onConnectionCheck = { viewModel.checkDatabaseConnection() })
+            }
         ) { padding ->
             Column(
-                modifier = Modifier
+                modifier = Modifier.Companion
                     .fillMaxSize()
                     .padding(padding)
                     .background(AppColors.Background)
@@ -44,6 +54,7 @@ fun ProbkiScreen(viewModel: ProbkiViewModel) {
                         progress = viewModel.loadingProgress,
                         message = viewModel.loadingMessage
                     )
+
                     viewModel.errorMessage != null -> ErrorScreen(viewModel.errorMessage!!)
                     viewModel.filteredProbki.isEmpty() -> EmptyScreen()
                     else -> ProbkiList(

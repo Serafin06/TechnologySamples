@@ -1,33 +1,37 @@
-package ui
+package ui.panels
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.TooltipArea
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Science
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import ui.AppColors
+import ui.ConnectionStatus
+import java.time.LocalDateTime
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun TopAppBar(
     connectionStatus: ConnectionStatus,
-    lastCheck: java.time.LocalDateTime?,
+    lastCheck: LocalDateTime?,
     onConnectionCheck: () -> Unit
 ) {
     TopAppBar(
         title = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(verticalAlignment = Alignment.Companion.CenterVertically) {
                 Icon(Icons.Default.Science, contentDescription = null)
-                Spacer(Modifier.width(8.dp))
+                Spacer(Modifier.Companion.width(8.dp))
                 Text("Technologia - Zarządzanie Próbkami")
             }
         },
@@ -36,30 +40,30 @@ fun TopAppBar(
             TooltipArea(
                 tooltip = {
                     Surface(
-                        modifier = Modifier.shadow(4.dp),
-                        shape = androidx.compose.foundation.shape.RoundedCornerShape(4.dp),
+                        modifier = Modifier.Companion.shadow(4.dp),
+                        shape = RoundedCornerShape(4.dp),
                         color = Color(0xFF424242)
                     ) {
-                        Column(modifier = Modifier.padding(8.dp)) {
+                        Column(modifier = Modifier.Companion.padding(8.dp)) {
                             Text(
                                 text = when (connectionStatus) {
                                     ConnectionStatus.CONNECTED -> "Połączono z bazą"
                                     ConnectionStatus.DISCONNECTED -> "Brak połączenia"
                                     ConnectionStatus.CHECKING -> "Sprawdzanie..."
                                 },
-                                color = Color.White,
+                                color = Color.Companion.White,
                                 fontSize = 11.sp
                             )
                             lastCheck?.let {
                                 Text(
                                     text = "Ostatnie: ${it.toString().take(16)}",
-                                    color = Color.LightGray,
+                                    color = Color.Companion.LightGray,
                                     fontSize = 9.sp
                                 )
                             }
                             Text(
                                 text = "Kliknij aby odświeżyć",
-                                color = Color.LightGray,
+                                color = Color.Companion.LightGray,
                                 fontSize = 9.sp
                             )
                         }
@@ -68,7 +72,7 @@ fun TopAppBar(
                 delayMillis = 300
             ) {
                 Surface(
-                    modifier = Modifier
+                    modifier = Modifier.Companion
                         .size(32.dp)
                         .clickable { onConnectionCheck() }
                         .padding(8.dp),
@@ -76,15 +80,15 @@ fun TopAppBar(
                     color = when (connectionStatus) {
                         ConnectionStatus.CONNECTED -> AppColors.StatusCompleted // Zielony
                         ConnectionStatus.DISCONNECTED -> AppColors.Error // Czerwony
-                        ConnectionStatus.CHECKING -> Color.Gray // Szary
+                        ConnectionStatus.CHECKING -> Color.Companion.Gray // Szary
                     }
                 ) {
-                    Box(contentAlignment = Alignment.Center) {
+                    Box(contentAlignment = Alignment.Companion.Center) {
                         if (connectionStatus == ConnectionStatus.CHECKING) {
                             CircularProgressIndicator(
-                                modifier = Modifier.size(16.dp),
+                                modifier = Modifier.Companion.size(16.dp),
                                 strokeWidth = 2.dp,
-                                color = Color.White
+                                color = Color.Companion.White
                             )
                         }
                     }

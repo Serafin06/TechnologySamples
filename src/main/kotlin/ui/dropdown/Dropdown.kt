@@ -1,4 +1,4 @@
-package ui
+package ui.dropdown
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -6,20 +6,18 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import ui.AppColors
+import ui.DateRange
 import java.time.LocalDateTime
-
-// 🏢 Dropdown Components
 
 @Composable
 fun OddzialDropdown(
     selectedOddzial: String?,
     onOddzialSelected: (String?) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier.Companion
 ) {
     var expanded by remember { mutableStateOf(false) }
     val oddzialy = listOf("Ignatki", "Tychy")
@@ -30,7 +28,10 @@ fun OddzialDropdown(
             onValueChange = {},
             readOnly = true,
             label = { Text("Zakład") },
-            colors = TextFieldDefaults.outlinedTextFieldColors(backgroundColor = AppColors.Surface, textColor = Color.Black),
+            colors = TextFieldDefaults.outlinedTextFieldColors(
+                backgroundColor = AppColors.Surface,
+                textColor = Color.Companion.Black
+            ),
             trailingIcon = {
                 IconButton(onClick = { expanded = !expanded }) {
                     Icon(
@@ -39,7 +40,7 @@ fun OddzialDropdown(
                     )
                 }
             },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.Companion.fillMaxWidth()
         )
 
         DropdownMenu(
@@ -65,70 +66,10 @@ fun OddzialDropdown(
 }
 
 @Composable
-fun StatusDropdown(
-    label: String,
-    selectedStatus: Byte?,
-    onStatusSelected: (Byte?) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    var expanded by remember { mutableStateOf(false) }
-    val statusy = mapOf(
-        0.toByte() to "Wykonane",
-        1.toByte() to "Do realizacji",
-        2.toByte() to "Zaplanowane",
-        3.toByte() to "Wstrzymane",
-        4.toByte() to "Anulowane"
-    )
-
-    Box(modifier = modifier) {
-        OutlinedTextField(
-            value = selectedStatus?.let { statusy[it] } ?: "Wszystkie",
-            onValueChange = {},
-            readOnly = true,
-            label = { Text(label) },
-            colors = TextFieldDefaults.outlinedTextFieldColors(backgroundColor = AppColors.Surface, textColor = Color.Black),
-            trailingIcon = {
-                IconButton(onClick = { expanded = !expanded }) {
-                    Icon(
-                        if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                        contentDescription = null
-                    )
-                }
-            },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
-            DropdownMenuItem(onClick = {
-                onStatusSelected(null)
-                expanded = false
-            }) {
-                Text("Wszystkie")
-            }
-            statusy.forEach { (stan, nazwa) ->
-                DropdownMenuItem(onClick = {
-                    onStatusSelected(stan)
-                    expanded = false
-                }) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        StatusBadge(stan, compact = true)
-                        Spacer(Modifier.width(8.dp))
-                        Text(nazwa)
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
 fun DateRangeDropdown(
     selectedRange: DateRange,
-    onRangeSelected: (ui.DateRange) -> Unit,
-    modifier: Modifier = Modifier
+    onRangeSelected: (DateRange) -> Unit,
+    modifier: Modifier = Modifier.Companion
     ) {
     var expanded by remember { mutableStateOf(false) }
 
@@ -138,22 +79,25 @@ fun DateRangeDropdown(
             onValueChange = {},
             readOnly = true,
             label = { Text("Zakres danych") },
-            colors = TextFieldDefaults.outlinedTextFieldColors(backgroundColor = _root_ide_package_.ui.AppColors.Surface, disabledLabelColor = Color.Black),
+            colors = TextFieldDefaults.outlinedTextFieldColors(
+                backgroundColor = AppColors.Surface,
+                disabledLabelColor = Color.Companion.Black
+            ),
             trailingIcon = {
                 Icon(
                     Icons.Default.ArrowDropDown,
                     contentDescription = null,
-                    modifier = Modifier.clickable { expanded = true }
+                    modifier = Modifier.Companion.clickable { expanded = true }
                 )
             },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.Companion.fillMaxWidth()
         )
 
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false }
         ) {
-            _root_ide_package_.ui.DateRange.values().forEach { range ->
+            DateRange.values().forEach { range ->
                 DropdownMenuItem(
                     onClick = {
                         onRangeSelected(range)
@@ -173,7 +117,7 @@ fun DatePickerField(
     label: String,
     date: LocalDateTime?,
     onDateChange: (LocalDateTime?) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier.Companion
 ) {
     var showDialog by remember { mutableStateOf(false) }
 
@@ -182,18 +126,21 @@ fun DatePickerField(
         onValueChange = {},
         readOnly = true,
         label = { Text(label) },
-        colors = TextFieldDefaults.outlinedTextFieldColors(backgroundColor = _root_ide_package_.ui.AppColors.Surface, textColor = Color.Black),
+        colors = TextFieldDefaults.outlinedTextFieldColors(
+            backgroundColor = AppColors.Surface,
+            textColor = Color.Companion.Black
+        ),
         trailingIcon = {
             Row {
                 if (date != null) {
                     IconButton(
                         onClick = { onDateChange(null) },
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.Companion.size(24.dp)
                     ) {
                         Icon(
                             Icons.Default.Clear,
                             contentDescription = "Wyczyść",
-                            modifier = Modifier.size(16.dp)
+                            modifier = Modifier.Companion.size(16.dp)
                         )
                     }
                 }
@@ -234,26 +181,26 @@ fun SimpleDatePickerDialog(
         text = {
             Column {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.Companion.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     OutlinedTextField(
                         value = year.toString(),
                         onValueChange = { year = it.toIntOrNull() ?: year },
                         label = { Text("Rok") },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.Companion.weight(1f)
                     )
                     OutlinedTextField(
                         value = month.toString(),
                         onValueChange = { month = (it.toIntOrNull() ?: month).coerceIn(1, 12) },
                         label = { Text("Miesiąc") },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.Companion.weight(1f)
                     )
                     OutlinedTextField(
                         value = day.toString(),
                         onValueChange = { day = (it.toIntOrNull() ?: day).coerceIn(1, 31) },
                         label = { Text("Dzień") },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.Companion.weight(1f)
                     )
                 }
             }
