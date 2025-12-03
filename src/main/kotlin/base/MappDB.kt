@@ -17,13 +17,16 @@ class ProbkaMapper {
 
     fun toProbkaDTO(
         zo: ZO,
-        zdList: List<ZD>,
-        zlList: List<ZL>,
-        zkList: List<ZK>,
-        technologia: Technologia?,
-        kontrahent: Kontrahent?,
         statusResolver: StatusResolver
     ): ProbkaDTO {
+        // 1. Wyciągamy dane bezpośrednio z obiektu 'zo'
+        // Konwertujemy Set na List, aby zachować zgodność z resztą kodu
+        val zdList = zo.statusZD?.toList() ?: emptyList()
+        val zlList = zo.statusZL?.toList() ?: emptyList()
+        val zkList = zo.statusZK?.toList() ?: emptyList()
+
+        // 2. Dla technologii, zakładając relację 1-do-1, bierzemy pierwszy element z Setu
+        val technologia = zo.technologia
 
         // Automatyczna flaga 'produce' z statusu ZO
         val produceFlag = when (zo.stan) {
@@ -38,7 +41,7 @@ class ProbkaMapper {
             rok = zo.rok.toByte(),
             oddzialNazwa = getOddzialNazwa(zo.oddzialW),
             dataZamowienia = zo.data,
-            kontrahentNazwa = kontrahent?.nazwa ?: "Nieznany",
+            kontrahentNazwa = zo.kontrahent?.nazwa ?: "Nieznany",
             art = zo.art,
             receptura = zo.receptura1,
             grubosc11 = zo.grubosc11,

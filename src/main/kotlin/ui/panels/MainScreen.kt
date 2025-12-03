@@ -45,7 +45,7 @@ fun ProbkiScreen(viewModel: ProbkiViewModel) {
                     probkaService = viewModel.probkaService,
                     filterState = viewModel.filterState,
                     onFilterChange = { viewModel.updateFilter(it) },
-                    onRefresh = { viewModel.loadProbki() } // Usuń scope.launch
+                    onRefresh = { viewModel.loadProbki() }
                 )
 
                 // Zawartość

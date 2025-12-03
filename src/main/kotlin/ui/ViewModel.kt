@@ -134,13 +134,6 @@ class ProbkiViewModel(val probkaService: ProbkaService) {
         }
     }
 
-    fun saveTechnologiaKolumny(numer: Int,
-                        k1: String?, k2: String?, k3: String?, k4: String?) {
-        coroutineScope.launch {
-            probkaService.saveTechnologiaKolumny(numer, k1, k2, k3, k4)
-            loadProbki() // Odśwież dane
-        }
-    }
     fun saveTechnologiaKolumnyAsync(
         numer: Int,
         k1: String?,
@@ -148,28 +141,35 @@ class ProbkiViewModel(val probkaService: ProbkaService) {
         k3: String?,
         k4: String?,
     ) {
-        // Zapis w tle, bez blokowania UI
+        // 1. Znajdź indeks próbki na głównej liście
+        val index = probki.indexOfFirst { it.numer == numer }
+        if (index == -1) return // Nie znaleziono próbki, zakończ
+
+        // 2. Stwórz zaktualizowaną kopię obiektu w pamięci (aktualizacja optymistyczna)
+        val currentProbka = probki[index]
+        val updatedProbka = currentProbka.copy(
+            opis = k1,
+            dodtkoweInformacje = k2,
+                    uwagi = k3,
+            testy = k4
+        )
+
+        // 3. Natychmiast zaktualizuj stan w UI
+        probki = probki.toMutableList().apply { set(index, updatedProbka) }
+        applyFilters()
+
+        // 4. Zapisz zmianę w bazie danych w tle
         coroutineScope.launch(Dispatchers.IO) {
             try {
                 probkaService.saveTechnologiaKolumny(numer, k1, k2, k3, k4)
-
-                // Odśwież tylko tę jedną próbkę zamiast wszystkich
-                val updated = probkaService.getProbkaDetails(numer)
-                if (updated != null) {
-                    withContext(Dispatchers.Main) {
-                        val index = probki.indexOfFirst {
-                            it.numer == numer
-                        }
-                        if (index >= 0) {
-                            probki = probki.toMutableList().apply {
-                                set(index, updated)
-                            }
-                            applyFilters()
-                        }
-                    }
-                }
+                // Na sukcesie nie robimy nic więcej, UI jest już aktualne
             } catch (e: Exception) {
-                errorMessage = "Błąd zapisu: ${e.message}"
+                // W razie błędu, cofnij zmianę w UI i pokaż komunikat
+                withContext(Dispatchers.Main) {
+                    errorMessage = "Błąd zapisu: ${e.message}"
+                    probki = probki.toMutableList().apply { set(index, currentProbka) }
+                    applyFilters()
+                }
             }
         }
     }

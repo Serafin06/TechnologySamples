@@ -36,33 +36,23 @@ class ProbkaServiceImpl(
     private val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
     override fun getProbki(monthBack: Long): List<ProbkaDTO> {
-        val probkiZO = repository.findProbkiZO(monthBack)
+        // Zamiast wielu zapytań, wywołujemy jedno nowe
+        val probkiZO = repository.findProbkiWithDetails(monthBack)
 
+        // Mapowanie jest teraz znacznie szybsze, bo wszystkie dane są już załadowane
         return probkiZO.map { zo ->
-            val zdList = repository.findZDByNumer(zo.numer)
-            val zlList = repository.findZLByNumer(zo.numer)
-            val zkList = repository.findZKByNumer(zo.numer)
-            val technologia = repository.findTechnologiaNumer(zo.numer)
-            val kontrahent = repository.findKontrahentById(zo.idKontrahenta)
-
-            mapper.toProbkaDTO(zo, zdList, zlList, zkList,  technologia, kontrahent, statusResolver)
+            mapper.toProbkaDTO(zo, statusResolver)
         }
     }
 
     override fun getProbkaDetails(numer: Int): ProbkaDTO? {
-        val probkiZO = repository.findProbkiZO()
-        val zo = probkiZO.find {
-            it.numer == numer
-        } ?: return null
+        // Jedno zoptymalizowane zapytanie pobierające WSZYSTKIE dane dla jednej próbki
+        val zo = repository.findProbkaWithDetailsByNumer(numer) ?: return null
 
-        val zdList = repository.findZDByNumer(numer)
-        val zlList = repository.findZLByNumer(numer)
-        val zkList = repository.findZKByNumer(numer)
-        val technologia = repository.findTechnologiaNumer(numer)
-        val kontrahent = repository.findKontrahentById(zo.idKontrahenta)
-
-        return mapper.toProbkaDTO(zo, zdList, zlList,zkList, technologia, kontrahent, statusResolver)
+        // Użycie nowej, uproszczonej metody mappera
+        return mapper.toProbkaDTO(zo, statusResolver)
     }
+
 
     override fun saveTechnologiaKolumny(
         numer: Int,
@@ -117,12 +107,18 @@ class ProbkaServiceImpl(
     }
 
     override fun initializeProduceFlags() {
-        val probkiZO = repository.findProbkiZO()
 
-        probkiZO.forEach { zo ->
-            val technologia = repository.findTechnologiaNumer(zo.numer)
+        // 1. Pobierz wszystkie potrzebne dane w DWÓCH zapytaniach
+        val allProbkiZO = repository.findProbkiZO() // Pobiera wszystkie próbki (proba=1)
+        val allTechnologia = repository.findAllTechnologia()
 
-            // Oblicz wartość produce z statusu
+        // 2. Stwórz mapę dla szybkiego dostępu (O(1)) zamiast pętli
+        val technologiaMap = allTechnologia.associateBy { it.numer }
+
+        // 3. Przygotuj listę obiektów do zapisania
+        val entitiesToSave = mutableListOf<Technologia>()
+
+        allProbkiZO.forEach { zo ->
             val produceValue = when (zo.stan) {
                 0.toByte() -> true
                 1.toByte(), 2.toByte() -> false
@@ -130,16 +126,18 @@ class ProbkaServiceImpl(
             }
 
             // 3. Logika zapisu/aktualizacji
+            val technologia = technologiaMap[zo.numer]
+
             if (technologia == null) {
                 // 🆕 PUNKT 0: Utwórz nowy rekord TYLKO WTEDY, gdy próbka ma status
                 // Planowane (2) lub Do Realizacji (1), co przekłada się na produceValue = false.
                 // Jeśli produceValue == true (Zrealizowane) lub produceValue == null, ignorujemy.
                 if (produceValue == false) {
-                    repository.saveTechnologia(
+                    entitiesToSave.add(
                         Technologia(
                             numer = zo.numer,
-                            produce = produceValue, // Zawsze false przy tworzeniu z null
-                            send = null, // Flagi nieaktywne, bo nie zrealizowano
+                            produce = false,
+                            send = null,
                             tested = null
                         )
                     )
@@ -158,8 +156,13 @@ class ProbkaServiceImpl(
                     send = if (produceValue == true && technologia.send == null) false else technologia.send,
                     tested = if (produceValue == true && technologia.tested == null) false else technologia.tested
                 )
-                repository.saveTechnologia(updated)
+                entitiesToSave.add(updated)
             }
+        }
+
+        // 4. Zapisz WSZYSTKIE zmiany w JEDNEJ operacji bazodanowej
+        if (entitiesToSave.isNotEmpty()) {
+            repository.saveAllTechnologia(entitiesToSave)
         }
     }
 
@@ -183,7 +186,7 @@ class ProbkaServiceImpl(
         // 2. Mapowanie na ReportDTO (błyskawicznie)
         return daneZBazy.map { zo ->
             // Używamy firstOrNull(), ponieważ Set nie ma indeksów
-            val technologia = zo.technologia?.firstOrNull()
+            val technologia = zo.technologia
             val zd = zo.statusZD?.firstOrNull()
             val zk = zo.statusZK?.firstOrNull()
 

@@ -171,9 +171,9 @@ data class ZO(
 
     // 1. Relacja do Technologia (Zakładamy, że jest to 0/1 do 1)
     // Mapowanie przez kolumnę 'numer' w obu encjach
-    @OneToMany(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "NUMER", referencedColumnName = "NUMER", insertable = false, updatable = false)
-    val technologia: Set<Technologia>? = null,
+    var technologia: Technologia? = null,
 
     // 2. Relacja do ZD (Drukowanie)
     @OneToMany(fetch = FetchType.LAZY)
