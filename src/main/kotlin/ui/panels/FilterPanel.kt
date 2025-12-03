@@ -51,7 +51,7 @@ fun FilterPanel(
 
 
     Card(
-        modifier = Modifier.Companion
+        modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp),
         elevation = 2.dp,
@@ -60,14 +60,14 @@ fun FilterPanel(
         Column {
             // Header z przyciskiem zwiń/rozwiń
             Row(
-                modifier = Modifier.Companion.fillMaxWidth().background(AppColors.Surface).padding(4.dp),
+                modifier = Modifier.fillMaxWidth().background(AppColors.Surface).padding(4.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Companion.CenterVertically,
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Row(verticalAlignment = Alignment.Companion.CenterVertically) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.AutoMirrored.Filled.ManageSearch, contentDescription = null, tint = AppColors.Primary)
-                    Spacer(Modifier.Companion.width(4.dp))
-                    Text("Filtry", fontWeight = FontWeight.Companion.Bold, fontSize = 16.sp)
+                    Spacer(Modifier.width(4.dp))
+                    Text("Filtry", fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 }
 
                 Row {
@@ -121,7 +121,7 @@ fun FilterPanel(
                     onValueChange = { onFilterChange(filterState.copy(searchQuery = it)) },
                     label = { Text("Szukaj (numer, ART, receptura)") },
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                    modifier = Modifier.Companion.fillMaxWidth().padding(10.dp),
+                    modifier = Modifier.fillMaxWidth().padding(10.dp),
                     colors = TextFieldDefaults.outlinedTextFieldColors(backgroundColor = AppColors.Surface),
                     singleLine = true
                 )
@@ -129,15 +129,15 @@ fun FilterPanel(
                 DateRangeDropdown(
                     selectedRange = filterState.dateRange,
                     onRangeSelected = { onFilterChange(filterState.copy(dateRange = it)) },
-                    modifier = Modifier.Companion.fillMaxWidth().padding(10.dp),
+                    modifier = Modifier.fillMaxWidth().padding(10.dp),
                 )
 
                 // Jeśli wybrano CUSTOM, pokaż pola dat
                 if (filterState.dateRange == DateRange.CUSTOM) {
-                    Spacer(Modifier.Companion.height(8.dp))
+                    Spacer(Modifier.height(8.dp))
 
                     Row(
-                        modifier = Modifier.Companion.fillMaxWidth().padding(10.dp),
+                        modifier = Modifier.fillMaxWidth().padding(10.dp),
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         DatePickerField(
@@ -146,7 +146,7 @@ fun FilterPanel(
                             onDateChange = {
                                 onFilterChange(filterState.copy(customDateFrom = it))
                             },
-                            modifier = Modifier.Companion.weight(1f)
+                            modifier = Modifier.weight(1f)
                         )
 
                         DatePickerField(
@@ -155,83 +155,83 @@ fun FilterPanel(
                             onDateChange = {
                                 onFilterChange(filterState.copy(customDateTo = it))
                             },
-                            modifier = Modifier.Companion.weight(1f)
+                            modifier = Modifier.weight(1f)
                         )
                     }
                 }
 
-                Spacer(Modifier.Companion.height(2.dp))
+                Spacer(Modifier.height(2.dp))
 
                 // Oddział, kontahent i Status ZO
                 Row(
-                    modifier = Modifier.Companion.fillMaxWidth().padding(10.dp),
+                    modifier = Modifier.fillMaxWidth().padding(10.dp),
                     horizontalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
                     OddzialDropdown(
                         selectedOddzial = filterState.oddzial,
                         onOddzialSelected = { onFilterChange(filterState.copy(oddzial = it)) },
-                        modifier = Modifier.Companion.weight(1f)
+                        modifier = Modifier.weight(1f)
                     )
 
                     KontrahentDropdown(
                         availableKontrahenci = availableKontrahenci,
                         selectedKontrahenci = filterState.selectedKontrahenci,
                         onKontrahenciChange = { onFilterChange(filterState.copy(selectedKontrahenci = it)) },
-                        modifier = Modifier.Companion.weight(1f)
+                        modifier = Modifier.weight(1f)
                     )
 
                     MultiStatusDropdown(
                         label = "Status Zlecenia",
                         selectedStatuses = filterState.selectedStatusZO,
                         onStatusesChange = { onFilterChange(filterState.copy(selectedStatusZO = it)) },
-                        modifier = Modifier.Companion.weight(1f)
+                        modifier = Modifier.weight(1f)
                     )
 
 
                 }
 
-                Spacer(Modifier.Companion.height(2.dp))
+                Spacer(Modifier.height(2.dp))
 
                 // Statusy ZD, ZL, ZK
                 Row(
-                    modifier = Modifier.Companion.fillMaxWidth().padding(10.dp),
+                    modifier = Modifier.fillMaxWidth().padding(10.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     MultiStatusDropdown(
                         label = "Status Drukarnia",
                         selectedStatuses = filterState.selectedStatusZD,
                         onStatusesChange = { onFilterChange(filterState.copy(selectedStatusZD = it)) },
-                        modifier = Modifier.Companion.weight(1f)
+                        modifier = Modifier.weight(1f)
                     )
 
                     MultiStatusDropdown(
                         label = "Status Laminacja",
                         selectedStatuses = filterState.selectedStatusZL,
                         onStatusesChange = { onFilterChange(filterState.copy(selectedStatusZL = it)) },
-                        modifier = Modifier.Companion.weight(1f)
+                        modifier = Modifier.weight(1f)
                     )
 
                     MultiStatusDropdown(
                         label = "Status Krajarki",
                         selectedStatuses = filterState.selectedStatusZK,
                         onStatusesChange = { onFilterChange(filterState.copy(selectedStatusZK = it)) },
-                        modifier = Modifier.Companion.weight(1f)
+                        modifier = Modifier.weight(1f)
                     )
 
 
                 }
 
-                Spacer(Modifier.Companion.height(6.dp))
+                Spacer(Modifier.height(6.dp))
 
                 // Przycisk czyszczenia filtrów
                 if (filterState != FilterState()) {
-                    Spacer(Modifier.Companion.height(12.dp))
+                    Spacer(Modifier.height(12.dp))
                     TextButton(
                         onClick = { onFilterChange(FilterState()) },
-                        modifier = Modifier.Companion.align(Alignment.Companion.End)
+                        modifier = Modifier.align(Alignment.End)
                     ) {
-                        Icon(Icons.Default.Clear, contentDescription = null, modifier = Modifier.Companion.size(16.dp))
-                        Spacer(Modifier.Companion.width(4.dp))
+                        Icon(Icons.Default.Clear, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(Modifier.width(4.dp))
                         Text("Wyczyść filtry")
                     }
                 }
