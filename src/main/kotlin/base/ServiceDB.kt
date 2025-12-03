@@ -109,11 +109,7 @@ class ProbkaServiceImpl(
     override fun initializeProduceFlags() {
 
         // 1. Pobierz wszystkie potrzebne dane w DWÓCH zapytaniach
-        val allProbkiZO = repository.findProbkiZO() // Pobiera wszystkie próbki (proba=1)
-        val allTechnologia = repository.findAllTechnologia()
-
-        // 2. Stwórz mapę dla szybkiego dostępu (O(1)) zamiast pętli
-        val technologiaMap = allTechnologia.associateBy { it.numer }
+        val allProbkiZO = repository.findProbkiWithDetails(monthsBack = 12)
 
         // 3. Przygotuj listę obiektów do zapisania
         val entitiesToSave = mutableListOf<Technologia>()
@@ -126,7 +122,7 @@ class ProbkaServiceImpl(
             }
 
             // 3. Logika zapisu/aktualizacji
-            val technologia = technologiaMap[zo.numer]
+            val technologia = zo.technologia
 
             if (technologia == null) {
                 // 🆕 PUNKT 0: Utwórz nowy rekord TYLKO WTEDY, gdy próbka ma status

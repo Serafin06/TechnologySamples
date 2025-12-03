@@ -13,11 +13,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import base.ProbkaService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import report.ExportType
-import report.generujRaportAkcja
 import ui.AppColors
 import ui.DateRange
 import ui.FilterState
@@ -32,8 +29,10 @@ fun FilterPanel(
     filterState: FilterState,
     onFilterChange: (FilterState) -> Unit,
     coroutineScope: CoroutineScope,
-    probkaService: ProbkaService,
-    onRefresh: () -> Unit
+    onRefresh: () -> Unit,
+    onExportExcel: () -> Unit,
+    onExportPdf: () -> Unit,
+    availableKontrahenci: List<String>
 ) {
     var expanded by remember { mutableStateOf(true) }
     var showDialogState by remember { mutableStateOf<String?>(null) }
@@ -86,15 +85,16 @@ fun FilterPanel(
                         ) {
                             DropdownMenuItem(onClick = {
                                 showExportMenu = false
-                                // przekazujemy callback, który ustawi stan dialogu
-                                generujRaportAkcja(coroutineScope, ExportType.EXCEL, probkaService, onExportComplete)
+                                // Zamiast wywoływać serwis, wywołujemy callback
+                                onExportExcel()
                             }) {
                                 Text("Eksportuj do Excel (.xlsx)")
                             }
 
                             DropdownMenuItem(onClick = {
                                 showExportMenu = false
-                                generujRaportAkcja(coroutineScope, ExportType.PDF, probkaService, onExportComplete)
+                                // Zamiast wywoływać serwis, wywołujemy callback
+                                onExportPdf()
                             }) {
                                 Text("Eksportuj do PDF")
                             }
@@ -174,7 +174,7 @@ fun FilterPanel(
                     )
 
                     KontrahentDropdown(
-                        availableKontrahenci = probkaService.getAvailableKontrahenci(), // Dodaj tę metodę
+                        availableKontrahenci = availableKontrahenci,
                         selectedKontrahenci = filterState.selectedKontrahenci,
                         onKontrahenciChange = { onFilterChange(filterState.copy(selectedKontrahenci = it)) },
                         modifier = Modifier.Companion.weight(1f)

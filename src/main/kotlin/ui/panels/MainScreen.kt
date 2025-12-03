@@ -4,10 +4,14 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.AlertDialog
+import androidx.compose.material.Button
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
+import androidx.compose.material.Text
 import androidx.compose.material.lightColors
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import ui.AppColors
@@ -42,10 +46,15 @@ fun ProbkiScreen(viewModel: ProbkiViewModel) {
                 // Filtry
                 FilterPanel(
                     coroutineScope = rememberCoroutineScope(),
-                    probkaService = viewModel.probkaService,
-                    filterState = viewModel.filterState,
+                    filterState = viewModel.filterStateFlow.collectAsState().value,
                     onFilterChange = { viewModel.updateFilter(it) },
-                    onRefresh = { viewModel.loadProbki() }
+                    onRefresh = {
+                        viewModel.loadProbki()
+                    },
+                    availableKontrahenci = viewModel.availableKontrahenci,
+                    // Przekazujemy funkcje z ViewModelu
+                    onExportExcel = { viewModel.exportToExcel() },
+                    onExportPdf = { viewModel.exportToPdf() }
                 )
 
                 // Zawartość
@@ -68,6 +77,25 @@ fun ProbkiScreen(viewModel: ProbkiViewModel) {
                     )
                 }
             }
+        }
+
+        // Dialog pokazujący wynik eksportu
+        viewModel.exportMessage?.let { message ->
+            AlertDialog(
+                onDismissRequest = { viewModel.clearExportMessage() },
+                title = {
+                    Text(
+                        text = if (message.startsWith("Sukces")) "Eksport zakończony pomyślnie 🎉" else "Wystąpił błąd ❌",
+                        color = if (message.startsWith("Sukces")) AppColors.Primary else AppColors.Error
+                    )
+                },
+                text = { Text(message) },
+                confirmButton = {
+                    Button(onClick = { viewModel.clearExportMessage() }) {
+                        Text("OK")
+                    }
+                }
+            )
         }
     }
 }

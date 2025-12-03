@@ -1,11 +1,13 @@
 package ui
 
 import androidx.compose.runtime.*
-import androidx.compose.ui.graphics.PathHitTester
 import base.FlagType
 import base.ProbkaDTO
 import base.ProbkaService
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.*
+import report.ExportType
+import report.generujRaportAkcja
 import java.time.LocalDateTime
 
 enum class ConnectionStatus {
@@ -14,21 +16,20 @@ enum class ConnectionStatus {
     CHECKING        // Szary
 }
 
-
 class ProbkiViewModel(val probkaService: ProbkaService) {
 
+    // Główny coroutine scope dla operacji asynchronicznych
     private val coroutineScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
+
+    // Specjalny job do zarządzania zadaniem filtrowania, aby można je było anulować
+    private val filterJob = SupervisorJob()
+
+    // --- STANY APLIKACJI ---
 
     var loadingProgress by mutableStateOf(0f)
         private set
 
     var loadingMessage by mutableStateOf("")
-        private set
-
-    var probki by mutableStateOf<List<ProbkaDTO>>(emptyList())
-        private set
-
-    var filteredProbki by mutableStateOf<List<ProbkaDTO>>(emptyList())
         private set
 
     var isLoading by mutableStateOf(false)
@@ -37,8 +38,47 @@ class ProbkiViewModel(val probkaService: ProbkaService) {
     var errorMessage by mutableStateOf<String?>(null)
         private set
 
-    var filterState by mutableStateOf(FilterState())
+    // Główna lista wszystkich próbek (ładowana raz z bazy)
+    var probki by mutableStateOf<List<ProbkaDTO>>(emptyList())
         private set
+
+    // Lista filtrowana, wyświetlana w UI (aktualizowana w tle)
+    var filteredProbki by mutableStateOf<List<ProbkaDTO>>(emptyList())
+        private set
+
+    // Stan filtra, teraz jako MutableStateFlow, co ułatwia reagowanie na zmiany
+    private val _filterStateFlow = MutableStateFlow(FilterState())
+    val filterStateFlow = _filterStateFlow.asStateFlow()
+
+    // Zachowaj referencję do aktualnego stanu filtra dla łatwego dostępu
+    var currentFilterState: FilterState
+        get() = _filterStateFlow.value
+        private set(value) { _filterStateFlow.value = value }
+
+    var connectionStatus by mutableStateOf(ConnectionStatus.CHECKING)
+        private set
+
+    var lastConnectionCheck by mutableStateOf<LocalDateTime?>(null)
+        private set
+
+    private val connectionCheckScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+
+    var availableKontrahenci by mutableStateOf<List<String>>(emptyList())
+        private set
+
+    // Nowy stan do przechowywania wiadomości o eksporcie
+    var exportMessage by mutableStateOf<String?>(null)
+        private set
+
+    // --- INICJALIZACJA ---
+
+    init {
+        // Uruchom nasłuchiwanie na zmiany filtra i monitorowanie połączenia
+        startFiltering()
+        startConnectionMonitoring()
+    }
+
+    // --- GŁÓWNA LOGIKA ---
 
     fun loadProbki() {
         coroutineScope.launch {
@@ -49,24 +89,31 @@ class ProbkiViewModel(val probkaService: ProbkaService) {
             try {
                 loadingMessage = "Inicjalizacja flag..."
                 loadingProgress = 0.2f
-
-                // Najpierw zainicjalizuj flagi
                 withContext(Dispatchers.IO) {
                     probkaService.initializeProduceFlags()
                 }
 
                 loadingMessage = "Ładowanie próbek ZO..."
                 loadingProgress = 0.4f
-
                 probki = withContext(Dispatchers.IO) {
-                    val monthsNonNull = filterState.dateRange.months ?: 6L
+                    val monthsNonNull = currentFilterState.dateRange.months ?: 6L
                     probkaService.getProbki(monthsNonNull)
                 }
+                // Ładujemy próbki i kontrahentów równolegle dla lepszej wydajności
+                val monthsNonNull = currentFilterState.dateRange.months ?: 6L
+
+                val probkiDeferred = async(Dispatchers.IO) { probkaService.getProbki(monthsNonNull) }
+                val kontrahenciDeferred = async(Dispatchers.IO) { probkaService.getAvailableKontrahenci() }
+
+                probki = probkiDeferred.await()
+                availableKontrahenci = kontrahenciDeferred.await()
 
                 loadingMessage = "Przetwarzanie danych..."
                 loadingProgress = 0.8f
 
-                applyFilters()
+                // Po załadowaniu danych, uruchom filtrowanie po raz pierwszy
+                triggerFiltering()
+
                 loadingProgress = 1f
 
             } catch (e: Exception) {
@@ -77,62 +124,88 @@ class ProbkiViewModel(val probkaService: ProbkaService) {
         }
     }
 
+    // --- LOGIKA FILTROWANIA ---
 
-    fun updateFilter(newFilter: FilterState) {
-        filterState = newFilter
-        applyFilters()
-    }
-
-    private fun applyFilters() {
-        filteredProbki = probki.filter { probka ->
-            val matchesSearch = if (filterState.searchQuery.isBlank()) {
-                true
-            } else {
-                val query = filterState.searchQuery.lowercase()
-                probka.numer.toString().contains(query) ||
-                        probka.art?.lowercase()?.contains(query) == true ||
-                        probka.receptura?.lowercase()?.contains(query) == true
-            }
-
-            val matchesOddzial = filterState.oddzial?.let {
-                probka.oddzialNazwa == it
-            } ?: true
-
-            val matchesKontrahent = if (filterState.selectedKontrahenci.isEmpty()) {
-                true
-            } else {
-                filterState.selectedKontrahenci.contains(probka.kontrahentNazwa)
-            }
-
-            // WSZYSTKIE statusy jako multi-select
-            val matchesStanZO = if (filterState.selectedStatusZO.isEmpty()) {
-                true
-            } else {
-                probka.statusZO?.stan in filterState.selectedStatusZO
-            }
-
-            val matchesStanZK = if (filterState.selectedStatusZK.isEmpty()) {
-                true
-            } else {
-                probka.statusZK?.stan in filterState.selectedStatusZK
-            }
-
-            val matchesStanZD = if (filterState.selectedStatusZD.isEmpty()) {
-                true
-            } else {
-                probka.statusZD?.stan in filterState.selectedStatusZD
-            }
-
-            val matchesStanZL = if (filterState.selectedStatusZL.isEmpty()) {
-                true
-            } else {
-                probka.statusZL?.any { it.stan in filterState.selectedStatusZL } == true
-            }
-
-            matchesSearch && matchesOddzial && matchesKontrahent &&
-                    matchesStanZO && matchesStanZK && matchesStanZD && matchesStanZL
+    private fun startFiltering() {
+        coroutineScope.launch {
+            // Nasłuchujemy na zmiany w stanie filtra
+            filterStateFlow
+                .debounce(300) // Czekamy 300ms po ostatniej zmianie
+                .distinctUntilChanged() // Filtrujemy tylko, jeśli stan faktycznie się zmienił
+                .collect {
+                    // Za każdym razem, gdy filtr się zmieni, uruchamiamy logikę filtrowania
+                    triggerFiltering()
+                }
         }
     }
+
+    private fun triggerFiltering() {
+        // Anulujemy poprzednie zadanie filtrowania, jeśli wciąż trwa
+        filterJob.cancelChildren()
+
+        // Uruchamiamy nowe zadanie filtrowania w wątku tła (Dispatchers.Default)
+        coroutineScope.launch(filterJob) {
+            val newFiltered = probki.filter { probka ->
+                val matchesSearch = if (currentFilterState.searchQuery.isBlank()) {
+                    true
+                } else {
+                    val query = currentFilterState.searchQuery.lowercase()
+                    probka.numer.toString().contains(query) ||
+                            probka.art?.lowercase()?.contains(query) == true ||
+                            probka.receptura?.lowercase()?.contains(query) == true
+                }
+
+                val matchesOddzial = currentFilterState.oddzial?.let {
+                    probka.oddzialNazwa == it
+                } ?: true
+
+                val matchesKontrahent = if (currentFilterState.selectedKontrahenci.isEmpty()) {
+                    true
+                } else {
+                    currentFilterState.selectedKontrahenci.contains(probka.kontrahentNazwa)
+                }
+
+                val matchesStanZO = if (currentFilterState.selectedStatusZO.isEmpty()) {
+                    true
+                } else {
+                    probka.statusZO?.stan in currentFilterState.selectedStatusZO
+                }
+
+                val matchesStanZK = if (currentFilterState.selectedStatusZK.isEmpty()) {
+                    true
+                } else {
+                    probka.statusZK?.stan in currentFilterState.selectedStatusZK
+                }
+
+                val matchesStanZD = if (currentFilterState.selectedStatusZD.isEmpty()) {
+                    true
+                } else {
+                    probka.statusZD?.stan in currentFilterState.selectedStatusZD
+                }
+
+                val matchesStanZL = if (currentFilterState.selectedStatusZL.isEmpty()) {
+                    true
+                } else {
+                    probka.statusZL?.any { it.stan in currentFilterState.selectedStatusZL } == true
+                }
+
+                matchesSearch && matchesOddzial && matchesKontrahent &&
+                        matchesStanZO && matchesStanZK && matchesStanZD && matchesStanZL
+            }
+
+            // Po zakończeniu filtrowania, aktualizujemy stan w głównym wątku UI
+            withContext(Dispatchers.Main) {
+                filteredProbki = newFiltered
+            }
+        }
+    }
+
+    // Funkcja do wywoływania z UI, gdy użytkownik zmieni filtr
+    fun updateFilter(newFilter: FilterState) {
+        _filterStateFlow.value = newFilter
+    }
+
+    // --- AKTUALIZACJE DANYCH (optymistyczne) ---
 
     fun saveTechnologiaKolumnyAsync(
         numer: Int,
@@ -141,51 +214,99 @@ class ProbkiViewModel(val probkaService: ProbkaService) {
         k3: String?,
         k4: String?,
     ) {
-        // 1. Znajdź indeks próbki na głównej liście
         val index = probki.indexOfFirst { it.numer == numer }
-        if (index == -1) return // Nie znaleziono próbki, zakończ
+        if (index == -1) return
 
-        // 2. Stwórz zaktualizowaną kopię obiektu w pamięci (aktualizacja optymistyczna)
         val currentProbka = probki[index]
         val updatedProbka = currentProbka.copy(
             opis = k1,
             dodtkoweInformacje = k2,
-                    uwagi = k3,
+            uwagi = k3,
             testy = k4
         )
 
-        // 3. Natychmiast zaktualizuj stan w UI
+        // Natychmiast zaktualizuj UI
         probki = probki.toMutableList().apply { set(index, updatedProbka) }
-        applyFilters()
+        triggerFiltering() // Używamy nowej funkcji
 
-        // 4. Zapisz zmianę w bazie danych w tle
+        // Zapisz zmianę w tle
         coroutineScope.launch(Dispatchers.IO) {
             try {
                 probkaService.saveTechnologiaKolumny(numer, k1, k2, k3, k4)
-                // Na sukcesie nie robimy nic więcej, UI jest już aktualne
             } catch (e: Exception) {
-                // W razie błędu, cofnij zmianę w UI i pokaż komunikat
                 withContext(Dispatchers.Main) {
                     errorMessage = "Błąd zapisu: ${e.message}"
                     probki = probki.toMutableList().apply { set(index, currentProbka) }
-                    applyFilters()
+                    triggerFiltering()
                 }
             }
         }
     }
 
-    var connectionStatus by mutableStateOf(ConnectionStatus.CHECKING)
-        private set
+    fun updateFlagAsync(numer: Int, flagType: FlagType, value: Boolean) {
+        val index = probki.indexOfFirst { it.numer == numer }
+        if (index == -1) return
 
-    var lastConnectionCheck by mutableStateOf<LocalDateTime?>(null)
-        private set
+        val currentProbka = probki[index]
+        val updatedProbka = when (flagType) {
+            FlagType.SEND -> currentProbka.copy(send = value)
+            FlagType.TESTED -> currentProbka.copy(tested = value)
+        }
 
-    private val connectionCheckScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+        // Natychmiast zaktualizuj UI
+        probki = probki.toMutableList().apply { set(index, updatedProbka) }
+        triggerFiltering()
 
-    init {
-        // Uruchom automatyczne sprawdzanie co 5 minut
-        startConnectionMonitoring()
+        // Zapisz zmianę w tle
+        coroutineScope.launch(Dispatchers.IO) {
+            try {
+                probkaService.updateFlag(numer, flagType, value)
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    errorMessage = "Błąd aktualizacji flagi: ${e.message}"
+                    probki = probki.toMutableList().apply { set(index, currentProbka) }
+                    triggerFiltering()
+                }
+            }
+        }
     }
+
+    // --- EKSPORT DANYCH ---
+
+    fun exportToExcel() {
+        // Wywołujemy akcję raportu, przekazując serwis i callback
+        generujRaportAkcja(
+            scope = coroutineScope,
+            type = ExportType.EXCEL,
+            probkaService = probkaService,
+            onComplete = { success, path ->
+                // Aktualizujemy stan, który zostanie wyświetlony w UI
+                exportMessage = if (success) {
+                    "Sukces! Raport zapisano w:\n$path"
+                } else {
+                    "Błąd! Nie udało się zapisać raportu."
+                }
+            }
+        )
+    }
+
+    fun exportToPdf() {
+        // To samo dla PDF
+        generujRaportAkcja(
+            scope = coroutineScope,
+            type = ExportType.PDF,
+            probkaService = probkaService,
+            onComplete = { success, path ->
+                exportMessage = if (success) {
+                    "Sukces! Raport zapisano w:\n$path"
+                } else {
+                    "Błąd! Nie udało się zapisać raportu."
+                }
+            }
+        )
+    }
+
+    // --- POZOSTAŁE FUNKCJE ---
 
     private fun startConnectionMonitoring() {
         connectionCheckScope.launch {
@@ -199,14 +320,9 @@ class ProbkiViewModel(val probkaService: ProbkaService) {
     fun checkDatabaseConnection() {
         connectionCheckScope.launch {
             connectionStatus = ConnectionStatus.CHECKING
-
             try {
                 val isConnected = probkaService.testConnection()
-                connectionStatus = if (isConnected) {
-                    ConnectionStatus.CONNECTED
-                } else {
-                    ConnectionStatus.DISCONNECTED
-                }
+                connectionStatus = if (isConnected) ConnectionStatus.CONNECTED else ConnectionStatus.DISCONNECTED
                 lastConnectionCheck = LocalDateTime.now()
             } catch (e: Exception) {
                 connectionStatus = ConnectionStatus.DISCONNECTED
@@ -215,34 +331,14 @@ class ProbkiViewModel(val probkaService: ProbkaService) {
         }
     }
 
+    // Funkcja do czyszczenia wiadomości po zamknięciu dialogu
+    fun clearExportMessage() {
+        exportMessage = null
+    }
+
     fun dispose() {
         coroutineScope.cancel()
         connectionCheckScope.cancel()
     }
 
-    fun updateFlagAsync(numer: Int,flagType: FlagType, value: Boolean) {
-        coroutineScope.launch(Dispatchers.IO) {
-            try {
-                probkaService.updateFlag(numer, flagType, value)
-
-                // Odśwież tylko tę próbkę
-                val updated = probkaService.getProbkaDetails(numer)
-                if (updated != null) {
-                    withContext(Dispatchers.Main) {
-                        val index = probki.indexOfFirst {
-                            it.numer == numer
-                        }
-                        if (index >= 0) {
-                            probki = probki.toMutableList().apply {
-                                set(index, updated)
-                            }
-                            applyFilters()
-                        }
-                    }
-                }
-            } catch (e: Exception) {
-                errorMessage = "Błąd aktualizacji flagi: ${e.message}"
-            }
-        }
-    }
 }
