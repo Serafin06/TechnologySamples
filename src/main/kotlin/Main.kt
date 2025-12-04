@@ -23,8 +23,11 @@ fun main() = application {
         title = "Technologia - Zarządzanie Próbkami"
     ) {
         val sessionFactory = remember { HibernateConfig.sessionFactory }
-        val probkaService = remember { ProbkaServiceFactory.createProbkaService(sessionFactory) }
-        val viewModel = remember { ProbkiViewModel(probkaService) }
+        val probkaRepository = remember { base.ProbkaRepositoryImpl(sessionFactory) }
+        val probkaService = remember { ProbkaServiceFactory.createProbkaService(probkaRepository) }
+        val reportService = remember { report.createReportService(probkaRepository) }
+
+        val viewModel = remember { ProbkiViewModel(probkaService, reportService) }
 
         // Załaduj dane asynchronicznie przy starcie
         LaunchedEffect(Unit) {

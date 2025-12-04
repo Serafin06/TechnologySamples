@@ -7,6 +7,7 @@ import base.ProbkaService
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import report.ExportType
+import report.ReportServiceI
 import report.generujRaportAkcja
 import java.time.LocalDateTime
 
@@ -16,7 +17,7 @@ enum class ConnectionStatus {
     CHECKING        // Szary
 }
 
-class ProbkiViewModel(val probkaService: ProbkaService) {
+class ProbkiViewModel(val probkaService: ProbkaService, private val reportService: ReportServiceI) {
 
     // Główny coroutine scope dla operacji asynchronicznych
     private val coroutineScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
@@ -278,7 +279,7 @@ class ProbkiViewModel(val probkaService: ProbkaService) {
         generujRaportAkcja(
             scope = coroutineScope,
             type = ExportType.EXCEL,
-            probkaService = probkaService,
+            reportService = reportService,
             onComplete = { success, path ->
                 // Aktualizujemy stan, który zostanie wyświetlony w UI
                 exportMessage = if (success) {
@@ -295,7 +296,7 @@ class ProbkiViewModel(val probkaService: ProbkaService) {
         generujRaportAkcja(
             scope = coroutineScope,
             type = ExportType.PDF,
-            probkaService = probkaService,
+            reportService = reportService,
             onComplete = { success, path ->
                 exportMessage = if (success) {
                     "Sukces! Raport zapisano w:\n$path"

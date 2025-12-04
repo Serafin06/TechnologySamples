@@ -26,8 +26,8 @@ interface ProbkaRepository {
     fun batchInsertTechnologia(entities: List<Technologia>)
     fun batchUpdateTechnologia(entities: List<Technologia>)
     fun findKontrahenciByIds(ids: Collection<Int>): Map<Int, Kontrahent>
-    fun findReportData(filter: RaportFilter): List<ZO>
     fun testConnection()
+    fun <T> useSession(block: (Session) -> T): T
 }
 
 /**
@@ -152,54 +152,6 @@ class ProbkaRepositoryImpl(private val sessionFactory: SessionFactory) : ProbkaR
         }
     }
 
-    override fun findReportData(filter: RaportFilter): List<ZO> {
-        val dateFrom = LocalDateTime.now().minus(12, ChronoUnit.MONTHS)
-
-        val hql = StringBuilder()
-        hql.append("SELECT zo FROM ZO zo ")
-        hql.append("LEFT JOIN FETCH zo.statusZD zd ")
-        hql.append("LEFT JOIN FETCH zo.statusZK zk ")
-        hql.append("LEFT JOIN FETCH zo.statusZL zl ")
-        hql.append("LEFT JOIN FETCH zo.technologia t ")
-        hql.append("WHERE zo.proba = 1 AND zo.data >= :fromDate ")
-
-        if (filter.oddzialNazwa != null) {
-            hql.append("AND zo.oddzialW = :oddzialWCode ")
-        }
-        if (filter.tylkoOtwarte) {
-            hql.append("AND zo.stan IN (1, 2) ")
-        }
-        hql.append("ORDER BY zo.data DESC")
-
-        return useSession { session ->
-            val list = session.createQuery(hql.toString(), ZO::class.java).apply {
-                setParameter("fromDate", dateFrom)
-                if (filter.oddzialNazwa != null) {
-                    val oddzialCode = when (filter.oddzialNazwa) {
-                        "Tychy" -> 12.toByte()
-                        "Ignatki" -> 11.toByte()
-                        else -> throw IllegalArgumentException("Nieznana nazwa oddziału dla filtra: ${filter.oddzialNazwa}")
-                    }
-                    setParameter("oddzialWCode", oddzialCode)
-                }
-            }.resultList
-
-            // --- BATCH: zbierz unikalne id kontrahentów (Int)
-            val kontrahentIds: Set<Int> = list.mapNotNull { it.idKontrahenta }.toSet()
-
-            // pobierz wszystkie kontrahenty jednym zapytaniem i zmapuj na Int -> Kontrahent
-            val kontrahentMap: Map<Int, Kontrahent> = findKontrahenciByIds(kontrahentIds)
-
-            // przypisz kontrahenta do każdego ZO (transient pole)
-            list.forEach { zo ->
-                zo.kontrahent = kontrahentMap[zo.idKontrahenta]
-            }
-
-            list
-        }
-    }
-
-
     override fun testConnection() {
         val session = sessionFactory.openSession()
         try {
@@ -214,7 +166,7 @@ class ProbkaRepositoryImpl(private val sessionFactory: SessionFactory) : ProbkaR
         }
     }
 
-    private fun <T> useSession(block: (Session) -> T): T {
+    override fun <T> useSession(block: (Session) -> T): T {
         val session = sessionFactory.openSession()
         return try {
             block(session)

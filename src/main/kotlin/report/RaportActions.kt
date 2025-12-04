@@ -1,6 +1,5 @@
 package report
 
-import base.ProbkaService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -15,7 +14,7 @@ enum class ExportType { EXCEL, PDF }
 fun generujRaportAkcja(
     scope: CoroutineScope,
     type: ExportType,
-    probkaService: ProbkaService,
+    reportService: ReportServiceI,
     onComplete: (success: Boolean, path: String) -> Unit
 ) {
     scope.launch(Dispatchers.Swing) { // Uruchamiamy w wątku Swing/UI
@@ -41,7 +40,6 @@ fun generujRaportAkcja(
                 withContext(Dispatchers.IO) {
                     println("Rozpoczynanie generowania raportu do: $finalPath")
 
-                    val raportService = ReportService(probkaService)
                     val generator: ReportGenerator = when(type) {
                         ExportType.EXCEL -> ExcelReportGenerator()
                         ExportType.PDF -> PdfReportGenerator()
@@ -49,7 +47,7 @@ fun generujRaportAkcja(
 
                     try {
                         val filtr = RaportFilter.tychyOtwarte()
-                        val dane = raportService.przygotujDaneDoRaportu(filtr)
+                        val dane = reportService.przygotujDaneDoRaportu(filtr)
                         generator.generujReport(dane, finalPath)
                         println("Sukces! Raport zapisany.")
 
