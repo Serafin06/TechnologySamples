@@ -20,21 +20,11 @@ import java.time.temporal.ChronoUnit
  * Interface dla repository - łatwe mockowanie i testowanie
  */
 interface ProbkaRepository {
-    fun findProbkiZO(monthsBack: Long = 6): List<ZO>
-    fun findZKByNumer(numer: Int): List<ZK>
-    fun findZDByNumer(numer: Int): List<ZD>
-    fun findZLByNumer(numer: Int): List<ZL>
-    fun findTechnologiaNumer(numer: Int): Technologia?
     fun findTechnologiaByNumers(numers: Collection<Int>): Map<Int, Technologia>
-    fun findAllTechnologia(): List<Technologia>
     fun findProbkiWithDetails(monthsBack: Long): List<ZO>
-    fun findProbkaWithDetailsByNumer(numer: Int): ZO?
     fun findProbkiStanOnly(monthsBack: Long): Map<Int, Byte>
-    fun saveTechnologia(technologia: Technologia): Technologia
-    fun saveAllTechnologia(technologiaList: List<Technologia>)
     fun batchInsertTechnologia(entities: List<Technologia>)
     fun batchUpdateTechnologia(entities: List<Technologia>)
-    fun findKontrahentById(id: Int): Kontrahent?
     fun findKontrahenciByIds(ids: Collection<Int>): Map<Int, Kontrahent>
     fun findReportData(filter: RaportFilter): List<ZO>
     fun testConnection()
@@ -45,64 +35,6 @@ interface ProbkaRepository {
  */
 class ProbkaRepositoryImpl(private val sessionFactory: SessionFactory) : ProbkaRepository {
 
-    override fun findProbkiZO(monthsBack: Long): List<ZO> {
-        val dateFrom = LocalDateTime.now().minus(monthsBack, ChronoUnit.MONTHS)
-
-        return useSession { session ->
-            session.createQuery(
-                "FROM ZO WHERE proba = 1 AND data >= :fromDate ORDER BY data DESC",
-                ZO::class.java
-            ).apply {
-                setParameter("fromDate", dateFrom)
-            }.list()
-        }
-    }
-
-    override fun findZKByNumer(numer: Int): List<ZK> {
-        return useSession { session ->
-            session.createQuery(
-                "FROM ZK WHERE numer = :numer",
-                ZK::class.java
-            ).apply {
-                setParameter("numer", numer)
-            }.list()
-        }
-    }
-
-    override fun findZDByNumer(numer: Int): List<ZD> {
-        return useSession { session ->
-            session.createQuery(
-                "FROM ZD WHERE numer = :numer",
-                ZD::class.java
-            ).apply {
-                setParameter("numer", numer)
-            }.list()
-        }
-    }
-
-    override fun findZLByNumer(numer: Int): List<ZL> {
-        return useSession { session ->
-            session.createQuery(
-                "FROM ZL WHERE numer = :numer",
-                ZL::class.java
-            ).apply {
-                setParameter("numer", numer)
-
-            }.list()
-        }
-    }
-
-    override fun findTechnologiaNumer(numer: Int): Technologia? {
-        return useSession { session ->
-            session.createQuery(
-                "FROM Technologia WHERE numer = :numer",
-                Technologia::class.java
-            ).apply {
-                setParameter("numer", numer)
-            }.uniqueResultOptional().orElse(null)
-        }
-    }
-
     override fun findTechnologiaByNumers(numers: Collection<Int>): Map<Int, Technologia> {
         if (numers.isEmpty()) return emptyMap()
         return useSession { session ->
@@ -112,12 +44,6 @@ class ProbkaRepositoryImpl(private val sessionFactory: SessionFactory) : ProbkaR
             ).setParameter("numers", numers).resultList
             // Tworzymy mapę dla szybkiego dostępu O(1)
             list.associateBy { it.numer }
-        }
-    }
-
-    override fun findAllTechnologia(): List<Technologia> {
-        return useSession { session ->
-            session.createQuery("FROM Technologia", Technologia::class.java).list()
         }
     }
 
@@ -168,23 +94,6 @@ class ProbkaRepositoryImpl(private val sessionFactory: SessionFactory) : ProbkaR
         }
     }
 
-    override fun findProbkaWithDetailsByNumer(numer: Int): ZO? {
-        val hql = StringBuilder()
-        hql.append("SELECT zo FROM ZO zo ")
-        hql.append("LEFT JOIN FETCH zo.statusZD ")
-        hql.append("LEFT JOIN FETCH zo.statusZK ")
-        hql.append("LEFT JOIN FETCH zo.statusZL ")
-        hql.append("LEFT JOIN FETCH zo.technologia ")
-        hql.append("LEFT JOIN FETCH zo.kontrahent ") // Dołączamy kontrahenta od razu
-        hql.append("WHERE zo.numer = :numer")
-
-        return useSession { session ->
-            session.createQuery(hql.toString(), ZO::class.java)
-                .setParameter("numer", numer)
-                .resultList
-                .firstOrNull()
-        }
-    }
 
     // Lżejsze zapytanie - tylko numer i stan
     override fun findProbkiStanOnly(monthsBack: Long): Map<Int, Byte> {
@@ -200,49 +109,6 @@ class ProbkaRepositoryImpl(private val sessionFactory: SessionFactory) : ProbkaR
         }
     }
 
-    override fun saveTechnologia(technologia: Technologia): Technologia {
-        return useSession { session ->
-            val transaction = session.beginTransaction()
-            try {
-                session.merge(technologia).also {
-                    transaction.commit()
-                }
-            } catch (e: Exception) {
-                transaction.rollback()
-                throw e
-            }
-        }
-    }
-
-    override fun saveAllTechnologia(technologiaList: List<Technologia>) {
-        if (technologiaList.isEmpty()) return
-
-        useSession { session ->
-            val transaction = session.beginTransaction()
-            try {
-                // Używamy pętli w ramach jednej transakcji, co jest znacznie szybsze
-                technologiaList.forEach { technologia ->
-                    session.merge(technologia) // merge obsłuży zarówno nowe, jak i istniejące obiekty
-                }
-                transaction.commit()
-            } catch (e: Exception) {
-                transaction.rollback()
-                throw e
-            }
-        }
-    }
-
-    override fun findKontrahentById(id: Int): Kontrahent? {
-        val idBig = id.toBigDecimalId()
-        return useSession { session ->
-            session.createQuery(
-                "FROM Kontrahent WHERE idKontrahenta = :id",
-                Kontrahent ::class.java
-            ).apply {
-                setParameter("id",  idBig)
-            }.uniqueResultOptional().orElse(null)
-        }
-    }
 
     // Batch insert
     override fun batchInsertTechnologia(entities: List<Technologia>) {

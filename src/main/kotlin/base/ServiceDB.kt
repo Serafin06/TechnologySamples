@@ -11,7 +11,6 @@ import report.StatusConverter
  */
 interface ProbkaService {
     fun getProbki(monthBack: Long = 6): List<ProbkaDTO>
-    fun getProbkaDetails(numer: Int): ProbkaDTO?
     fun saveTechnologiaKolumny(numer: Int, k1: String?, k2: String?, k3: String?, k4: String?): Boolean
     fun updateFlag(numer: Int, flagType: FlagType, value: Boolean): Boolean
     fun initializeProduceFlags()
@@ -45,15 +44,6 @@ class ProbkaServiceImpl(
         }
     }
 
-    override fun getProbkaDetails(numer: Int): ProbkaDTO? {
-        // Jedno zoptymalizowane zapytanie pobierające WSZYSTKIE dane dla jednej próbki
-        val zo = repository.findProbkaWithDetailsByNumer(numer) ?: return null
-
-        // Użycie nowej, uproszczonej metody mappera
-        return mapper.toProbkaDTO(zo, statusResolver)
-    }
-
-
     override fun saveTechnologiaKolumny(
         numer: Int,
         k1: String?,
@@ -62,7 +52,8 @@ class ProbkaServiceImpl(
         k4: String?,
     ): Boolean {
         return try {
-            val existing = repository.findTechnologiaNumer(numer)
+
+            val existing = repository.findTechnologiaByNumers(listOf(numer))[numer]
 
             val technologia = existing?.copy(
                 opis = k1,
@@ -77,7 +68,11 @@ class ProbkaServiceImpl(
                 testy = k4,
             )
 
-            repository.saveTechnologia(technologia)
+            if (existing == null) {
+                repository.batchInsertTechnologia(listOf(technologia))
+            } else {
+                repository.batchUpdateTechnologia(listOf(technologia))
+            }
             true
         } catch (e: Exception) {
             false
@@ -86,7 +81,7 @@ class ProbkaServiceImpl(
 
     override fun updateFlag(numer: Int, flagType: FlagType, value: Boolean): Boolean {
         return try {
-            val existing = repository.findTechnologiaNumer(numer)
+            val existing = repository.findTechnologiaByNumers(listOf(numer))[numer]
 
             val technologia = existing?.apply {
                 when (flagType) {
@@ -99,7 +94,11 @@ class ProbkaServiceImpl(
                 tested = if (flagType == FlagType.TESTED) value else null
             )
 
-            repository.saveTechnologia(technologia)
+            if (existing == null) {
+                repository.batchInsertTechnologia(listOf(technologia))
+            } else {
+                repository.batchUpdateTechnologia(listOf(technologia))
+            }
             true
         } catch (e: Exception) {
             false
@@ -158,10 +157,10 @@ class ProbkaServiceImpl(
     }
 
     override fun getAvailableKontrahenci(): List<String> {
-        val probkiZO = repository.findProbkiZO()
-        val uniqueIds = probkiZO.map { it.idKontrahenta }.distinct()
 
-        // Użyj istniejącej metody findKontrahenciByIds
+        val probkiZO = repository.findProbkiWithDetails(monthsBack = 6)
+        val uniqueIds = probkiZO.mapNotNull { it.idKontrahenta }.distinct()
+
         val kontrahenciMap = repository.findKontrahenciByIds(uniqueIds)
 
         return kontrahenciMap.values
