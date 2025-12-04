@@ -108,58 +108,53 @@ class ProbkaServiceImpl(
 
     override fun initializeProduceFlags() {
 
-        // 1. Pobierz wszystkie potrzebne dane w DWÓCH zapytaniach
-        val allProbkiZO = repository.findProbkiWithDetails(monthsBack = 12)
+        // 1. Pobierz tylko numery z ich stanami - lżejsze zapytanie
+        val probkiData = repository.findProbkiStanOnly(monthsBack = 12)
 
-        // 3. Przygotuj listę obiektów do zapisania
-        val entitiesToSave = mutableListOf<Technologia>()
+        /// Pobierz istniejące Technologie w jednym zapytaniu
+        val existingTech = repository.findTechnologiaByNumers(probkiData.keys)
 
-        allProbkiZO.forEach { zo ->
-            val produceValue = when (zo.stan) {
+        val toInsert = mutableListOf<Technologia>()
+        val toUpdate = mutableListOf<Technologia>()
+
+        probkiData.forEach { (numer, stan) ->
+            val produceValue = when (stan) {
                 0.toByte() -> true
                 1.toByte(), 2.toByte() -> false
                 else -> null
             }
 
-            // 3. Logika zapisu/aktualizacji
-            val technologia = zo.technologia
+            val existing = existingTech[numer]
 
-            if (technologia == null) {
-                // 🆕 PUNKT 0: Utwórz nowy rekord TYLKO WTEDY, gdy próbka ma status
-                // Planowane (2) lub Do Realizacji (1), co przekłada się na produceValue = false.
-                // Jeśli produceValue == true (Zrealizowane) lub produceValue == null, ignorujemy.
-                if (produceValue == false) {
-                    entitiesToSave.add(
-                        Technologia(
-                            numer = zo.numer,
-                            produce = false,
-                            send = null,
-                            tested = null
-                        )
-                    )
-                }
-            } else if (technologia.produce != produceValue) {
+
+            // 🆕 PUNKT 0: Utwórz nowy rekord TYLKO WTEDY, gdy próbka ma status
+            // Planowane (2) lub Do Realizacji (1), co przekłada się na produceValue = false.
+            // Jeśli produceValue == true (Zrealizowane) lub produceValue == null, ignorujemy.
+
+            if (existing == null && produceValue == false) {
+                toInsert.add(Technologia(numer = numer, produce = false, send = null, tested = null))
+
                 // 🔄 PUNKT 1 & 2: Aktualizuj istniejący rekord
 
                 // Dodatkowe sprawdzenie, czy aktualizacja z false na true jest dozwolona.
                 // (technologia.produce != produceValue) gwarantuje, że nie aktualizujemy
                 // ze stanu null na true, ponieważ ten przypadek został odrzucony powyżej.
                 // Tutaj obsługujemy głównie przejście: false (w Technologia) -> true (z ZO).
-                val updated = technologia.copy(
-                    produce = produceValue,
-                    // Flagi send/tested ustawiamy na false tylko wtedy, gdy przejście
-                    // na produce=true się odbywa, A poprzednie wartości były null.
-                    send = if (produceValue == true && technologia.send == null) false else technologia.send,
-                    tested = if (produceValue == true && technologia.tested == null) false else technologia.tested
+
+            } else if (existing != null && existing.produce != produceValue) {
+                toUpdate.add(
+                    existing.copy(
+                        produce = produceValue,
+                        send = if (produceValue == true && existing.send == null) false else existing.send,
+                        tested = if (produceValue == true && existing.tested == null) false else existing.tested
+                    )
                 )
-                entitiesToSave.add(updated)
             }
         }
 
-        // 4. Zapisz WSZYSTKIE zmiany w JEDNEJ operacji bazodanowej
-        if (entitiesToSave.isNotEmpty()) {
-            repository.saveAllTechnologia(entitiesToSave)
-        }
+        // Bulk insert/update
+        if (toInsert.isNotEmpty()) repository.batchInsertTechnologia(toInsert)
+        if (toUpdate.isNotEmpty()) repository.batchUpdateTechnologia(toUpdate)
     }
 
     override fun getAvailableKontrahenci(): List<String> {

@@ -89,31 +89,31 @@ class ProbkiViewModel(val probkaService: ProbkaService) {
             try {
                 loadingMessage = "Inicjalizacja flag..."
                 loadingProgress = 0.2f
-                withContext(Dispatchers.IO) {
-                    probkaService.initializeProduceFlags()
-                }
 
-                loadingMessage = "Ładowanie próbek ZO..."
-                loadingProgress = 0.4f
-                probki = withContext(Dispatchers.IO) {
-                    val monthsNonNull = currentFilterState.dateRange.months ?: 6L
-                    probkaService.getProbki(monthsNonNull)
-                }
-                // Ładujemy próbki i kontrahentów równolegle dla lepszej wydajności
                 val monthsNonNull = currentFilterState.dateRange.months ?: 6L
 
-                val probkiDeferred = async(Dispatchers.IO) { probkaService.getProbki(monthsNonNull) }
-                val kontrahenciDeferred = async(Dispatchers.IO) { probkaService.getAvailableKontrahenci() }
+                // Równoległe wykonanie inicjalizacji i ładowania danych
+                val initDeferred = async(Dispatchers.IO) {
+                    probkaService.initializeProduceFlags()
+                }
+                val probkiDeferred = async(Dispatchers.IO) {
+                    probkaService.getProbki(monthsNonNull)
+                }
+                val kontrahenciDeferred = async(Dispatchers.IO) {
+                    probkaService.getAvailableKontrahenci()
+                }
 
+                initDeferred.await()
+                loadingProgress = 0.4f
+
+                loadingMessage = "Ładowanie próbek ZO..."
                 probki = probkiDeferred.await()
                 availableKontrahenci = kontrahenciDeferred.await()
 
                 loadingMessage = "Przetwarzanie danych..."
                 loadingProgress = 0.8f
 
-                // Po załadowaniu danych, uruchom filtrowanie po raz pierwszy
                 triggerFiltering()
-
                 loadingProgress = 1f
 
             } catch (e: Exception) {

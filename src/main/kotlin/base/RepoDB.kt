@@ -29,8 +29,11 @@ interface ProbkaRepository {
     fun findAllTechnologia(): List<Technologia>
     fun findProbkiWithDetails(monthsBack: Long): List<ZO>
     fun findProbkaWithDetailsByNumer(numer: Int): ZO?
+    fun findProbkiStanOnly(monthsBack: Long): Map<Int, Byte>
     fun saveTechnologia(technologia: Technologia): Technologia
     fun saveAllTechnologia(technologiaList: List<Technologia>)
+    fun batchInsertTechnologia(entities: List<Technologia>)
+    fun batchUpdateTechnologia(entities: List<Technologia>)
     fun findKontrahentById(id: Int): Kontrahent?
     fun findKontrahenciByIds(ids: Collection<Int>): Map<Int, Kontrahent>
     fun findReportData(filter: RaportFilter): List<ZO>
@@ -183,6 +186,20 @@ class ProbkaRepositoryImpl(private val sessionFactory: SessionFactory) : ProbkaR
         }
     }
 
+    // Lżejsze zapytanie - tylko numer i stan
+    override fun findProbkiStanOnly(monthsBack: Long): Map<Int, Byte> {
+        val dateFrom = LocalDateTime.now().minus(monthsBack, ChronoUnit.MONTHS)
+
+        return useSession { session ->
+            session.createQuery(
+                "SELECT zo.numer, zo.stan FROM ZO zo WHERE zo.proba = 1 AND zo.data >= :fromDate",
+                Array<Any>::class.java
+            ).apply {
+                setParameter("fromDate", dateFrom)
+            }.resultList.associate { it[0] as Int to it[1] as Byte }
+        }
+    }
+
     override fun saveTechnologia(technologia: Technologia): Technologia {
         return useSession { session ->
             val transaction = session.beginTransaction()
@@ -224,6 +241,36 @@ class ProbkaRepositoryImpl(private val sessionFactory: SessionFactory) : ProbkaR
             ).apply {
                 setParameter("id",  idBig)
             }.uniqueResultOptional().orElse(null)
+        }
+    }
+
+    // Batch insert
+    override fun batchInsertTechnologia(entities: List<Technologia>) {
+        useSession { session ->
+            val tx = session.beginTransaction()
+            entities.forEachIndexed { index, entity ->
+                session.persist(entity)
+                if (index % 50 == 0) {
+                    session.flush()
+                    session.clear()
+                }
+            }
+            tx.commit()
+        }
+    }
+
+    // Batch update
+    override fun batchUpdateTechnologia(entities: List<Technologia>) {
+        useSession { session ->
+            val tx = session.beginTransaction()
+            entities.forEachIndexed { index, entity ->
+                session.merge(entity)
+                if (index % 50 == 0) {
+                    session.flush()
+                    session.clear()
+                }
+            }
+            tx.commit()
         }
     }
 
