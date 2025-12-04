@@ -119,7 +119,7 @@ fun FilterPanel(
                 OutlinedTextField(
                     value = filterState.searchQuery,
                     onValueChange = { onFilterChange(filterState.copy(searchQuery = it)) },
-                    label = { Text("Szukaj (numer, ART, receptura)") },
+                    label = { Text("Szukaj (numer, KIW, receptura)") },
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                     modifier = Modifier.fillMaxWidth().padding(10.dp),
                     colors = TextFieldDefaults.outlinedTextFieldColors(backgroundColor = AppColors.Surface),

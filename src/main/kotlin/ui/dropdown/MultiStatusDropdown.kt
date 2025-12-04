@@ -20,6 +20,7 @@ fun MultiStatusDropdown(
 ) {
     var expanded by remember { mutableStateOf(false) }
 
+    // Mapa, która przypisuje kod statusu do jego nazwy
     val statusy = mapOf(
         0.toByte() to "Wykonane",
         1.toByte() to "Do realizacji",

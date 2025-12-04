@@ -24,8 +24,8 @@ fun getStatusColor(stan: Byte): Color {
     return when (stan.toInt()) {
         0 -> AppColors.StatusCompleted
         1 -> AppColors.StatusInProgress
-        2 -> AppColors.StatusCancel
-        3 -> AppColors.StatusPlaned
+        2 -> AppColors.StatusPlaned
+        3 -> AppColors.StatusCancel
         4 -> AppColors.StatusCancelled
         else -> Color.Gray
     }
