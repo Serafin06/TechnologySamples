@@ -11,6 +11,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import ui.AppColors
 import ui.DateRange
+import ui.heightCell
 import java.time.LocalDateTime
 
 @Composable
@@ -30,7 +31,7 @@ fun OddzialDropdown(
             label = { Text("Zakład") },
             colors = TextFieldDefaults.outlinedTextFieldColors(
                 backgroundColor = AppColors.Surface,
-                textColor = Color.Companion.Black
+                textColor = Color.Black
             ),
             trailingIcon = {
                 IconButton(onClick = { expanded = !expanded }) {
@@ -40,7 +41,7 @@ fun OddzialDropdown(
                     )
                 }
             },
-            modifier = Modifier.Companion.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth().height(heightCell)
         )
 
         DropdownMenu(
@@ -81,16 +82,16 @@ fun DateRangeDropdown(
             label = { Text("Zakres danych") },
             colors = TextFieldDefaults.outlinedTextFieldColors(
                 backgroundColor = AppColors.Surface,
-                disabledLabelColor = Color.Companion.Black
+                disabledLabelColor = Color.Black
             ),
             trailingIcon = {
                 Icon(
                     Icons.Default.ArrowDropDown,
                     contentDescription = null,
-                    modifier = Modifier.Companion.clickable { expanded = true }
+                    modifier = Modifier.clickable { expanded = true }
                 )
             },
-            modifier = Modifier.Companion.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth().height(heightCell)
         )
 
         DropdownMenu(
@@ -128,19 +129,19 @@ fun DatePickerField(
         label = { Text(label) },
         colors = TextFieldDefaults.outlinedTextFieldColors(
             backgroundColor = AppColors.Surface,
-            textColor = Color.Companion.Black
+            textColor = Color.Black
         ),
         trailingIcon = {
             Row {
                 if (date != null) {
                     IconButton(
                         onClick = { onDateChange(null) },
-                        modifier = Modifier.Companion.size(24.dp)
+                        modifier = Modifier.size(24.dp)
                     ) {
                         Icon(
                             Icons.Default.Clear,
                             contentDescription = "Wyczyść",
-                            modifier = Modifier.Companion.size(16.dp)
+                            modifier = Modifier.size(16.dp)
                         )
                     }
                 }
@@ -149,7 +150,7 @@ fun DatePickerField(
                 }
             }
         },
-        modifier = modifier.clickable { showDialog = true }
+        modifier = modifier.height(heightCell).clickable { showDialog = true }
     )
 
     if (showDialog) {
@@ -181,26 +182,26 @@ fun SimpleDatePickerDialog(
         text = {
             Column {
                 Row(
-                    modifier = Modifier.Companion.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     OutlinedTextField(
                         value = year.toString(),
                         onValueChange = { year = it.toIntOrNull() ?: year },
                         label = { Text("Rok") },
-                        modifier = Modifier.Companion.weight(1f)
+                        modifier = Modifier.weight(1f)
                     )
                     OutlinedTextField(
                         value = month.toString(),
                         onValueChange = { month = (it.toIntOrNull() ?: month).coerceIn(1, 12) },
                         label = { Text("Miesiąc") },
-                        modifier = Modifier.Companion.weight(1f)
+                        modifier = Modifier.weight(1f)
                     )
                     OutlinedTextField(
                         value = day.toString(),
                         onValueChange = { day = (it.toIntOrNull() ?: day).coerceIn(1, 31) },
                         label = { Text("Dzień") },
-                        modifier = Modifier.Companion.weight(1f)
+                        modifier = Modifier.weight(1f)
                     )
                 }
             }

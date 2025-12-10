@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.CircularProgressIndicator
@@ -57,7 +59,7 @@ fun SplashScreen() {
             Image(
                 painter = painterResource("drawable/logo2.png"),
                 contentDescription = "Logo Aplikacji",
-                modifier = Modifier.size(777.dp)
+                modifier = Modifier.size(700.dp)
             )
 
             Text(

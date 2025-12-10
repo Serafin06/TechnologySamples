@@ -1,6 +1,7 @@
 package ui
 
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import java.time.LocalDateTime
 
 // 🎨 Theme & Colors
@@ -61,3 +62,5 @@ enum class DateRange(val label: String, val months: Long?) {
     ONE_YEAR("Ostatni rok", 12),
     CUSTOM("Własny zakres", null)
 }
+
+val heightCell = 59.dp

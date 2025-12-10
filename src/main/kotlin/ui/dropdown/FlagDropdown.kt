@@ -9,6 +9,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import ui.AppColors
+import ui.heightCell
 
 @Composable
 fun FlagDropdown(
@@ -66,7 +67,7 @@ fun FlagDropdown(
                     }
                 }
             },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.height(heightCell).fillMaxWidth()
         )
 
         DropdownMenu(

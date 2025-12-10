@@ -9,6 +9,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import ui.AppColors
+import ui.heightCell
 
 @Composable
 fun KontrahentDropdown(
@@ -48,12 +49,12 @@ fun KontrahentDropdown(
                     if (selectedKontrahenci.isNotEmpty()) {
                         IconButton(
                             onClick = { onKontrahenciChange(emptySet()) },
-                            modifier = Modifier.Companion.size(24.dp)
+                            modifier = Modifier.size(24.dp)
                         ) {
                             Icon(
                                 Icons.Default.Clear,
                                 contentDescription = "Wyczyść",
-                                modifier = Modifier.Companion.size(16.dp)
+                                modifier = Modifier.size(16.dp)
                             )
                         }
                     }
@@ -68,7 +69,7 @@ fun KontrahentDropdown(
                     }
                 }
             },
-            modifier = Modifier.Companion.fillMaxWidth()
+            modifier = Modifier.height(heightCell).fillMaxWidth()
         )
 
         DropdownMenu(
@@ -77,7 +78,7 @@ fun KontrahentDropdown(
                 expanded = false
                 searchQuery = ""
             },
-            modifier = Modifier.Companion.heightIn(max = 400.dp).width(300.dp)
+            modifier = Modifier.heightIn(max = 400.dp).width(300.dp)
         ) {
             // Pole wyszukiwania w menu
             OutlinedTextField(
@@ -85,7 +86,7 @@ fun KontrahentDropdown(
                 onValueChange = { searchQuery = it },
                 placeholder = { Text("Szukaj...") },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                modifier = Modifier.Companion.fillMaxWidth().padding(8.dp),
+                modifier = Modifier.fillMaxWidth().padding(8.dp),
                 singleLine = true
             )
 
@@ -103,9 +104,9 @@ fun KontrahentDropdown(
                     }
                 ) {
                     Row(
-                        verticalAlignment = Alignment.Companion.CenterVertically,
+                        verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.Companion.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         Checkbox(
                             checked = selectedKontrahenci.contains(kontrahent),

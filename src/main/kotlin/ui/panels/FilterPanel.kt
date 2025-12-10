@@ -22,6 +22,7 @@ import ui.dropdown.FlagDropdown
 import ui.dropdown.KontrahentDropdown
 import ui.dropdown.MultiStatusDropdown
 import ui.dropdown.OddzialDropdown
+import ui.heightCell
 
 @Composable
 fun FilterPanel(
@@ -42,17 +43,17 @@ fun FilterPanel(
         Column {
             // Header - bez zmian, ale mniejsza czcionka
             Row(
-                modifier = Modifier.fillMaxWidth().background(AppColors.Surface).padding(4.dp),
+                modifier = Modifier.fillMaxWidth().background(AppColors.Surface).padding(2.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.AutoMirrored.Filled.ManageSearch, contentDescription = null, tint = AppColors.Primary)
-                    Spacer(Modifier.width(4.dp))
+                    Spacer(Modifier.width(2.dp))
                     Text(
                         "Filtry",
                         fontWeight = FontWeight.Bold,
-                        fontSize = if (expanded) 16.sp else 14.sp // ✅ Mniejsza gdy zwinięte
+                        fontSize = if (expanded) 16.sp else 14.sp
                     )
                 }
 
@@ -105,7 +106,7 @@ fun FilterPanel(
                     onValueChange = { onFilterChange(filterState.copy(searchQuery = it)) },
                     label = { Text("Szukaj (numer, KIW, receptura)", fontSize = 12.sp) },
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 6.dp, vertical = 4.dp),
+                    modifier = Modifier.fillMaxWidth().height(heightCell).padding(horizontal = 6.dp, vertical = 4.dp),
                     colors = TextFieldDefaults.outlinedTextFieldColors(backgroundColor = AppColors.Surface),
                     singleLine = true,
                     textStyle = LocalTextStyle.current.copy(fontSize = 13.sp)
@@ -157,6 +158,13 @@ fun FilterPanel(
                         modifier = Modifier.weight(1f)
                     )
 
+                    FlagDropdown(
+                        label = "Wyprodukowane",
+                        selectedFlags = filterState.selectedProduce,
+                        onFlagsChange = { onFilterChange(filterState.copy(selectedProduce = it)) },
+                        modifier = Modifier.weight(1f)
+                    )
+
                     MultiStatusDropdown(
                         label = "Status Zlecenia",
                         selectedStatuses = filterState.selectedStatusZO,
@@ -190,22 +198,9 @@ fun FilterPanel(
                         onStatusesChange = { onFilterChange(filterState.copy(selectedStatusZK = it)) },
                         modifier = Modifier.weight(1f)
                     )
-                }
-
-                // ✅ NOWY WIERSZ: Flagi technologii
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 6.dp, vertical = 4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    FlagDropdown(
-                        label = "Wyprodukowana",
-                        selectedFlags = filterState.selectedProduce,
-                        onFlagsChange = { onFilterChange(filterState.copy(selectedProduce = it)) },
-                        modifier = Modifier.weight(1f)
-                    )
 
                     FlagDropdown(
-                        label = "Wysłana",
+                        label = "Wysłane",
                         selectedFlags = filterState.selectedSend,
                         onFlagsChange = { onFilterChange(filterState.copy(selectedSend = it)) },
                         modifier = Modifier.weight(1f)

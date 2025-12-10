@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import ui.AppColors
 import ui.StatusBadge
+import ui.heightCell
 
 @Composable
 fun MultiStatusDropdown(
@@ -64,7 +65,7 @@ fun MultiStatusDropdown(
                     }
                 }
             },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.height(heightCell).fillMaxWidth()
         )
 
         DropdownMenu(
