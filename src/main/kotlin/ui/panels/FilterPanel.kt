@@ -13,8 +13,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 import ui.AppColors
 import ui.DateRange
 import ui.FilterState
@@ -29,24 +27,12 @@ import ui.dropdown.OddzialDropdown
 fun FilterPanel(
     filterState: FilterState,
     onFilterChange: (FilterState) -> Unit,
-    coroutineScope: CoroutineScope,
     onRefresh: () -> Unit,
     onExportExcel: () -> Unit,
     onExportPdf: () -> Unit,
     availableKontrahenci: List<String>
 ) {
     var expanded by remember { mutableStateOf(true) }
-    var showDialogState by remember { mutableStateOf<String?>(null) }
-
-    val onExportComplete: (Boolean, String) -> Unit = { success, path ->
-        coroutineScope.launch {
-            if (success) {
-                showDialogState = "Sukces! Raport zapisano w:\n$path"
-            } else {
-                showDialogState = "Błąd! Nie udało się zapisać raportu."
-            }
-        }
-    }
 
     Card(
         modifier = Modifier.fillMaxWidth().padding(8.dp),
@@ -255,24 +241,5 @@ fun FilterPanel(
                 }
             }
         }
-    }
-
-    // Dialog bez zmian
-    showDialogState?.let { message ->
-        AlertDialog(
-            onDismissRequest = { showDialogState = null },
-            title = {
-                Text(
-                    text = if (message.startsWith("Sukces")) "Eksport zakończony pomyślnie 🎉" else "Wystąpił błąd ❌",
-                    color = if (message.startsWith("Sukces")) AppColors.Primary else AppColors.Error
-                )
-            },
-            text = { Text(message) },
-            confirmButton = {
-                Button(onClick = { showDialogState = null }) {
-                    Text("OK")
-                }
-            }
-        )
     }
 }

@@ -14,11 +14,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import kotlinx.coroutines.launch
 import ui.AppColors
 import ui.ProbkiViewModel
 
 @Composable
 fun ProbkiScreen(viewModel: ProbkiViewModel) {
+
+    val coroutineScope = rememberCoroutineScope()
 
     MaterialTheme(
         colors = lightColors(
@@ -45,14 +48,15 @@ fun ProbkiScreen(viewModel: ProbkiViewModel) {
             ) {
                 // Filtry
                 FilterPanel(
-                    coroutineScope = rememberCoroutineScope(),
+                    // --- POPRAWKA: Usunięto deklarację typu `: FilterState` ---
                     filterState = viewModel.filterStateFlow.collectAsState().value,
                     onFilterChange = { viewModel.updateFilter(it) },
                     onRefresh = {
-                        viewModel.loadProbki()
+                        coroutineScope.launch {
+                            viewModel.loadProbki()
+                        }
                     },
                     availableKontrahenci = viewModel.availableKontrahenci,
-                    // Przekazujemy funkcje z ViewModelu
                     onExportExcel = { viewModel.exportToExcel() },
                     onExportPdf = { viewModel.exportToPdf() }
                 )

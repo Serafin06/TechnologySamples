@@ -1,50 +1,23 @@
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
-import base.ProbkaServiceFactory
 import dataBase.HibernateConfig
-import ui.panels.ProbkiScreen
-import ui.ProbkiViewModel
 
 
 fun main() = application {
-    val windowState = rememberWindowState(width = 1600.dp, height = 900.dp)
-
+    // Okno aplikacji jest tworzone od razu, ale jego zawartość (komponent App) jest prosta i szybka do wyrenderowania
     Window(
         onCloseRequest = {
             HibernateConfig.shutdown()
             exitApplication()
         },
-        state = windowState,
-        title = "Technologia - Zarządzanie Próbkami"
+        title = "Technologia - Zarządzanie Próbkami",
+        state = rememberWindowState(width = 1600.dp, height = 900.dp)
     ) {
-        val sessionFactory = remember { HibernateConfig.sessionFactory }
-        val probkaRepository = remember { base.ProbkaRepositoryImpl(sessionFactory) }
-        val probkaService = remember { ProbkaServiceFactory.createProbkaService(probkaRepository) }
-        val reportService = remember { report.createReportService(probkaRepository) }
-
-        val viewModel = remember { ProbkiViewModel(probkaService, reportService) }
-
-        // Załaduj dane asynchronicznie przy starcie
-        LaunchedEffect(Unit) {
-            viewModel.loadProbki()
-        }
-
-        // Cleanup przy zamknięciu
-        DisposableEffect(Unit) {
-            onDispose {
-                viewModel.dispose()
-            }
-        }
-
-        ProbkiScreen(viewModel)
+        App()
     }
 }
-
 
 fun test(){
     println("Test połączenia Hibernate z SQL Server...")

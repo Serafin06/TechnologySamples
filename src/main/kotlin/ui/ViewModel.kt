@@ -81,8 +81,9 @@ class ProbkiViewModel(val probkaService: ProbkaService, private val reportServic
 
     // --- GŁÓWNA LOGIKA ---
 
-    fun loadProbki() {
-        coroutineScope.launch {
+    suspend fun loadProbki() {
+        // Zmieniamy coroutineScope.launch na withContext, aby wykonać kod w danym wątku i czekać na wynik
+        withContext(Dispatchers.IO) {
             isLoading = true
             loadingProgress = 0f
             errorMessage = null
@@ -94,13 +95,13 @@ class ProbkiViewModel(val probkaService: ProbkaService, private val reportServic
                 val monthsNonNull = currentFilterState.dateRange.months ?: 6L
 
                 // Równoległe wykonanie inicjalizacji i ładowania danych
-                val initDeferred = async(Dispatchers.IO) {
+                val initDeferred = async {
                     probkaService.initializeProduceFlags()
                 }
-                val probkiDeferred = async(Dispatchers.IO) {
+                val probkiDeferred = async {
                     probkaService.getProbki(monthsNonNull)
                 }
-                val kontrahenciDeferred = async(Dispatchers.IO) {
+                val kontrahenciDeferred = async {
                     probkaService.getAvailableKontrahenci()
                 }
 
@@ -118,9 +119,15 @@ class ProbkiViewModel(val probkaService: ProbkaService, private val reportServic
                 loadingProgress = 1f
 
             } catch (e: Exception) {
-                errorMessage = "Błąd ładowania danych: ${e.message}"
+                // Musimy przełączyć się na główny wątek, aby zaktualizować UI
+                withContext(Dispatchers.Main) {
+                    errorMessage = "Błąd ładowania danych: ${e.message}"
+                }
             } finally {
-                isLoading = false
+                // Tak samo tutaj, przełączamy się na główny wątek
+                withContext(Dispatchers.Main) {
+                    isLoading = false
+                }
             }
         }
     }
