@@ -20,6 +20,7 @@ import ui.DateRange
 import ui.FilterState
 import ui.dropdown.DatePickerField
 import ui.dropdown.DateRangeDropdown
+import ui.dropdown.FlagDropdown
 import ui.dropdown.KontrahentDropdown
 import ui.dropdown.MultiStatusDropdown
 import ui.dropdown.OddzialDropdown
@@ -37,9 +38,7 @@ fun FilterPanel(
     var expanded by remember { mutableStateOf(true) }
     var showDialogState by remember { mutableStateOf<String?>(null) }
 
-    // Definicja funkcji, która będzie wywołana po zakończeniu eksportu
     val onExportComplete: (Boolean, String) -> Unit = { success, path ->
-        // Uruchomienie z powrotem w wątku Compose/Swing
         coroutineScope.launch {
             if (success) {
                 showDialogState = "Sukces! Raport zapisano w:\n$path"
@@ -49,16 +48,13 @@ fun FilterPanel(
         }
     }
 
-
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp),
+        modifier = Modifier.fillMaxWidth().padding(8.dp),
         elevation = 2.dp,
         shape = RoundedCornerShape(8.dp),
     ) {
         Column {
-            // Header z przyciskiem zwiń/rozwiń
+            // Header - bez zmian, ale mniejsza czcionka
             Row(
                 modifier = Modifier.fillMaxWidth().background(AppColors.Surface).padding(4.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -67,11 +63,14 @@ fun FilterPanel(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.AutoMirrored.Filled.ManageSearch, contentDescription = null, tint = AppColors.Primary)
                     Spacer(Modifier.width(4.dp))
-                    Text("Filtry", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Text(
+                        "Filtry",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = if (expanded) 16.sp else 14.sp // ✅ Mniejsza gdy zwinięte
+                    )
                 }
 
                 Row {
-                    // --- 💾 SEKCJA Raporty ---
                     var showExportMenu by remember { mutableStateOf(false) }
 
                     Box {
@@ -85,7 +84,6 @@ fun FilterPanel(
                         ) {
                             DropdownMenuItem(onClick = {
                                 showExportMenu = false
-                                // Zamiast wywoływać serwis, wywołujemy callback
                                 onExportExcel()
                             }) {
                                 Text("Eksportuj do Excel (.xlsx)")
@@ -93,7 +91,6 @@ fun FilterPanel(
 
                             DropdownMenuItem(onClick = {
                                 showExportMenu = false
-                                // Zamiast wywoływać serwis, wywołujemy callback
                                 onExportPdf()
                             }) {
                                 Text("Eksportuj do PDF")
@@ -114,58 +111,52 @@ fun FilterPanel(
             }
 
             if (expanded) {
+                // ✅ Zmniejszone paddingi: 10dp -> 6dp, height 8dp -> 4dp
 
                 // Wyszukiwanie
                 OutlinedTextField(
                     value = filterState.searchQuery,
                     onValueChange = { onFilterChange(filterState.copy(searchQuery = it)) },
-                    label = { Text("Szukaj (numer, KIW, receptura)") },
+                    label = { Text("Szukaj (numer, KIW, receptura)", fontSize = 12.sp) },
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                    modifier = Modifier.fillMaxWidth().padding(10.dp),
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 6.dp, vertical = 4.dp),
                     colors = TextFieldDefaults.outlinedTextFieldColors(backgroundColor = AppColors.Surface),
-                    singleLine = true
+                    singleLine = true,
+                    textStyle = LocalTextStyle.current.copy(fontSize = 13.sp)
                 )
 
                 DateRangeDropdown(
                     selectedRange = filterState.dateRange,
                     onRangeSelected = { onFilterChange(filterState.copy(dateRange = it)) },
-                    modifier = Modifier.fillMaxWidth().padding(10.dp),
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 6.dp, vertical = 4.dp),
                 )
 
-                // Jeśli wybrano CUSTOM, pokaż pola dat
+                // Custom daty
                 if (filterState.dateRange == DateRange.CUSTOM) {
-                    Spacer(Modifier.height(8.dp))
-
                     Row(
-                        modifier = Modifier.fillMaxWidth().padding(10.dp),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 6.dp, vertical = 4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         DatePickerField(
                             label = "Data od",
                             date = filterState.customDateFrom,
-                            onDateChange = {
-                                onFilterChange(filterState.copy(customDateFrom = it))
-                            },
+                            onDateChange = { onFilterChange(filterState.copy(customDateFrom = it)) },
                             modifier = Modifier.weight(1f)
                         )
 
                         DatePickerField(
                             label = "Data do",
                             date = filterState.customDateTo,
-                            onDateChange = {
-                                onFilterChange(filterState.copy(customDateTo = it))
-                            },
+                            onDateChange = { onFilterChange(filterState.copy(customDateTo = it)) },
                             modifier = Modifier.weight(1f)
                         )
                     }
                 }
 
-                Spacer(Modifier.height(2.dp))
-
-                // Oddział, kontahent i Status ZO
+                // Oddział, Kontrahent, Status ZO
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(10.dp),
-                    horizontalArrangement = Arrangement.spacedBy(2.dp)
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 6.dp, vertical = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     OddzialDropdown(
                         selectedOddzial = filterState.oddzial,
@@ -186,16 +177,12 @@ fun FilterPanel(
                         onStatusesChange = { onFilterChange(filterState.copy(selectedStatusZO = it)) },
                         modifier = Modifier.weight(1f)
                     )
-
-
                 }
-
-                Spacer(Modifier.height(2.dp))
 
                 // Statusy ZD, ZL, ZK
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(10.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 6.dp, vertical = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     MultiStatusDropdown(
                         label = "Status Drukarnia",
@@ -217,27 +204,60 @@ fun FilterPanel(
                         onStatusesChange = { onFilterChange(filterState.copy(selectedStatusZK = it)) },
                         modifier = Modifier.weight(1f)
                     )
-
-
                 }
 
-                Spacer(Modifier.height(6.dp))
+                // ✅ NOWY WIERSZ: Flagi technologii
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 6.dp, vertical = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    FlagDropdown(
+                        label = "Wyprodukowana",
+                        selectedFlags = filterState.selectedProduce,
+                        onFlagsChange = { onFilterChange(filterState.copy(selectedProduce = it)) },
+                        modifier = Modifier.weight(1f)
+                    )
 
-                // Przycisk czyszczenia filtrów
-                if (filterState != FilterState()) {
-                    Spacer(Modifier.height(12.dp))
+                    FlagDropdown(
+                        label = "Wysłana",
+                        selectedFlags = filterState.selectedSend,
+                        onFlagsChange = { onFilterChange(filterState.copy(selectedSend = it)) },
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    FlagDropdown(
+                        label = "Testy",
+                        selectedFlags = filterState.selectedTested,
+                        onFlagsChange = { onFilterChange(filterState.copy(selectedTested = it)) },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                // Przycisk czyszczenia - porównaj z domyślnym stanem
+                // 1. Stwórz obiekt stanu "czystego" do porównań
+                val clearedState = FilterState.cleared()
+
+                // 2. Sprawdź, czy aktualny stan różni się od stanu "czystego"
+                //    To jest bardzo prosta i czytelna logika!
+                val isAnyFilterActive = filterState != clearedState
+
+                // 3. Wyświetl przycisk, jeśli jakikolwiek filtr jest aktywny
+                if (isAnyFilterActive) {
                     TextButton(
-                        onClick = { onFilterChange(FilterState()) },
-                        modifier = Modifier.align(Alignment.End)
+                        // 4. Przy kliknięciu ustaw stan na "czysty"
+                        onClick = { onFilterChange(clearedState) },
+                        modifier = Modifier.align(Alignment.End).padding(4.dp)
                     ) {
-                        Icon(Icons.Default.Clear, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Icon(Icons.Default.Clear, contentDescription = null, modifier = Modifier.size(14.dp))
                         Spacer(Modifier.width(4.dp))
-                        Text("Wyczyść filtry")
+                        Text("Wyczyść filtry", fontSize = 12.sp)
                     }
                 }
             }
         }
     }
+
+    // Dialog bez zmian
     showDialogState?.let { message ->
         AlertDialog(
             onDismissRequest = { showDialogState = null },

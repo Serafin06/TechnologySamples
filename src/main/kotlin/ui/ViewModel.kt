@@ -190,8 +190,28 @@ class ProbkiViewModel(val probkaService: ProbkaService, private val reportServic
                     probka.statusZL?.any { it.stan in currentFilterState.selectedStatusZL } == true
                 }
 
+                val matchesProduce = if (currentFilterState.selectedProduce.isEmpty()) {
+                    true
+                } else {
+                    currentFilterState.selectedProduce.contains(probka.produce)
+                }
+
+                val matchesSend = if (currentFilterState.selectedSend.isEmpty()) {
+                    true
+                } else {
+                    currentFilterState.selectedSend.contains(probka.send)
+                }
+
+                val matchesTested = if (currentFilterState.selectedTested.isEmpty()) {
+                    true
+                } else {
+                    currentFilterState.selectedTested.contains(probka.tested)
+                }
+
+                // Zmień ostatnią linię na:
                 matchesSearch && matchesOddzial && matchesKontrahent &&
-                        matchesStanZO && matchesStanZK && matchesStanZD && matchesStanZL
+                        matchesStanZO && matchesStanZK && matchesStanZD && matchesStanZL &&
+                        matchesProduce && matchesSend && matchesTested
             }
 
             // Po zakończeniu filtrowania, aktualizujemy stan w głównym wątku UI

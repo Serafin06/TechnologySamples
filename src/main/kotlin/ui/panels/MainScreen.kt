@@ -38,7 +38,7 @@ fun ProbkiScreen(viewModel: ProbkiViewModel) {
             }
         ) { padding ->
             Column(
-                modifier = Modifier.Companion
+                modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
                     .background(AppColors.Background)
