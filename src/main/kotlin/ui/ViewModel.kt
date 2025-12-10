@@ -71,12 +71,17 @@ class ProbkiViewModel(val probkaService: ProbkaService, private val reportServic
     var exportMessage by mutableStateOf<String?>(null)
         private set
 
+    // Stan do śledzenia odświeżania w tle (inny niż początkowe ładowanie)
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
+
     // --- INICJALIZACJA ---
 
     init {
         // Uruchom nasłuchiwanie na zmiany filtra i monitorowanie połączenia
         startFiltering()
         startConnectionMonitoring()
+        startAutoRefreshTimer()
     }
 
     // --- GŁÓWNA LOGIKA ---
@@ -128,6 +133,43 @@ class ProbkiViewModel(val probkaService: ProbkaService, private val reportServic
                 withContext(Dispatchers.Main) {
                     isLoading = false
                 }
+            }
+        }
+    }
+
+    // --- AUTOMATYCZNE ODŚWIEŻANIE ---
+    private fun startAutoRefreshTimer() {
+        coroutineScope.launch {
+            while (isActive) { // Pętla działa, dopóki coroutineScope jest aktywny
+                delay(10 * 60 * 1000L) // Czekaj 10 minut
+                if (!isLoading) { // Nie odświeżaj, jeśli trwa początkowe ładowanie
+                    refreshProbki()
+                }
+            }
+        }
+    }
+
+    // ładowanie próbek w tle bez zmiany stanu isLoading
+
+    suspend fun refreshProbki() {
+        withContext(Dispatchers.IO) {
+            _isRefreshing.value = true
+            try {
+                val monthsNonNull = currentFilterState.dateRange.months ?: 6L
+
+                // Równoległe pobieranie danych
+                val probkiDeferred = async { probkaService.getProbki(monthsNonNull) }
+                val kontrahenciDeferred = async { probkaService.getAvailableKontrahenci() }
+
+                probki = probkiDeferred.await()
+                availableKontrahenci = kontrahenciDeferred.await()
+
+                triggerFiltering()
+            } catch (e: Exception) {
+                // Można dodać osobny stan błędu dla odświeżania, np. snackbar
+                println("Błąd automatycznego odświeżania: ${e.message}")
+            } finally {
+                _isRefreshing.value = false
             }
         }
     }

@@ -12,6 +12,7 @@ import androidx.compose.material.Text
 import androidx.compose.material.lightColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import kotlinx.coroutines.launch
@@ -22,6 +23,7 @@ import ui.ProbkiViewModel
 fun ProbkiScreen(viewModel: ProbkiViewModel) {
 
     val coroutineScope = rememberCoroutineScope()
+    val isRefreshing by viewModel.isRefreshing.collectAsState()
 
     MaterialTheme(
         colors = lightColors(
@@ -48,12 +50,13 @@ fun ProbkiScreen(viewModel: ProbkiViewModel) {
             ) {
                 // Filtry
                 FilterPanel(
-                    // --- POPRAWKA: Usunięto deklarację typu `: FilterState` ---
+
+                    isRefreshing = isRefreshing,
                     filterState = viewModel.filterStateFlow.collectAsState().value,
                     onFilterChange = { viewModel.updateFilter(it) },
                     onRefresh = {
                         coroutineScope.launch {
-                            viewModel.loadProbki()
+                            viewModel.refreshProbki()
                         }
                     },
                     availableKontrahenci = viewModel.availableKontrahenci,

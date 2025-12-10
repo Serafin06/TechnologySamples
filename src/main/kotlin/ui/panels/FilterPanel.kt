@@ -31,6 +31,7 @@ fun FilterPanel(
     onRefresh: () -> Unit,
     onExportExcel: () -> Unit,
     onExportPdf: () -> Unit,
+    isRefreshing: Boolean,
     availableKontrahenci: List<String>
 ) {
     var expanded by remember { mutableStateOf(true) }
@@ -86,7 +87,15 @@ fun FilterPanel(
                     }
 
                     IconButton(onClick = onRefresh) {
-                        Icon(Icons.Default.Refresh, contentDescription = "Odśwież", tint = AppColors.Primary)
+                        if (isRefreshing) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                strokeWidth = 2.dp,
+                                color = AppColors.Primary
+                            )
+                        } else {
+                            Icon(Icons.Default.Refresh, contentDescription = "Odśwież", tint = AppColors.Primary)
+                        }
                     }
                     IconButton(onClick = { expanded = !expanded }) {
                         Icon(
