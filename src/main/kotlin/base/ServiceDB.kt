@@ -1,10 +1,13 @@
 package base
 
 import dataBase.Technologia
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import report.RaportFilter
 import report.ReportDTO
 import java.time.format.DateTimeFormatter
 import report.StatusConverter
+import java.time.LocalDateTime
 
 /**
  * Interface serwisu - Single Responsibility Principle
@@ -16,6 +19,15 @@ interface ProbkaService {
     fun initializeProduceFlags()
     fun getAvailableKontrahenci(): List<String>
     fun testConnection(): Boolean
+    suspend fun getMagazynProbki(): List<MagazynDTO>
+    suspend fun saveMagazynData(
+        numer: Int,
+        skladMag: String?,
+        szerokoscMag: String?,
+        iloscMag: String?,
+        uwagiMag: String?,
+        dataProdukcjiMag: LocalDateTime?
+    )
 }
 
 enum class FlagType {
@@ -174,6 +186,25 @@ class ProbkaServiceImpl(
             true
         } catch (e: Exception) {
             false
+        }
+    }
+
+    override suspend fun getMagazynProbki(): List<MagazynDTO> {
+        return withContext(Dispatchers.IO) {
+            repository.getAllMagazynProbki()
+        }
+    }
+
+    override suspend fun saveMagazynData(
+        numer: Int,
+        skladMag: String?,
+        szerokoscMag: String?,
+        iloscMag: String?,
+        uwagiMag: String?,
+        dataProdukcjiMag: LocalDateTime?
+    ) {
+        withContext(Dispatchers.IO) {
+            repository.saveMagazynData(numer, skladMag, szerokoscMag, iloscMag, uwagiMag, dataProdukcjiMag)
         }
     }
 }

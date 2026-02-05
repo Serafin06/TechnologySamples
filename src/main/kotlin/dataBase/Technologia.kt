@@ -1,10 +1,8 @@
 package dataBase
 
 import jakarta.persistence.*
+import java.time.LocalDateTime
 
-/**
- * Encja TODO_TABELA - Przechowuje 4 flagi tekstowe dla zamówień
- */
 @Entity
 @Table(name = "Technologia")
 data class Technologia(
@@ -37,5 +35,23 @@ data class Technologia(
     var send: Boolean? = null,
 
     @Column(name = "TESTED")
-    var tested: Boolean? = null
+    var tested: Boolean? = null,
+
+    @Column(name = "SKLAD_MAG", length = 200)
+    var skladMag: String? = null,
+
+    @Column(name = "SZEROKOSC_MAG", length = 200)
+    var szerokoscMag: String? = null,
+
+    @Column(name = "ILOSC_MAG", length = 200)
+    var iloscMag: String? = null,
+
+    @Column(name = "UWAGI_MAG", length = 1000)
+    var uwagiMag: String? = null,
+
+    @Column(name = "DATA_PRODUKCJI_MAG")
+    var dataProdukcjiMag: LocalDateTime? = null,
+
+    @Column(name = "DATA_AKTUALIZACJI_MAG")
+    var dataAktualizacjiMag: LocalDateTime? = null
 )

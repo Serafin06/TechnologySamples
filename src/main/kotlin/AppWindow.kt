@@ -1,4 +1,3 @@
-
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -18,12 +17,19 @@ import kotlinx.coroutines.withContext
 import ui.AppColors
 import ui.panels.ProbkiScreen
 import ui.ProbkiViewModel
+import androidx.compose.material.Tab
+import androidx.compose.material.TabRow
 
 // Definiujemy stany, w których może znajdować się aplikacja
 enum class AppState {
     Loading, // Ekran powitalny
     Ready,   // Główny ekran aplikacji
     Error    // Ekran błędu krytycznego
+}
+
+enum class AppTab {
+    PROBKI,
+    MAGAZYN
 }
 
 // Suspend funkcja, która wykonuje całą ciężką pracę inicjalizacji
@@ -113,15 +119,40 @@ fun App() {
     when (appState.value) {
         AppState.Loading -> SplashScreen()
         AppState.Ready -> {
-            // Gdy stan jest Ready, mamy pewność, że viewModelState nie jest null
             viewModelState.value?.let { viewModel ->
-                ProbkiScreen(viewModel)
+                var selectedTab by remember { mutableStateOf(AppTab.PROBKI) }
+
+                Column(modifier = Modifier.fillMaxSize()) {
+                    TabRow(
+                        selectedTabIndex = selectedTab.ordinal,
+                        backgroundColor = AppColors.Primary,
+                        contentColor = Color.White
+                    ) {
+                        Tab(
+                            selected = selectedTab == AppTab.PROBKI,
+                            onClick = { selectedTab = AppTab.PROBKI },
+                            text = { Text("Próbki") }
+                        )
+                        Tab(
+                            selected = selectedTab == AppTab.MAGAZYN,
+                            onClick = { selectedTab = AppTab.MAGAZYN },
+                            text = { Text("Magazyn próbek") }
+                        )
+                    }
+
+                    when (selectedTab) {
+                        AppTab.PROBKI -> ProbkiScreen(viewModel)
+                        AppTab.MAGAZYN -> MagazynScreen(viewModel)
+                    }
+                }
             }
         }
+
         AppState.Error -> {
             errorMessage.value?.let { message ->
                 ErrorScreen(message)
             }
         }
     }
+
 }

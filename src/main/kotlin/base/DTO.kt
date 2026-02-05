@@ -54,3 +54,25 @@ data class StatusInfo(
     val terminZak: LocalDateTime?,
     val dataZak: LocalDateTime?
 )
+
+/**
+ * DTO dla widoku magazynu
+ */
+
+data class MagazynDTO(
+    val numer: Int,
+    val oddzialNazwa: String,
+    val kontrahentNazwa: String,
+    val art: String?,
+    val receptura: String?,
+    val nazwa: String?,
+    val tested: Boolean?,
+
+    // Dane magazynowe
+    val skladMag: String?,
+    val szerokoscMag: String?,
+    val iloscMag: String?,
+    val uwagiMag: String?,
+    val dataProdukcjiMag: LocalDateTime?,
+    val dataAktualizacjiMag: LocalDateTime?
+)

@@ -28,6 +28,15 @@ interface ProbkaRepository {
     fun findKontrahenciByIds(ids: Collection<Int>): Map<Int, Kontrahent>
     fun testConnection()
     fun <T> useSession(block: (Session) -> T): T
+    fun getAllMagazynProbki(): List<MagazynDTO>
+    fun saveMagazynData(
+        numer: Int,
+        skladMag: String?,
+        szerokoscMag: String?,
+        iloscMag: String?,
+        uwagiMag: String?,
+        dataProdukcjiMag: LocalDateTime?
+    )
 }
 
 /**
@@ -172,6 +181,107 @@ class ProbkaRepositoryImpl(private val sessionFactory: SessionFactory) : ProbkaR
             block(session)
         } finally {
             session.close()
+        }
+    }
+
+    override fun getAllMagazynProbki(): List<MagazynDTO> {
+        return useSession { session ->
+            val hql = """
+            SELECT zo.numer, zo.oddzialW, zo.art, zo.receptura1, zo.opis1,
+                   t.skladMag, t.szerokoscMag, t.iloscMag, t.uwagiMag, 
+                   t.dataProdukcjiMag, t.dataAktualizacjiMag, t.tested
+            FROM ZO zo
+            LEFT JOIN Technologia t ON zo.numer = t.numer
+            WHERE zo.proba = 1 
+              AND (t.skladMag IS NOT NULL 
+                   OR t.szerokoscMag IS NOT NULL 
+                   OR t.iloscMag IS NOT NULL)
+            ORDER BY t.dataAktualizacjiMag DESC NULLS LAST
+        """
+
+            val results = session.createQuery(hql, Array<Any>::class.java).resultList
+
+            // Pobierz kontrahentów
+            val zoNumers = results.map { it[0] as Int }.toSet()
+            val zoMap = session.createQuery(
+                "FROM ZO WHERE numer IN :numers",
+                ZO::class.java
+            ).setParameter("numers", zoNumers).resultList.associateBy { it.numer }
+
+            val kontrahentIds = zoMap.values.mapNotNull { it.idKontrahenta }.toSet()
+            val kontrahentMap = if (kontrahentIds.isNotEmpty()) {
+                findKontrahenciByIds(kontrahentIds)
+            } else emptyMap()
+
+            results.map { row ->
+                val numer = row[0] as Int
+                val zo = zoMap[numer]
+                val kontrahent = zo?.idKontrahenta?.let { kontrahentMap[it] }
+
+                MagazynDTO(
+                    numer = numer,
+                    oddzialNazwa = when ((row[1] as Byte).toInt()) {
+                        11 -> "Ignatki"
+                        12 -> "Tychy"
+                        else -> "Nieznany"
+                    },
+                    kontrahentNazwa = kontrahent?.nazwa ?: "Nieznany",
+                    art = row[2] as String?,
+                    receptura = row[3] as String?,
+                    nazwa = row[4] as String?,
+                    tested = row[11] as Boolean?,
+                    skladMag = row[5] as String?,
+                    szerokoscMag = row[6] as String?,
+                    iloscMag = row[7] as String?,
+                    uwagiMag = row[8] as String?,
+                    dataProdukcjiMag = row[9] as LocalDateTime?,
+                    dataAktualizacjiMag = row[10] as LocalDateTime?
+                )
+            }
+        }
+    }
+
+    override fun saveMagazynData(
+        numer: Int,
+        skladMag: String?,
+        szerokoscMag: String?,
+        iloscMag: String?,
+        uwagiMag: String?,
+        dataProdukcjiMag: LocalDateTime?
+    ) {
+        useSession { session ->
+            val tx = session.beginTransaction()
+            try {
+                val existing = findTechnologiaByNumers(listOf(numer))[numer]
+
+                val technologia = existing?.copy(
+                    skladMag = skladMag,
+                    szerokoscMag = szerokoscMag,
+                    iloscMag = iloscMag,
+                    uwagiMag = uwagiMag,
+                    dataProdukcjiMag = dataProdukcjiMag,
+                    dataAktualizacjiMag = LocalDateTime.now()
+                ) ?: Technologia(
+                    numer = numer,
+                    skladMag = skladMag,
+                    szerokoscMag = szerokoscMag,
+                    iloscMag = iloscMag,
+                    uwagiMag = uwagiMag,
+                    dataProdukcjiMag = dataProdukcjiMag,
+                    dataAktualizacjiMag = LocalDateTime.now()
+                )
+
+                if (existing == null) {
+                    session.persist(technologia)
+                } else {
+                    session.merge(technologia)
+                }
+
+                tx.commit()
+            } catch (e: Exception) {
+                tx.rollback()
+                throw e
+            }
         }
     }
 }
