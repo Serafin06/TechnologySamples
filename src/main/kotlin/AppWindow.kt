@@ -19,6 +19,8 @@ import ui.panels.ProbkiScreen
 import ui.ProbkiViewModel
 import androidx.compose.material.Tab
 import androidx.compose.material.TabRow
+import ui.MagazynViewModel
+import ui.panels.MagazynScreen
 
 // Definiujemy stany, w których może znajdować się aplikacja
 enum class AppState {
@@ -34,20 +36,19 @@ enum class AppTab {
 
 // Suspend funkcja, która wykonuje całą ciężką pracę inicjalizacji
 // Zwraca w pełni przygotowany ViewModel lub rzuca wyjątek
-suspend fun initializeApp(): ProbkiViewModel {
-    // Te operacje mogą być czasochłonne, więc wykonujemy je w tle
+suspend fun initializeApp(): Pair<ProbkiViewModel, MagazynViewModel> {
     return withContext(Dispatchers.IO) {
         val sessionFactory = HibernateConfig.sessionFactory
         val probkaRepository = base.ProbkaRepositoryImpl(sessionFactory)
         val probkaService = ProbkaServiceFactory.createProbkaService(probkaRepository)
         val reportService = report.createReportService(probkaRepository)
 
-        val viewModel = ProbkiViewModel(probkaService, reportService)
+        val probkiViewModel = ProbkiViewModel(probkaService, reportService)
+        val magazynViewModel = MagazynViewModel(probkaService)
 
-        // Czekamy, aż wszystkie dane zostaną załadowane do ViewModelu
-        viewModel.loadProbki()
+        probkiViewModel.loadProbki()
 
-        viewModel
+        Pair(probkiViewModel, magazynViewModel)
     }
 }
 
@@ -96,18 +97,15 @@ fun ErrorScreen(message: String) {
 // Główny komponent aplikacji, który zarządza stanem
 @Composable
 fun App() {
-    // Stan aplikacji, domyślnie ustawiony na ładowanie
     val appState = remember { mutableStateOf(AppState.Loading) }
-    // Stan do przechowywania ViewModelu po jego utworzeniu
-    val viewModelState = remember { mutableStateOf<ProbkiViewModel?>(null) }
-    // Stan do przechowywania ewentualnego błędu
+    // Zmieniony typ:
+    val viewModelState = remember { mutableStateOf<Pair<ProbkiViewModel, MagazynViewModel>?>(null) }
     val errorMessage = remember { mutableStateOf<String?>(null) }
 
-    // Uruchamiamy inicjalizację tylko raz, przy starcie komponentu
     LaunchedEffect(Unit) {
         try {
-            val viewModel = initializeApp()
-            viewModelState.value = viewModel
+            val viewModels = initializeApp()
+            viewModelState.value = viewModels
             appState.value = AppState.Ready
         } catch (e: Exception) {
             errorMessage.value = e.message
@@ -115,11 +113,11 @@ fun App() {
         }
     }
 
-    // Na podstawie stanu aplikacji wyświetlamy odpowiedni ekran
     when (appState.value) {
         AppState.Loading -> SplashScreen()
         AppState.Ready -> {
-            viewModelState.value?.let { viewModel ->
+            // Zmieniony destructuring:
+            viewModelState.value?.let { (probkiVM, magazynVM) ->
                 var selectedTab by remember { mutableStateOf(AppTab.PROBKI) }
 
                 Column(modifier = Modifier.fillMaxSize()) {
@@ -141,18 +139,16 @@ fun App() {
                     }
 
                     when (selectedTab) {
-                        AppTab.PROBKI -> ProbkiScreen(viewModel)
-                        AppTab.MAGAZYN -> MagazynScreen(viewModel)
+                        AppTab.PROBKI -> ProbkiScreen(probkiVM)
+                        AppTab.MAGAZYN -> MagazynScreen(magazynVM)
                     }
                 }
             }
         }
-
         AppState.Error -> {
             errorMessage.value?.let { message ->
                 ErrorScreen(message)
             }
         }
     }
-
 }

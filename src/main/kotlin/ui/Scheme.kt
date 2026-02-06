@@ -13,6 +13,9 @@ object AppColors {
     val Surface = Color.White
     val Error = Color(0xFFB00020)
 
+    val OnPrimary = Color.White
+    val OnBackground = Color.Black
+
     val StatusCompleted = Color(0xFF4CAF50)
     val StatusInProgress = Color(0xFF2196F3)
     val StatusCancel = Color(0xFF9E9E9E)
