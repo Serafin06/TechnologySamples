@@ -62,6 +62,7 @@ fun AddMagazynDialog(
                         suggestions.forEach { zo ->
                             DropdownMenuItem(onClick = {
                                 numerInput = zo.numer.toString()
+                                if (skladMag.isBlank()) skladMag = zo.art ?: ""
                                 showSuggestions = false
                             }) {
                                 Column {
@@ -76,9 +77,8 @@ fun AddMagazynDialog(
 
                 // Info z systemu (readonly jeśli wybrany)
                 if (selectedZO != null) {
-                    Text("Kontrahent: ${selectedZO.kontrahentNazwa}",
-                        style = MaterialTheme.typography.caption,
-                        color = AppColors.OnBackground.copy(alpha = 0.7f))
+                    Text("Kontrahent: ${selectedZO.kontrahentNazwa} | Art: ${selectedZO.art ?: "-"} | Receptura: ${selectedZO.receptura ?: "-"}",
+                        style = MaterialTheme.typography.caption)
                 }
 
                 OutlinedTextField(value = skladMag, onValueChange = { skladMag = it },

@@ -189,38 +189,32 @@ class ProbkaRepositoryImpl(private val sessionFactory: SessionFactory) : ProbkaR
         return useSession { session ->
             val hql = """
             SELECT zo.numer, zo.oddzialW, zo.art, zo.receptura1, zo.opis1,
-                   t.skladMag, t.szerokoscMag, t.iloscMag, t.uwagiMag, 
-                   t.dataProdukcjiMag, t.dataAktualizacjiMag, t.tested
+                   t.skladMag, t.szerokoscMag, t.iloscMag, t.uwagiMag,
+                   t.dataProdukcjiMag, t.dataAktualizacjiMag, t.tested,
+                   zo.idKontrahenta
             FROM ZO zo
             LEFT JOIN Technologia t ON zo.numer = t.numer
-            WHERE zo.proba = 1 
-              AND (t.skladMag IS NOT NULL 
-                   OR t.szerokoscMag IS NOT NULL 
+            WHERE zo.proba = 1
+              AND (t.skladMag IS NOT NULL
+                   OR t.szerokoscMag IS NOT NULL
                    OR t.iloscMag IS NOT NULL)
             ORDER BY t.dataAktualizacjiMag DESC NULLS LAST
         """
 
             val results = session.createQuery(hql, Array<Any>::class.java).resultList
 
-            // Pobierz kontrahentów
-            val zoNumers = results.map { it[0] as Int }.toSet()
-            val zoMap = session.createQuery(
-                "FROM ZO WHERE numer IN :numers",
-                ZO::class.java
-            ).setParameter("numers", zoNumers).resultList.associateBy { it.numer }
-
-            val kontrahentIds = zoMap.values.mapNotNull { it.idKontrahenta }.toSet()
+            val kontrahentIds = results.mapNotNull { it[12] as Int? }.toSet()
             val kontrahentMap = if (kontrahentIds.isNotEmpty()) {
                 findKontrahenciByIds(kontrahentIds)
-            } else emptyMap()
+            } else {
+                emptyMap()
+            }
 
             results.map { row ->
-                val numer = row[0] as Int
-                val zo = zoMap[numer]
-                val kontrahent = zo?.idKontrahenta?.let { kontrahentMap[it] }
+                val kontrahent = (row[12] as Int?)?.let { kontrahentMap[it] }
 
                 MagazynDTO(
-                    numer = numer,
+                    numer = row[0] as Int,
                     oddzialNazwa = when ((row[1] as Byte).toInt()) {
                         11 -> "Ignatki"
                         12 -> "Tychy"
@@ -230,13 +224,13 @@ class ProbkaRepositoryImpl(private val sessionFactory: SessionFactory) : ProbkaR
                     art = row[2] as String?,
                     receptura = row[3] as String?,
                     nazwa = row[4] as String?,
-                    tested = row[11] as Boolean?,
                     skladMag = row[5] as String?,
                     szerokoscMag = row[6] as String?,
                     iloscMag = row[7] as String?,
                     uwagiMag = row[8] as String?,
                     dataProdukcjiMag = row[9] as LocalDateTime?,
-                    dataAktualizacjiMag = row[10] as LocalDateTime?
+                    dataAktualizacjiMag = row[10] as LocalDateTime?,
+                    tested = row[11] as Boolean?
                 )
             }
         }
