@@ -20,6 +20,7 @@ interface ProbkaService {
     fun getAvailableKontrahenci(): List<String>
     fun testConnection(): Boolean
     suspend fun getMagazynProbki(): List<MagazynDTO>
+    suspend fun getAvailableZOForMagazyn(): List<ZOPodpowiedzDTO>
     suspend fun saveMagazynData(
         numer: Int,
         skladMag: String?,
@@ -192,6 +193,12 @@ class ProbkaServiceImpl(
     override suspend fun getMagazynProbki(): List<MagazynDTO> {
         return withContext(Dispatchers.IO) {
             repository.getAllMagazynProbki()
+        }
+    }
+
+    override suspend fun getAvailableZOForMagazyn(): List<ZOPodpowiedzDTO> {
+        return withContext(Dispatchers.IO) {
+            repository.getAvailableZOForMagazyn()
         }
     }
 

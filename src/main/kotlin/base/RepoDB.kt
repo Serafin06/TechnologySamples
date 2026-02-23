@@ -29,6 +29,7 @@ interface ProbkaRepository {
     fun testConnection()
     fun <T> useSession(block: (Session) -> T): T
     fun getAllMagazynProbki(): List<MagazynDTO>
+    fun getAvailableZOForMagazyn(): List<ZOPodpowiedzDTO>
     fun saveMagazynData(
         numer: Int,
         skladMag: String?,
@@ -236,6 +237,27 @@ class ProbkaRepositoryImpl(private val sessionFactory: SessionFactory) : ProbkaR
                     uwagiMag = row[8] as String?,
                     dataProdukcjiMag = row[9] as LocalDateTime?,
                     dataAktualizacjiMag = row[10] as LocalDateTime?
+                )
+            }
+        }
+    }
+
+    override fun getAvailableZOForMagazyn(): List<ZOPodpowiedzDTO> {
+        return useSession { session ->
+            val results = session.createQuery(
+                "FROM ZO zo WHERE zo.proba = 1 ORDER BY zo.numer DESC",
+                ZO::class.java
+            ).resultList
+
+            val kontrahentIds = results.mapNotNull { it.idKontrahenta }.toSet()
+            val kontrahentMap = if (kontrahentIds.isNotEmpty()) findKontrahenciByIds(kontrahentIds) else emptyMap()
+
+            results.map { zo ->
+                ZOPodpowiedzDTO(
+                    numer = zo.numer,
+                    kontrahentNazwa = kontrahentMap[zo.idKontrahenta]?.nazwa ?: "Nieznany",
+                    art = zo.art,
+                    receptura = zo.receptura1
                 )
             }
         }

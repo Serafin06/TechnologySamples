@@ -3,6 +3,7 @@ package ui
 import androidx.compose.runtime.*
 import base.MagazynDTO
 import base.ProbkaService
+import base.ZOPodpowiedzDTO
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import java.time.LocalDateTime
@@ -37,6 +38,13 @@ class MagazynViewModel(private val probkaService: ProbkaService) {
     var filteredMagazynProbki by mutableStateOf<List<MagazynDTO>>(emptyList())
         private set
 
+    //dodawanie próbek do magazynu - potrzebne do wyboru ZO
+    var availableZO by mutableStateOf<List<ZOPodpowiedzDTO>>(emptyList())
+        private set
+
+    var showAddDialog by mutableStateOf(false)
+        private set
+
     init {
         startFiltering()
     }
@@ -48,6 +56,7 @@ class MagazynViewModel(private val probkaService: ProbkaService) {
 
             try {
                 magazynProbki = probkaService.getMagazynProbki()
+                availableZO = probkaService.getAvailableZOForMagazyn()
                 triggerFiltering()
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
@@ -134,6 +143,28 @@ class MagazynViewModel(private val probkaService: ProbkaService) {
                     magazynProbki = magazynProbki.toMutableList().apply { set(index, current) }
                     triggerFiltering()
                 }
+            }
+        }
+    }
+
+    fun openAddDialog() { showAddDialog = true }
+    fun closeAddDialog() { showAddDialog = false }
+
+    fun addMagazynEntry(
+        numer: Int,
+        skladMag: String?,
+        szerokoscMag: String?,
+        iloscMag: String?,
+        uwagiMag: String?,
+        dataProdukcjiMag: LocalDateTime?
+    ) {
+        coroutineScope.launch(Dispatchers.IO) {
+            try {
+                probkaService.saveMagazynData(numer, skladMag, szerokoscMag, iloscMag, uwagiMag, dataProdukcjiMag)
+                loadMagazynProbki()
+                withContext(Dispatchers.Main) { showAddDialog = false }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) { errorMessage = "Błąd dodawania: ${e.message}" }
             }
         }
     }

@@ -7,13 +7,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.launch
 import ui.AppColors
 import ui.MagazynViewModel
+import ui.dialog.AddMagazynDialog
 
 @Composable
 fun MagazynScreen(viewModel: MagazynViewModel) {
-    val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
         viewModel.loadMagazynProbki()
@@ -34,7 +33,8 @@ fun MagazynScreen(viewModel: MagazynViewModel) {
                     isEditMode = viewModel.isEditMode,
                     onToggleEditMode = { viewModel.toggleEditMode() },
                     searchQuery = viewModel.searchQuery.collectAsState().value,
-                    onSearchChange = { viewModel.updateSearchQuery(it) }
+                    onSearchChange = { viewModel.updateSearchQuery(it) },
+                    onAddClick = { viewModel.openAddDialog() }
                 )
             }
         ) { padding ->
@@ -57,6 +57,16 @@ fun MagazynScreen(viewModel: MagazynViewModel) {
                     )
                 }
             }
+
+            if (viewModel.showAddDialog) {
+                AddMagazynDialog(
+                    availableZO = viewModel.availableZO,
+                    onDismiss = { viewModel.closeAddDialog() },
+                    onConfirm = { numer, sklad, szerokosc, ilosc, uwagi, dataProdukcji ->
+                        viewModel.addMagazynEntry(numer, sklad, szerokosc, ilosc, uwagi, dataProdukcji)
+                    }
+                )
+            }
         }
     }
 }
@@ -66,7 +76,8 @@ fun MagazynTopBar(
     isEditMode: Boolean,
     onToggleEditMode: () -> Unit,
     searchQuery: String,
-    onSearchChange: (String) -> Unit
+    onSearchChange: (String) -> Unit,
+    onAddClick: () -> Unit
 ) {
     TopAppBar(
         backgroundColor = AppColors.Primary,
@@ -76,7 +87,8 @@ fun MagazynTopBar(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = "Magazyn próbek",
@@ -100,6 +112,14 @@ fun MagazynTopBar(
                 ),
                 singleLine = true
             )
+
+            Button(
+                onClick = onAddClick,
+                modifier = Modifier.padding(end = 8.dp),
+                colors = ButtonDefaults.buttonColors(backgroundColor = AppColors.Surface)
+            ) {
+                Text("+ Dodaj")
+            }
 
             Button(
                 onClick = onToggleEditMode,
