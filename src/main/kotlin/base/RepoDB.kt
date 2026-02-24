@@ -2,13 +2,9 @@ package base
 
 import dataBase.Kontrahent
 import dataBase.Technologia
-import dataBase.ZD
-import dataBase.ZK
-import dataBase.ZL
 import dataBase.ZO
 import org.hibernate.Session
 import org.hibernate.SessionFactory
-import report.RaportFilter
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
@@ -36,7 +32,8 @@ interface ProbkaRepository {
         szerokoscMag: String?,
         iloscMag: String?,
         uwagiMag: String?,
-        dataProdukcjiMag: LocalDateTime?
+        dataProdukcjiMag: LocalDateTime?,
+        magAktywny: Boolean
     )
 }
 
@@ -187,50 +184,47 @@ class ProbkaRepositoryImpl(private val sessionFactory: SessionFactory) : ProbkaR
 
     override fun getAllMagazynProbki(): List<MagazynDTO> {
         return useSession { session ->
-            val hql = """
-            SELECT zo.numer, zo.oddzialW, zo.art, zo.receptura1, zo.opis1,
-                   t.skladMag, t.szerokoscMag, t.iloscMag, t.uwagiMag,
-                   t.dataProdukcjiMag, t.dataAktualizacjiMag, t.tested,
-                   zo.idKontrahenta
-            FROM ZO zo
-            LEFT JOIN Technologia t ON zo.numer = t.numer
-            WHERE zo.proba = 1
-              AND (t.skladMag IS NOT NULL
-                   OR t.szerokoscMag IS NOT NULL
-                   OR t.iloscMag IS NOT NULL)
-            ORDER BY t.dataAktualizacjiMag DESC NULLS LAST
-        """
 
-            val results = session.createQuery(hql, Array<Any>::class.java).resultList
+            // 1. Tylko aktywne rekordy z Technologia
+            val technologie = session.createQuery(
+                "FROM Technologia t WHERE t.magAktywny = true",
+                Technologia::class.java
+            ).resultList
 
-            val kontrahentIds = results.mapNotNull { it[12] as Int? }.toSet()
+            if (technologie.isEmpty()) return@useSession emptyList()
+
+            val numery = technologie.map { it.numer }
+
+            // 2. Jedno zapytanie do ZO - tylko numer i idKontrahenta
+            val zoData = session.createQuery(
+                "SELECT zo.numer, zo.idKontrahenta FROM ZO zo WHERE zo.numer IN :numery",
+                Array<Any>::class.java
+            ).setParameter("numery", numery).resultList
+                .associate { row -> row[0] as Int to row[1] as Int? }
+
+            // 3. Jedno zapytanie po kontrahentów
+            val kontrahentIds = zoData.values.filterNotNull().toSet()
             val kontrahentMap = if (kontrahentIds.isNotEmpty()) {
                 findKontrahenciByIds(kontrahentIds)
             } else {
                 emptyMap()
             }
 
-            results.map { row ->
-                val kontrahent = (row[12] as Int?)?.let { kontrahentMap[it] }
+            // 4. Mapowanie - wszystko z pamięci
+            technologie.map { t ->
+                val kontrahentId = zoData[t.numer]
+                val kontrahent = kontrahentId?.let { kontrahentMap[it] }
 
                 MagazynDTO(
-                    numer = row[0] as Int,
-                    oddzialNazwa = when ((row[1] as Byte).toInt()) {
-                        11 -> "Ignatki"
-                        12 -> "Tychy"
-                        else -> "Nieznany"
-                    },
+                    numer = t.numer,
                     kontrahentNazwa = kontrahent?.nazwa ?: "Nieznany",
-                    art = row[2] as String?,
-                    receptura = row[3] as String?,
-                    nazwa = row[4] as String?,
-                    skladMag = row[5] as String?,
-                    szerokoscMag = row[6] as String?,
-                    iloscMag = row[7] as String?,
-                    uwagiMag = row[8] as String?,
-                    dataProdukcjiMag = row[9] as LocalDateTime?,
-                    dataAktualizacjiMag = row[10] as LocalDateTime?,
-                    tested = row[11] as Boolean?
+                    tested = t.tested,
+                    skladMag = t.skladMag,
+                    szerokoscMag = t.szerokoscMag,
+                    iloscMag = t.iloscMag,
+                    uwagiMag = t.uwagiMag,
+                    dataProdukcjiMag = t.dataProdukcjiMag,
+                    dataAktualizacjiMag = t.dataAktualizacjiMag
                 )
             }
         }
@@ -263,7 +257,8 @@ class ProbkaRepositoryImpl(private val sessionFactory: SessionFactory) : ProbkaR
         szerokoscMag: String?,
         iloscMag: String?,
         uwagiMag: String?,
-        dataProdukcjiMag: LocalDateTime?
+        dataProdukcjiMag: LocalDateTime?,
+        magAktywny: Boolean
     ) {
         useSession { session ->
             val tx = session.beginTransaction()

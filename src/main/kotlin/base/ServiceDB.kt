@@ -3,10 +3,7 @@ package base
 import dataBase.Technologia
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import report.RaportFilter
-import report.ReportDTO
 import java.time.format.DateTimeFormatter
-import report.StatusConverter
 import java.time.LocalDateTime
 
 /**
@@ -27,7 +24,8 @@ interface ProbkaService {
         szerokoscMag: String?,
         iloscMag: String?,
         uwagiMag: String?,
-        dataProdukcjiMag: LocalDateTime?
+        dataProdukcjiMag: LocalDateTime?,
+        magAktywny: Boolean = !iloscMag.isNullOrBlank() && iloscMag != "0"
     )
 }
 
@@ -208,10 +206,11 @@ class ProbkaServiceImpl(
         szerokoscMag: String?,
         iloscMag: String?,
         uwagiMag: String?,
-        dataProdukcjiMag: LocalDateTime?
+        dataProdukcjiMag: LocalDateTime?,
+        magAktywny: Boolean
     ) {
         withContext(Dispatchers.IO) {
-            repository.saveMagazynData(numer, skladMag, szerokoscMag, iloscMag, uwagiMag, dataProdukcjiMag)
+            repository.saveMagazynData(numer, skladMag, szerokoscMag, iloscMag, uwagiMag, dataProdukcjiMag, magAktywny)
         }
     }
 }

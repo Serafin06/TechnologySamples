@@ -52,16 +52,13 @@ fun MagazynTableHeader() {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        HeaderCell("Numer", 0.06f)
-        HeaderCell("Oddział", 0.07f)
-        HeaderCell("Kontrahent", 0.13f)
-        HeaderCell("Art", 0.08f)
-        HeaderCell("Receptura", 0.08f)
-        HeaderCell("Skład", 0.13f)
-        HeaderCell("Szerokość", 0.10f)
-        HeaderCell("Ilość", 0.10f)
-        HeaderCell("Uwagi", 0.15f)
-        HeaderCell("Data prod.", 0.10f)
+        HeaderCell("Numer", 0.08f)
+        HeaderCell("Kontrahent", 0.20f)
+        HeaderCell("Skład", 0.17f)
+        HeaderCell("Szerokość", 0.13f)
+        HeaderCell("Ilość", 0.13f)
+        HeaderCell("Uwagi", 0.17f)
+        HeaderCell("Data prod.", 0.12f)
     }
 }
 
@@ -120,37 +117,16 @@ fun MagazynRow(
         ) {
             Text(
                 text = probka.numer.toString(),
-                modifier = Modifier.weight(0.06f),
-                style = MaterialTheme.typography.body2,
-                color = AppColors.OnBackground
-            )
-
-            Text(
-                text = probka.oddzialNazwa,
-                modifier = Modifier.weight(0.07f),
+                modifier = Modifier.weight(0.08f),
                 style = MaterialTheme.typography.body2,
                 color = AppColors.OnBackground
             )
 
             Text(
                 text = probka.kontrahentNazwa,
-                modifier = Modifier.weight(0.13f),
+                modifier = Modifier.weight(0.20f),
                 style = MaterialTheme.typography.body2,
                 color = AppColors.OnBackground
-            )
-
-            Text(
-                text = probka.art ?: "-",
-                modifier = Modifier.weight(0.08f),
-                style = MaterialTheme.typography.body2,
-                color = AppColors.OnBackground
-            )
-
-            Text(
-                text = probka.receptura ?: "-",
-                modifier = Modifier.weight(0.08f),
-                style = MaterialTheme.typography.body2,
-                color = AppColors.OnBackground.copy(alpha = 0.7f)
             )
 
             if (isEditMode) {

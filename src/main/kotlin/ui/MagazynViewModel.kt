@@ -89,8 +89,7 @@ class MagazynViewModel(private val probkaService: ProbkaService) {
                 magazynProbki.filter { probka ->
                     probka.numer.toString().contains(query) ||
                             probka.kontrahentNazwa.lowercase().contains(query) ||
-                            probka.skladMag?.lowercase()?.contains(query) == true ||
-                            probka.art?.lowercase()?.contains(query) == true
+                            probka.skladMag?.lowercase()?.contains(query) == true
                 }
             }
 

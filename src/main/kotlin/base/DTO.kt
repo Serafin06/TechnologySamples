@@ -61,14 +61,8 @@ data class StatusInfo(
 
 data class MagazynDTO(
     val numer: Int,
-    val oddzialNazwa: String,
     val kontrahentNazwa: String,
-    val art: String?,
-    val receptura: String?,
-    val nazwa: String?,
     val tested: Boolean?,
-
-    // Dane magazynowe
     val skladMag: String?,
     val szerokoscMag: String?,
     val iloscMag: String?,
