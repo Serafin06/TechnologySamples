@@ -20,6 +20,7 @@ import ui.ProbkiViewModel
 import androidx.compose.material.Tab
 import androidx.compose.material.TabRow
 import ui.MagazynViewModel
+import ui.WitchLoadingEffect
 import ui.panels.MagazynScreen
 
 // Definiujemy stany, w których może znajdować się aplikacja
@@ -61,15 +62,17 @@ fun SplashScreen() {
             .background(Color.Black),
         contentAlignment = Alignment.Center
     ) {
+        // WYŁĄCZNIK: Zmień na false, żeby ukryć wiedźmy
+        WitchLoadingEffect(enabled = true)
+
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(1.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Załaduj i wyświetl swój obrazek
             Image(
                 painter = painterResource("drawable/logo2.png"),
                 contentDescription = "Logo Aplikacji",
-                modifier = Modifier.size(700.dp)
+                modifier = Modifier.size(600.dp)
             )
 
             Text(
@@ -77,8 +80,6 @@ fun SplashScreen() {
                 style = MaterialTheme.typography.h5,
                 color = AppColors.Primary
             )
-
-            CircularProgressIndicator()
         }
     }
 }
