@@ -60,7 +60,11 @@ fun MagazynScreen(viewModel: MagazynViewModel) {
 
             if (viewModel.showAddDialog) {
                 AddMagazynDialog(
-                    availableZO = viewModel.availableZO,
+                    // ZMIANA: Przekazujemy znalezioną próbkę i metody
+                    foundProbka = viewModel.foundProbka,
+                    isSearching = viewModel.isSearching,
+                    searchError = viewModel.errorMessage,
+                    onSearch = { viewModel.searchProbka(it) },
                     onDismiss = { viewModel.closeAddDialog() },
                     onConfirm = { numer, sklad, szerokosc, ilosc, uwagi, dataProdukcji ->
                         viewModel.addMagazynEntry(numer, sklad, szerokosc, ilosc, uwagi, dataProdukcji)

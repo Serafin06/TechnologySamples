@@ -70,10 +70,3 @@ data class MagazynDTO(
     val dataProdukcjiMag: LocalDateTime?,
     val dataAktualizacjiMag: LocalDateTime?
 )
-
-data class ZOPodpowiedzDTO(
-    val numer: Int,
-    val kontrahentNazwa: String,
-    val art: String?,
-    val receptura: String?
-)

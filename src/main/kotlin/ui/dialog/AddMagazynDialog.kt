@@ -1,24 +1,23 @@
 package ui.dialog
 
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import ui.AppColors
-
-import base.ZOPodpowiedzDTO
+import base.ProbkaDTO
 import java.time.LocalDate
 import java.time.LocalDateTime
 
 @Composable
 fun AddMagazynDialog(
-    availableZO: List<ZOPodpowiedzDTO>,
+    foundProbka: ProbkaDTO?,
+    isSearching: Boolean,
+    searchError: String?,
+    onSearch: (String) -> Unit,
     onDismiss: () -> Unit,
     onConfirm: (Int, String?, String?, String?, String?, LocalDateTime?) -> Unit
 ) {
@@ -28,70 +27,107 @@ fun AddMagazynDialog(
     var iloscMag by remember { mutableStateOf("") }
     var uwagiMag by remember { mutableStateOf("") }
     var dataProdukcji by remember { mutableStateOf("") }
-    var showSuggestions by remember { mutableStateOf(false) }
 
-    val suggestions = remember(numerInput) {
-        if (numerInput.length >= 2) {
-            availableZO.filter {
-                it.numer.toString().contains(numerInput) ||
-                        it.kontrahentNazwa.lowercase().contains(numerInput.lowercase())
-            }.take(8)
-        } else emptyList()
+    // Automatyczne uzupełnianie, gdy ViewModel znajdzie próbkę
+    LaunchedEffect(foundProbka) {
+        foundProbka?.let { probka ->
+            // Uzupełniamy skład z receptury (zgodnie z Twoim wymogiem)
+            if (skladMag.isBlank()) {
+                skladMag = probka.receptura ?: ""
+            }
+            // Możesz tu dodać inne pola, jeśli chcesz je kopiować, np. ilość z zamówienia
+        }
     }
-
-    val selectedZO = availableZO.firstOrNull { it.numer.toString() == numerInput }
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Dodaj próbkę do magazynu") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                // Autocomplete numer
-                Box {
+
+                // Sekcja wyszukiwania
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
                     OutlinedTextField(
                         value = numerInput,
-                        onValueChange = { numerInput = it; showSuggestions = true },
+                        onValueChange = { numerInput = it },
                         label = { Text("Numer ZO") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
+                        modifier = Modifier.weight(1f),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                        )
                     )
-                    DropdownMenu(
-                        expanded = showSuggestions && suggestions.isNotEmpty(),
-                        onDismissRequest = { showSuggestions = false }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(
+                        onClick = { onSearch(numerInput) },
+                        enabled = !isSearching && numerInput.isNotBlank()
                     ) {
-                        suggestions.forEach { zo ->
-                            DropdownMenuItem(onClick = {
-                                numerInput = zo.numer.toString()
-                                if (skladMag.isBlank()) skladMag = zo.art ?: ""
-                                showSuggestions = false
-                            }) {
-                                Column {
-                                    Text("${zo.numer} — ${zo.kontrahentNazwa}", fontWeight = FontWeight.Bold)
-                                    Text("${zo.art ?: "-"} / ${zo.receptura ?: "-"}",
-                                        style = MaterialTheme.typography.caption)
-                                }
-                            }
+                        if (isSearching) {
+                            CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+                        } else {
+                            Text("Szukaj")
                         }
                     }
                 }
 
-                // Info z systemu (readonly jeśli wybrany)
-                if (selectedZO != null) {
-                    Text("Kontrahent: ${selectedZO.kontrahentNazwa} | Art: ${selectedZO.art ?: "-"} | Receptura: ${selectedZO.receptura ?: "-"}",
-                        style = MaterialTheme.typography.caption)
+                // Wyświetlanie błędu szukania
+                if (searchError != null && foundProbka == null) {
+                    Text(searchError, color = AppColors.Error, style = MaterialTheme.typography.caption)
                 }
 
-                OutlinedTextField(value = skladMag, onValueChange = { skladMag = it },
-                    label = { Text("Skład") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
-                OutlinedTextField(value = szerokoscMag, onValueChange = { szerokoscMag = it },
-                    label = { Text("Szerokość") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
-                OutlinedTextField(value = iloscMag, onValueChange = { iloscMag = it },
-                    label = { Text("Ilość") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
-                OutlinedTextField(value = uwagiMag, onValueChange = { uwagiMag = it },
-                    label = { Text("Uwagi") }, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = dataProdukcji, onValueChange = { dataProdukcji = it },
+                // Wyświetlanie informacji o znalezionej próbce
+                if (foundProbka != null) {
+                    Card(
+                        backgroundColor = AppColors.Surface,
+                        elevation = 2.dp,
+                        modifier = Modifier.fillMaxWidth().padding(top = 4.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(8.dp)) {
+                            Text("Znaleziono:", style = MaterialTheme.typography.caption, color = AppColors.Primary)
+                            Text("Kontrahent: ${foundProbka.kontrahentNazwa}", fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+                            // Art usunięty zgodnie z wymogiem, ale można go wyświetlić dla info
+                            Text("Art: ${foundProbka.art ?: "-"}")
+                            Text("Receptura: ${foundProbka.receptura ?: "-"}")
+                        }
+                    }
+                }
+
+                Divider(modifier = Modifier.padding(vertical = 8.dp))
+
+                // Pola edycji
+                OutlinedTextField(
+                    value = skladMag,
+                    onValueChange = { skladMag = it },
+                    label = { Text("Skład (Receptura)") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+                OutlinedTextField(
+                    value = szerokoscMag,
+                    onValueChange = { szerokoscMag = it },
+                    label = { Text("Szerokość") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+                OutlinedTextField(
+                    value = iloscMag,
+                    onValueChange = { iloscMag = it },
+                    label = { Text("Ilość") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+                OutlinedTextField(
+                    value = uwagiMag,
+                    onValueChange = { uwagiMag = it },
+                    label = { Text("Uwagi") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = dataProdukcji,
+                    onValueChange = { dataProdukcji = it },
                     label = { Text("Data produkcji (yyyy-MM-dd)") },
-                    modifier = Modifier.fillMaxWidth(), singleLine = true)
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
             }
         },
         confirmButton = {
@@ -106,7 +142,8 @@ fun AddMagazynDialog(
                     onConfirm(numer, skladMag.ifBlank { null }, szerokoscMag.ifBlank { null },
                         iloscMag.ifBlank { null }, uwagiMag.ifBlank { null }, data)
                 },
-                enabled = numerInput.toIntOrNull() != null
+                // Można dodać warunek: enabled = foundProbka != null, jeśli dodawać można tylko istniejące ZO
+                enabled = numerInput.toIntOrNull() != null && !isSearching
             ) { Text("Dodaj") }
         },
         dismissButton = {

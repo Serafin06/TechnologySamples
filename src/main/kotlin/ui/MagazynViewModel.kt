@@ -2,8 +2,8 @@ package ui
 
 import androidx.compose.runtime.*
 import base.MagazynDTO
+import base.ProbkaDTO // ZMIANA: Używamy ProbkaDTO zamiast ZOPodpowiedzDTO
 import base.ProbkaService
-import base.ZOPodpowiedzDTO
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import java.time.LocalDateTime
@@ -38,8 +38,11 @@ class MagazynViewModel(private val probkaService: ProbkaService) {
     var filteredMagazynProbki by mutableStateOf<List<MagazynDTO>>(emptyList())
         private set
 
-    //dodawanie próbek do magazynu - potrzebne do wyboru ZO
-    var availableZO by mutableStateOf<List<ZOPodpowiedzDTO>>(emptyList())
+    // DODANO: Znaleziona próbka do dodania (On-Demand)
+    var foundProbka by mutableStateOf<ProbkaDTO?>(null)
+        private set
+
+    var isSearching by mutableStateOf(false)
         private set
 
     var showAddDialog by mutableStateOf(false)
@@ -55,8 +58,9 @@ class MagazynViewModel(private val probkaService: ProbkaService) {
             errorMessage = null
 
             try {
+                // Ładujemy TYLKO magazyn - bardzo szybkie
                 magazynProbki = probkaService.getMagazynProbki()
-                availableZO = probkaService.getAvailableZOForMagazyn()
+                // USUNIĘTO: availableZO = probkaService.getAvailableZOForMagazyn()
                 triggerFiltering()
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
@@ -66,6 +70,34 @@ class MagazynViewModel(private val probkaService: ProbkaService) {
                 withContext(Dispatchers.Main) {
                     isLoading = false
                 }
+            }
+        }
+    }
+
+    // --- NOWA METODA: Szukanie próbki po numerze ---
+    fun searchProbka(numerInput: String) {
+        val numer = numerInput.toIntOrNull()
+        if (numer == null) {
+            errorMessage = "Wpisz poprawny numer."
+            return
+        }
+
+        coroutineScope.launch {
+            isSearching = true
+            errorMessage = null
+            foundProbka = null
+            try {
+                // Wywołujemy nową metodę z Service (trzeba ją dodać w Service/Repo - patrz instrukcja niżej)
+                val result = probkaService.getProbkaByNumer(numer)
+                if (result == null) {
+                    errorMessage = "Nie znaleziono próbki nr $numer"
+                } else {
+                    foundProbka = result
+                }
+            } catch (e: Exception) {
+                errorMessage = "Błąd wyszukiwania: ${e.message}"
+            } finally {
+                isSearching = false
             }
         }
     }
@@ -146,8 +178,16 @@ class MagazynViewModel(private val probkaService: ProbkaService) {
         }
     }
 
-    fun openAddDialog() { showAddDialog = true }
-    fun closeAddDialog() { showAddDialog = false }
+    fun openAddDialog() {
+        showAddDialog = true
+        foundProbka = null // Czyścimy przy otwarciu
+        errorMessage = null
+    }
+
+    fun closeAddDialog() {
+        showAddDialog = false
+        foundProbka = null
+    }
 
     fun addMagazynEntry(
         numer: Int,
@@ -172,7 +212,3 @@ class MagazynViewModel(private val probkaService: ProbkaService) {
         coroutineScope.cancel()
     }
 }
-
-
-
-

@@ -25,7 +25,7 @@ interface ProbkaRepository {
     fun testConnection()
     fun <T> useSession(block: (Session) -> T): T
     fun getAllMagazynProbki(): List<MagazynDTO>
-    fun getAvailableZOForMagazyn(): List<ZOPodpowiedzDTO>
+    fun findZoWithDetailsByNumer(numer: Int): ZO?
     fun saveMagazynData(
         numer: Int,
         skladMag: String?,
@@ -230,26 +230,34 @@ class ProbkaRepositoryImpl(private val sessionFactory: SessionFactory) : ProbkaR
         }
     }
 
-    override fun getAvailableZOForMagazyn(): List<ZOPodpowiedzDTO> {
+    override fun findZoWithDetailsByNumer(numer: Int): ZO? {
         return useSession { session ->
-            val results = session.createQuery(
-                "FROM ZO zo WHERE zo.proba = 1 ORDER BY zo.numer DESC",
+            // 1. Pobieramy ZO z relacjami (to samo co w findProbkiWithDetails, ale dla jednego ID)
+            val zo = session.createQuery(
+                "FROM ZO zo " +
+                        "LEFT JOIN FETCH zo.statusZD " +
+                        "LEFT JOIN FETCH zo.statusZK " +
+                        "LEFT JOIN FETCH zo.statusZL " +
+                        "WHERE zo.numer = :numer",
                 ZO::class.java
-            ).resultList
+            )
+                .setParameter("numer", numer)
+                .uniqueResultOptional()
+                .orElse(null) ?: return@useSession null
 
-            val kontrahentIds = results.mapNotNull { it.idKontrahenta }.toSet()
-            val kontrahentMap = if (kontrahentIds.isNotEmpty()) findKontrahenciByIds(kontrahentIds) else emptyMap()
-
-            results.map { zo ->
-                ZOPodpowiedzDTO(
-                    numer = zo.numer,
-                    kontrahentNazwa = kontrahentMap[zo.idKontrahenta]?.nazwa ?: "Nieznany",
-                    art = zo.art,
-                    receptura = zo.receptura1
-                )
+            // 2. Dociągamy Kontrahenta (dla bezpieczeństwa i wydajności pojedynczego zapytania)
+            if (zo.idKontrahenta != null) {
+                // Zakładam, że toBigDecimalId() to Twoja metoda pomocnicza, jeśli nie - zamień na odpowiednią konwersję
+                zo.kontrahent = session.get(Kontrahent::class.java, zo.idKontrahenta!!.toBigDecimalId())
             }
+
+            // 3. Dociągamy Technologię (jeśli istnieje)
+            zo.technologia = findTechnologiaByNumers(listOf(numer))[numer]
+
+            zo
         }
     }
+
 
     override fun saveMagazynData(
         numer: Int,

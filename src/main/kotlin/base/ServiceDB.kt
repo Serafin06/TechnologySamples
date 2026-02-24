@@ -17,7 +17,7 @@ interface ProbkaService {
     fun getAvailableKontrahenci(): List<String>
     fun testConnection(): Boolean
     suspend fun getMagazynProbki(): List<MagazynDTO>
-    suspend fun getAvailableZOForMagazyn(): List<ZOPodpowiedzDTO>
+    suspend fun getProbkaByNumer(numer: Int): ProbkaDTO?
     suspend fun saveMagazynData(
         numer: Int,
         skladMag: String?,
@@ -194,9 +194,11 @@ class ProbkaServiceImpl(
         }
     }
 
-    override suspend fun getAvailableZOForMagazyn(): List<ZOPodpowiedzDTO> {
+    override suspend fun getProbkaByNumer(numer: Int): ProbkaDTO? {
         return withContext(Dispatchers.IO) {
-            repository.getAvailableZOForMagazyn()
+            val zo = repository.findZoWithDetailsByNumer(numer) ?: return@withContext null
+            // Używamy istniejącego mappera, żeby zachować spójność danych
+            mapper.toProbkaDTO(zo, statusResolver)
         }
     }
 
