@@ -1,16 +1,21 @@
 package ui.dialog
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import ui.AppColors
 import base.ProbkaDTO
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 @Composable
 fun AddMagazynDialog(
@@ -28,6 +33,8 @@ fun AddMagazynDialog(
     var iloscMag by remember { mutableStateOf("") }
     var uwagiMag by remember { mutableStateOf("") }
     var dataProdukcji by remember { mutableStateOf("") }
+    val dateFormatter = remember { DateTimeFormatter.ofPattern("yyyy-MM-dd") }
+    var showDatePicker by remember { mutableStateOf(false) }
 
     // Automatyczne uzupełnianie, gdy ViewModel znajdzie próbkę
     LaunchedEffect(foundProbka) {
@@ -43,6 +50,9 @@ fun AddMagazynDialog(
             )
             if (layers.isNotEmpty() && strukturaMag.isBlank()) {
                 strukturaMag = layers.joinToString("/")
+            }
+            if (dataProdukcji.isBlank()) {
+                probka.statusZK?.dataZak?.let { dataProdukcji = it.format(dateFormatter) }
             }
         }
     }
@@ -62,6 +72,10 @@ fun AddMagazynDialog(
                             modifier = Modifier.weight(1f),
                             singleLine = true,
                             keyboardOptions = KeyboardOptions.Default.copy(
+                                imeAction = ImeAction.Search
+                            ),
+                            keyboardActions = KeyboardActions(
+                                onSearch = { if (numerInput.isNotBlank()) onSearch(numerInput) }
                             )
                         )
                         Spacer(modifier = Modifier.width(8.dp))
@@ -139,13 +153,28 @@ fun AddMagazynDialog(
                         label = { Text("Uwagi") },
                         modifier = Modifier.fillMaxWidth()
                     )
-                    OutlinedTextField(
-                        value = dataProdukcji,
-                        onValueChange = { dataProdukcji = it },
-                        label = { Text("Data produkcji (yyyy-MM-dd)") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        OutlinedTextField(
+                            value = dataProdukcji,
+                            onValueChange = { dataProdukcji = it },
+                            label = { Text("Data produkcji (yyyy-MM-dd)") },
+                            modifier = Modifier.weight(1f),
+                            singleLine = true
+                        )
+                        IconButton(onClick = { showDatePicker = true }) {
+                            Icon(Icons.Default.DateRange, contentDescription = "Wybierz datę")
+                        }
+                    }
+
+                    if (showDatePicker) {
+                        DatePickerDialog(
+                            onDismissRequest = { showDatePicker = false },
+                            onDateSelected = { date ->
+                                dataProdukcji = date.format(dateFormatter)
+                                showDatePicker = false
+                            }
+                        )
+                    }
                 }
             },
             confirmButton = {
@@ -174,3 +203,85 @@ fun AddMagazynDialog(
             }
         )
     }
+
+@Composable
+fun DatePickerDialog(
+    onDismissRequest: () -> Unit,
+    onDateSelected: (LocalDate) -> Unit
+) {
+    var selectedDate by remember { mutableStateOf(LocalDate.now()) }
+
+    AlertDialog(
+        onDismissRequest = onDismissRequest,
+        title = { Text("Wybierz datę") },
+        text = {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                // Rok i miesiąc
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    IconButton(onClick = { selectedDate = selectedDate.minusMonths(1) }) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = null)
+                    }
+                    Text(
+                        "${selectedDate.month.getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale("pl"))} ${selectedDate.year}",
+                        style = MaterialTheme.typography.subtitle1
+                    )
+                    IconButton(onClick = { selectedDate = selectedDate.plusMonths(1) }) {
+                        Icon(Icons.Default.ArrowForward, contentDescription = null)
+                    }
+                }
+
+                Spacer(Modifier.height(8.dp))
+
+                // Dni tygodnia
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    listOf("Pn","Wt","Śr","Cz","Pt","So","Nd").forEach {
+                        Text(it, modifier = Modifier.weight(1f), textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                            style = MaterialTheme.typography.caption)
+                    }
+                }
+
+                // Siatka dni
+                val firstDay = selectedDate.withDayOfMonth(1)
+                val offset = (firstDay.dayOfWeek.value - 1)
+                val daysInMonth = selectedDate.lengthOfMonth()
+
+                val cells = offset + daysInMonth
+                val rows = (cells + 6) / 7
+
+                for (row in 0 until rows) {
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        for (col in 0..6) {
+                            val dayIndex = row * 7 + col - offset + 1
+                            if (dayIndex in 1..daysInMonth) {
+                                val date = selectedDate.withDayOfMonth(dayIndex)
+                                val isSelected = date == selectedDate
+                                TextButton(
+                                    onClick = { selectedDate = date },
+                                    modifier = Modifier.weight(1f),
+                                    colors = ButtonDefaults.textButtonColors(
+                                        backgroundColor = if (isSelected) AppColors.Primary else androidx.compose.ui.graphics.Color.Transparent,
+                                        contentColor = if (isSelected) AppColors.OnPrimary else AppColors.OnBackground
+                                    )
+                                ) {
+                                    Text("$dayIndex", style = MaterialTheme.typography.caption)
+                                }
+                            } else {
+                                Spacer(modifier = Modifier.weight(1f))
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(onClick = { onDateSelected(selectedDate) }) { Text("OK") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismissRequest) { Text("Anuluj") }
+        }
+    )
+}
