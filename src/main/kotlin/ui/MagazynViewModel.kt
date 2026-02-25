@@ -2,7 +2,7 @@ package ui
 
 import androidx.compose.runtime.*
 import base.MagazynDTO
-import base.ProbkaDTO // ZMIANA: Używamy ProbkaDTO zamiast ZOPodpowiedzDTO
+import base.ProbkaDTO
 import base.ProbkaService
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -17,7 +17,6 @@ class MagazynViewModel(private val probkaService: ProbkaService) {
 
     private val coroutineScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
 
-    // Lista próbek w magazynie (tylko te z niepustymi danymi magazynowymi)
     var magazynProbki by mutableStateOf<List<MagazynDTO>>(emptyList())
         private set
 
@@ -27,18 +26,12 @@ class MagazynViewModel(private val probkaService: ProbkaService) {
     var errorMessage by mutableStateOf<String?>(null)
         private set
 
-    // Tryb edycji
     var isEditMode by mutableStateOf(false)
         private set
 
-    // Wyszukiwarka
     private val _searchQuery = MutableStateFlow("")
     val searchQuery = _searchQuery.asStateFlow()
 
-    var filteredMagazynProbki by mutableStateOf<List<MagazynDTO>>(emptyList())
-        private set
-
-    // DODANO: Znaleziona próbka do dodania (On-Demand)
     var foundProbka by mutableStateOf<ProbkaDTO?>(null)
         private set
 
@@ -51,28 +44,62 @@ class MagazynViewModel(private val probkaService: ProbkaService) {
     var searchError by mutableStateOf<String?>(null)
         private set
 
-    init {
-        startFiltering()
+    private val _skladFilter = MutableStateFlow("")
+    val skladFilter = _skladFilter.asStateFlow()
+
+
+    val filteredMagazynProbki: StateFlow<List<MagazynDTO>> = combine(
+        _searchQuery,
+        _skladFilter,
+        snapshotFlow { magazynProbki }
+    ) { query, skladFilterValue, lista ->
+        val q = query.lowercase().trim()
+        val s = skladFilterValue.lowercase().trim()
+
+        lista.filter { probka ->
+            // 1. Filtr ogólny (szukajka po numerze i kontrahencie)
+            val matchesQuery = q.isBlank() ||
+                    probka.numer.toString().contains(q) ||
+                    probka.kontrahentNazwa.lowercase().contains(q)
+
+            // 2. Precyzyjny filtr składu/struktury
+            val matchesSklad = s.isBlank() || run {
+                // Pobieramy tekst ze składu i struktury (skoro to dla Ciebie to samo)
+                val tekstDoPrzeszukania = "${probka.skladMag ?: ""} ${probka.strukturaMag ?: ""}".lowercase()
+
+                // Dzielimy tekst na konkretne materiały (separatory: spacja, ukośnik, przecinek, procent)
+                val materialy = tekstDoPrzeszukania.split(Regex("[\\s/%,.-]+")).filter { it.isNotBlank() }
+
+                // Sprawdzamy czy którykolwiek materiał ZACZYNA SIĘ od wpisanej frazy
+                // Dzięki temu "PET" znajdzie "PET", ale nie znajdzie "PE"
+                materialy.any { m -> m.startsWith(s) }
+            }
+
+            matchesQuery && matchesSklad
+        }.sortedByDescending { it.numer }
+    }.stateIn(
+        scope = coroutineScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
+    fun updateSkladFilter(value: String) {
+        _skladFilter.value = value
     }
 
     suspend fun loadMagazynProbki() {
         withContext(Dispatchers.IO) {
             isLoading = true
             errorMessage = null
-
             try {
-                // Ładujemy TYLKO magazyn - bardzo szybkie
                 magazynProbki = probkaService.getMagazynProbki()
-                // USUNIĘTO: availableZO = probkaService.getAvailableZOForMagazyn()
-                triggerFiltering()
+                // USUNIĘTO: triggerFiltering() - niepotrzebne
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     errorMessage = "Błąd ładowania magazynu: ${e.message}"
                 }
             } finally {
-                withContext(Dispatchers.Main) {
-                    isLoading = false
-                }
+                withContext(Dispatchers.Main) { isLoading = false }
             }
         }
     }
@@ -83,52 +110,18 @@ class MagazynViewModel(private val probkaService: ProbkaService) {
             errorMessage = "Wpisz poprawny numer."
             return
         }
-
         coroutineScope.launch {
             isSearching = true
             errorMessage = null
             foundProbka = null
             try {
-                // Wywołujemy nową metodę z Service (trzeba ją dodać w Service/Repo - patrz instrukcja niżej)
                 val result = probkaService.getProbkaByNumer(numer)
-                if (result == null)
-                    searchError = "Nie znaleziono próbki nr $numer"
-                else {
-                    foundProbka = result
-                }
+                if (result == null) searchError = "Nie znaleziono próbki nr $numer"
+                else foundProbka = result
             } catch (e: Exception) {
                 errorMessage = "Błąd wyszukiwania: ${e.message}"
             } finally {
                 isSearching = false
-            }
-        }
-    }
-
-    private fun startFiltering() {
-        coroutineScope.launch {
-            searchQuery
-                .debounce(300)
-                .collect {
-                    triggerFiltering()
-                }
-        }
-    }
-
-    private fun triggerFiltering() {
-        coroutineScope.launch {
-            val query = _searchQuery.value.lowercase()
-            val filtered = if (query.isBlank()) {
-                magazynProbki
-            } else {
-                magazynProbki.filter { probka ->
-                    probka.numer.toString().contains(query) ||
-                            probka.kontrahentNazwa.lowercase().contains(query) ||
-                            probka.skladMag?.lowercase()?.contains(query) == true
-                }
-            }
-
-            withContext(Dispatchers.Main) {
-                filteredMagazynProbki = filtered
             }
         }
     }
@@ -164,11 +157,9 @@ class MagazynViewModel(private val probkaService: ProbkaService) {
             dataAktualizacjiMag = LocalDateTime.now()
         )
 
-        // Optymistyczna aktualizacja UI
+        // Aktualizacja tej listy automatycznie "odpali" filtrowanie dzięki snapshotFlow
         magazynProbki = magazynProbki.toMutableList().apply { set(index, updated) }
-        triggerFiltering()
 
-        // Zapis w tle
         coroutineScope.launch(Dispatchers.IO) {
             try {
                 probkaService.saveMagazynData(numer, strukturaMag, skladMag, szerokoscMag, iloscMag, uwagiMag, dataProdukcjiMag)
@@ -176,7 +167,6 @@ class MagazynViewModel(private val probkaService: ProbkaService) {
                 withContext(Dispatchers.Main) {
                     errorMessage = "Błąd zapisu: ${e.message}"
                     magazynProbki = magazynProbki.toMutableList().apply { set(index, current) }
-                    triggerFiltering()
                 }
             }
         }
@@ -205,10 +195,38 @@ class MagazynViewModel(private val probkaService: ProbkaService) {
         coroutineScope.launch(Dispatchers.IO) {
             try {
                 probkaService.saveMagazynData(numer, strukturaMag, skladMag, szerokoscMag, iloscMag, uwagiMag, dataProdukcjiMag)
-                loadMagazynProbki()
+                loadMagazynProbki() // To odświeży magazynProbki i automatycznie wyzwoli filtr
                 withContext(Dispatchers.Main) { showAddDialog = false }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) { errorMessage = "Błąd dodawania: ${e.message}" }
+            }
+        }
+    }
+
+    fun deleteMagazynEntry(numer: Int) {
+        val index = magazynProbki.indexOfFirst { it.numer == numer }
+        if (index == -1) return
+
+        val current = magazynProbki[index]
+        magazynProbki = magazynProbki.toMutableList().apply { removeAt(index) }
+
+        coroutineScope.launch(Dispatchers.IO) {
+            try {
+                probkaService.saveMagazynData(
+                    numer = numer,
+                    strukturaMag = current.strukturaMag,
+                    skladMag = current.skladMag,
+                    szerokoscMag = current.szerokoscMag,
+                    iloscMag = null,
+                    uwagiMag = current.uwagiMag,
+                    dataProdukcjiMag = current.dataProdukcjiMag,
+                    magAktywny = false
+                )
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    errorMessage = "Błąd usuwania: ${e.message}"
+                    magazynProbki = magazynProbki.toMutableList().apply { add(index, current) }
+                }
             }
         }
     }

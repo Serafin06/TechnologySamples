@@ -14,6 +14,8 @@ import ui.dialog.AddMagazynDialog
 @Composable
 fun MagazynScreen(viewModel: MagazynViewModel) {
 
+    val filteredList by viewModel.filteredMagazynProbki.collectAsState()
+
     LaunchedEffect(Unit) {
         viewModel.loadMagazynProbki()
     }
@@ -34,7 +36,9 @@ fun MagazynScreen(viewModel: MagazynViewModel) {
                     onToggleEditMode = { viewModel.toggleEditMode() },
                     searchQuery = viewModel.searchQuery.collectAsState().value,
                     onSearchChange = { viewModel.updateSearchQuery(it) },
-                    onAddClick = { viewModel.openAddDialog() }
+                    onAddClick = { viewModel.openAddDialog() },
+                    strukturaFilter = viewModel.skladFilter.collectAsState().value,
+                    onStrukruraFilterChange = { viewModel.updateSkladFilter(it) }
                 )
             }
         ) { padding ->
@@ -47,13 +51,14 @@ fun MagazynScreen(viewModel: MagazynViewModel) {
                 when {
                     viewModel.isLoading -> MagazynLoadingScreen()
                     viewModel.errorMessage != null -> MagazynErrorScreen(viewModel.errorMessage!!)
-                    viewModel.filteredMagazynProbki.isEmpty() -> EmptyMagazynScreen()
+                    filteredList.isEmpty() -> EmptyMagazynScreen()
                     else -> MagazynList(
-                        probki = viewModel.filteredMagazynProbki,
+                        probki = filteredList,
                         isEditMode = viewModel.isEditMode,
                         onSave = { numer, struktura, sklad, szerokosc, ilosc, uwagi, dataProdukcji ->
                             viewModel.saveMagazynData(numer, struktura, sklad, szerokosc, ilosc, uwagi, dataProdukcji)
-                        }
+                        },
+                        onDelete = { viewModel.deleteMagazynEntry(it) }
                     )
                 }
             }
@@ -81,7 +86,9 @@ fun MagazynTopBar(
     onToggleEditMode: () -> Unit,
     searchQuery: String,
     onSearchChange: (String) -> Unit,
-    onAddClick: () -> Unit
+    onAddClick: () -> Unit,
+    strukturaFilter: String,
+    onStrukruraFilterChange: (String) -> Unit
 ) {
     TopAppBar(
         backgroundColor = AppColors.Primary,
@@ -98,6 +105,21 @@ fun MagazynTopBar(
                 text = "Magazyn próbek",
                 style = MaterialTheme.typography.h6,
                 modifier = Modifier.weight(1f)
+            )
+
+            OutlinedTextField(
+                value = strukturaFilter,
+                onValueChange = onStrukruraFilterChange,
+                placeholder = { Text("Filtr składu...") },
+                modifier = Modifier.weight(1f).padding(horizontal = 8.dp),
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    textColor = AppColors.OnPrimary,
+                    backgroundColor = AppColors.Primary,
+                    cursorColor = AppColors.OnPrimary,
+                    focusedBorderColor = AppColors.OnPrimary,
+                    unfocusedBorderColor = AppColors.OnPrimary.copy(alpha = 0.5f)
+                ),
+                singleLine = true
             )
 
             OutlinedTextField(

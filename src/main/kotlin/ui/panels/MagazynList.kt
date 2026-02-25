@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -21,7 +23,8 @@ import java.time.format.DateTimeFormatter
 fun MagazynList(
     probki: List<MagazynDTO>,
     isEditMode: Boolean,
-    onSave: (Int, String?, String?, String?, String?, String?, LocalDateTime?) -> Unit
+    onSave: (Int, String?, String?, String?, String?, String?, LocalDateTime?) -> Unit,
+    onDelete: (Int) -> Unit
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize().padding(16.dp),
@@ -35,7 +38,8 @@ fun MagazynList(
             MagazynRow(
                 probka = probka,
                 isEditMode = isEditMode,
-                onSave = onSave
+                onSave = onSave,
+                onDelete = onDelete
             )
         }
     }
@@ -78,7 +82,8 @@ fun RowScope.HeaderCell(text: String, weight: Float) {
 fun MagazynRow(
     probka: MagazynDTO,
     isEditMode: Boolean,
-    onSave: (Int, String?, String?, String?, String?, String?, LocalDateTime?) -> Unit
+    onSave: (Int, String?, String?, String?, String?, String?, LocalDateTime?) -> Unit,
+    onDelete: (Int) -> Unit
 ) {
     var skladMag by remember { mutableStateOf(probka.skladMag ?: "") }
     var strukturaMag by remember { mutableStateOf(probka.strukturaMag ?: "") }
@@ -114,6 +119,7 @@ fun MagazynRow(
         Row(
             modifier = Modifier
                 .fillMaxSize()
+                .height(if (isEditMode) 64.dp else heightCell)
                 .padding(8.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
@@ -244,6 +250,21 @@ fun MagazynRow(
                 style = MaterialTheme.typography.body2,
                 color = AppColors.OnBackground
             )
+            if (isEditMode) {
+                IconButton(
+                    onClick = { onDelete(probka.numer) },
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        Icons.Default.Close,
+                        contentDescription = "Usuń",
+                        tint = AppColors.Error,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            } else {
+                Spacer(Modifier.width(32.dp))
+            }
         }
     }
 }
