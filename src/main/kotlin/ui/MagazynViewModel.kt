@@ -47,35 +47,28 @@ class MagazynViewModel(private val probkaService: ProbkaService) {
     private val _skladFilter = MutableStateFlow("")
     val skladFilter = _skladFilter.asStateFlow()
 
-
     val filteredMagazynProbki: StateFlow<List<MagazynDTO>> = combine(
         _searchQuery,
         _skladFilter,
         snapshotFlow { magazynProbki }
-    ) { query, skladFilterValue, lista ->
+    ) { query, skladQuery, lista ->
         val q = query.lowercase().trim()
-        val s = skladFilterValue.lowercase().trim()
+        val s = skladQuery.lowercase().trim()
 
         lista.filter { probka ->
-            // 1. Filtr ogólny (szukajka po numerze i kontrahencie)
-            val matchesQuery = q.isBlank() ||
+            // 1. SZUKAJ (Pole po prawej) - szuka tylko w numerze i kontrahencie
+            val matchesMainSearch = q.isBlank() ||
                     probka.numer.toString().contains(q) ||
                     probka.kontrahentNazwa.lowercase().contains(q)
 
-            // 2. Precyzyjny filtr składu/struktury
-            val matchesSklad = s.isBlank() || run {
-                // Pobieramy tekst ze składu i struktury (skoro to dla Ciebie to samo)
-                val tekstDoPrzeszukania = "${probka.skladMag ?: ""} ${probka.strukturaMag ?: ""}".lowercase()
+            // 2. FILTR SKŁADU (Pole po lewej) - szuka TYLKO w składzie i strukturze
+            // Używamy prostego 'contains', żeby nie pominąć niczego przez przypadek
+            val matchesSklad = s.isBlank() ||
+                    (probka.skladMag?.lowercase()?.contains(s) == true ||
+                            probka.strukturaMag?.lowercase()?.contains(s) == true)
 
-                // Dzielimy tekst na konkretne materiały (separatory: spacja, ukośnik, przecinek, procent)
-                val materialy = tekstDoPrzeszukania.split(Regex("[\\s/%,.-]+")).filter { it.isNotBlank() }
-
-                // Sprawdzamy czy którykolwiek materiał ZACZYNA SIĘ od wpisanej frazy
-                // Dzięki temu "PET" znajdzie "PET", ale nie znajdzie "PE"
-                materialy.any { m -> m.startsWith(s) }
-            }
-
-            matchesQuery && matchesSklad
+            // Obie sekcje muszą być spełnione (AND)
+            matchesMainSearch && matchesSklad
         }.sortedByDescending { it.numer }
     }.stateIn(
         scope = coroutineScope,
