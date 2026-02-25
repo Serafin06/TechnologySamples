@@ -21,7 +21,7 @@ import java.time.format.DateTimeFormatter
 fun MagazynList(
     probki: List<MagazynDTO>,
     isEditMode: Boolean,
-    onSave: (Int, String?, String?, String?, String?, LocalDateTime?) -> Unit
+    onSave: (Int, String?, String?, String?, String?, String?, LocalDateTime?) -> Unit
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize().padding(16.dp),
@@ -52,12 +52,13 @@ fun MagazynTableHeader() {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        HeaderCell("Numer", 0.08f)
-        HeaderCell("Kontrahent", 0.20f)
-        HeaderCell("Skład", 0.17f)
-        HeaderCell("Szerokość", 0.13f)
-        HeaderCell("Ilość", 0.13f)
-        HeaderCell("Uwagi", 0.17f)
+        HeaderCell("Numer", 0.07f)
+        HeaderCell("Kontrahent", 0.18f)
+        HeaderCell("Skład", 0.15f)
+        HeaderCell("Struktura", 0.12f)
+        HeaderCell("Szerokość", 0.10f)
+        HeaderCell("Ilość", 0.10f)
+        HeaderCell("Uwagi", 0.16f)
         HeaderCell("Data prod.", 0.12f)
     }
 }
@@ -77,9 +78,10 @@ fun RowScope.HeaderCell(text: String, weight: Float) {
 fun MagazynRow(
     probka: MagazynDTO,
     isEditMode: Boolean,
-    onSave: (Int, String?, String?, String?, String?, LocalDateTime?) -> Unit
+    onSave: (Int, String?, String?, String?, String?, String?, LocalDateTime?) -> Unit
 ) {
     var skladMag by remember { mutableStateOf(probka.skladMag ?: "") }
+    var strukturaMag by remember { mutableStateOf(probka.strukturaMag ?: "") }
     var szerokoscMag by remember { mutableStateOf(probka.szerokoscMag ?: "") }
     var iloscMag by remember { mutableStateOf(probka.iloscMag ?: "") }
     var uwagiMag by remember { mutableStateOf(probka.uwagiMag ?: "") }
@@ -91,6 +93,7 @@ fun MagazynRow(
         if (!isEditMode) {
             onSave(
                 probka.numer,
+                strukturaMag.ifBlank { null },
                 skladMag.ifBlank { null },
                 szerokoscMag.ifBlank { null },
                 iloscMag.ifBlank { null },
@@ -117,14 +120,15 @@ fun MagazynRow(
         ) {
             Text(
                 text = probka.numer.toString(),
-                modifier = Modifier.weight(0.08f),
+                modifier = Modifier.weight(0.06f),
                 style = MaterialTheme.typography.body2,
                 color = AppColors.OnBackground
             )
 
+
             Text(
                 text = probka.kontrahentNazwa,
-                modifier = Modifier.weight(0.20f),
+                modifier = Modifier.weight(0.13f),
                 style = MaterialTheme.typography.body2,
                 color = AppColors.OnBackground
             )
@@ -145,6 +149,27 @@ fun MagazynRow(
                 Text(
                     text = skladMag.ifBlank { "-" },
                     modifier = Modifier.weight(0.13f),
+                    style = MaterialTheme.typography.body2,
+                    color = AppColors.OnBackground
+                )
+            }
+
+            if (isEditMode) {
+                OutlinedTextField(
+                    value = strukturaMag,
+                    onValueChange = { strukturaMag = it },
+                    modifier = Modifier.weight(0.12f).padding(horizontal = 2.dp),
+                    singleLine = true,
+                    textStyle = MaterialTheme.typography.caption,
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        textColor = AppColors.OnBackground,
+                        backgroundColor = AppColors.Surface
+                    )
+                )
+            } else {
+                Text(
+                    text = strukturaMag.ifBlank { "-" },
+                    modifier = Modifier.weight(0.12f),
                     style = MaterialTheme.typography.body2,
                     color = AppColors.OnBackground
                 )

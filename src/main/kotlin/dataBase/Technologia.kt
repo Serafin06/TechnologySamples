@@ -56,5 +56,8 @@ data class Technologia(
     var dataAktualizacjiMag: LocalDateTime? = null,
 
     @Column(name = "MAG_AKTYWNY")
-    var magAktywny: Boolean? = null
+    var magAktywny: Boolean? = null,
+
+    @Column(name = "STRUKTURA_MAG", length = 100)
+    var strukturaMag: String? = null
 )

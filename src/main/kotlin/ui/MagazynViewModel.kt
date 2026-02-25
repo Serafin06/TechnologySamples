@@ -48,6 +48,9 @@ class MagazynViewModel(private val probkaService: ProbkaService) {
     var showAddDialog by mutableStateOf(false)
         private set
 
+    var searchError by mutableStateOf<String?>(null)
+        private set
+
     init {
         startFiltering()
     }
@@ -74,7 +77,6 @@ class MagazynViewModel(private val probkaService: ProbkaService) {
         }
     }
 
-    // --- NOWA METODA: Szukanie próbki po numerze ---
     fun searchProbka(numerInput: String) {
         val numer = numerInput.toIntOrNull()
         if (numer == null) {
@@ -89,9 +91,9 @@ class MagazynViewModel(private val probkaService: ProbkaService) {
             try {
                 // Wywołujemy nową metodę z Service (trzeba ją dodać w Service/Repo - patrz instrukcja niżej)
                 val result = probkaService.getProbkaByNumer(numer)
-                if (result == null) {
-                    errorMessage = "Nie znaleziono próbki nr $numer"
-                } else {
+                if (result == null)
+                    searchError = "Nie znaleziono próbki nr $numer"
+                else {
                     foundProbka = result
                 }
             } catch (e: Exception) {
@@ -141,6 +143,7 @@ class MagazynViewModel(private val probkaService: ProbkaService) {
 
     fun saveMagazynData(
         numer: Int,
+        strukturaMag: String?,
         skladMag: String?,
         szerokoscMag: String?,
         iloscMag: String?,
@@ -152,6 +155,7 @@ class MagazynViewModel(private val probkaService: ProbkaService) {
 
         val current = magazynProbki[index]
         val updated = current.copy(
+            strukturaMag = strukturaMag,
             skladMag = skladMag,
             szerokoscMag = szerokoscMag,
             iloscMag = iloscMag,
@@ -167,7 +171,7 @@ class MagazynViewModel(private val probkaService: ProbkaService) {
         // Zapis w tle
         coroutineScope.launch(Dispatchers.IO) {
             try {
-                probkaService.saveMagazynData(numer, skladMag, szerokoscMag, iloscMag, uwagiMag, dataProdukcjiMag)
+                probkaService.saveMagazynData(numer, strukturaMag, skladMag, szerokoscMag, iloscMag, uwagiMag, dataProdukcjiMag)
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     errorMessage = "Błąd zapisu: ${e.message}"
@@ -180,8 +184,8 @@ class MagazynViewModel(private val probkaService: ProbkaService) {
 
     fun openAddDialog() {
         showAddDialog = true
-        foundProbka = null // Czyścimy przy otwarciu
-        errorMessage = null
+        foundProbka = null
+        searchError = null
     }
 
     fun closeAddDialog() {
@@ -191,6 +195,7 @@ class MagazynViewModel(private val probkaService: ProbkaService) {
 
     fun addMagazynEntry(
         numer: Int,
+        strukturaMag: String?,
         skladMag: String?,
         szerokoscMag: String?,
         iloscMag: String?,
@@ -199,7 +204,7 @@ class MagazynViewModel(private val probkaService: ProbkaService) {
     ) {
         coroutineScope.launch(Dispatchers.IO) {
             try {
-                probkaService.saveMagazynData(numer, skladMag, szerokoscMag, iloscMag, uwagiMag, dataProdukcjiMag)
+                probkaService.saveMagazynData(numer, strukturaMag, skladMag, szerokoscMag, iloscMag, uwagiMag, dataProdukcjiMag)
                 loadMagazynProbki()
                 withContext(Dispatchers.Main) { showAddDialog = false }
             } catch (e: Exception) {

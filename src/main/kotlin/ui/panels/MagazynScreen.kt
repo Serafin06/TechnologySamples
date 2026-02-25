@@ -51,8 +51,8 @@ fun MagazynScreen(viewModel: MagazynViewModel) {
                     else -> MagazynList(
                         probki = viewModel.filteredMagazynProbki,
                         isEditMode = viewModel.isEditMode,
-                        onSave = { numer, sklad, szerokosc, ilosc, uwagi, dataProdukcji ->
-                            viewModel.saveMagazynData(numer, sklad, szerokosc, ilosc, uwagi, dataProdukcji)
+                        onSave = { numer, struktura, sklad, szerokosc, ilosc, uwagi, dataProdukcji ->
+                            viewModel.saveMagazynData(numer, struktura, sklad, szerokosc, ilosc, uwagi, dataProdukcji)
                         }
                     )
                 }
@@ -63,11 +63,11 @@ fun MagazynScreen(viewModel: MagazynViewModel) {
                     // ZMIANA: Przekazujemy znalezioną próbkę i metody
                     foundProbka = viewModel.foundProbka,
                     isSearching = viewModel.isSearching,
-                    searchError = viewModel.errorMessage,
+                    searchError = viewModel.searchError,
                     onSearch = { viewModel.searchProbka(it) },
                     onDismiss = { viewModel.closeAddDialog() },
-                    onConfirm = { numer, sklad, szerokosc, ilosc, uwagi, dataProdukcji ->
-                        viewModel.addMagazynEntry(numer, sklad, szerokosc, ilosc, uwagi, dataProdukcji)
+                    onConfirm = { numer, struktura, sklad, szerokosc, ilosc, uwagi, dataProdukcji ->
+                        viewModel.addMagazynEntry(numer, struktura, sklad, szerokosc, ilosc, uwagi, dataProdukcji)
                     }
                 )
             }

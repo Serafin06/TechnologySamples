@@ -20,6 +20,7 @@ interface ProbkaService {
     suspend fun getProbkaByNumer(numer: Int): ProbkaDTO?
     suspend fun saveMagazynData(
         numer: Int,
+        strukturaMag: String?,
         skladMag: String?,
         szerokoscMag: String?,
         iloscMag: String?,
@@ -204,6 +205,7 @@ class ProbkaServiceImpl(
 
     override suspend fun saveMagazynData(
         numer: Int,
+        strukturaMag: String?,
         skladMag: String?,
         szerokoscMag: String?,
         iloscMag: String?,
@@ -212,7 +214,7 @@ class ProbkaServiceImpl(
         magAktywny: Boolean
     ) {
         withContext(Dispatchers.IO) {
-            repository.saveMagazynData(numer, skladMag, szerokoscMag, iloscMag, uwagiMag, dataProdukcjiMag, magAktywny)
+            repository.saveMagazynData(numer, strukturaMag, skladMag, szerokoscMag, iloscMag, uwagiMag, dataProdukcjiMag, magAktywny)
         }
     }
 }

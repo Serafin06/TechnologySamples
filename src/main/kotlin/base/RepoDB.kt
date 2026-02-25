@@ -7,6 +7,7 @@ import org.hibernate.Session
 import org.hibernate.SessionFactory
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
+import kotlin.to
 
 // ═══════════════════════════════════════════════════════════════
 // 🗃️ Repository Layer - Warstwa dostępu do danych
@@ -28,6 +29,7 @@ interface ProbkaRepository {
     fun findZoWithDetailsByNumer(numer: Int): ZO?
     fun saveMagazynData(
         numer: Int,
+        strukturaMag: String?,
         skladMag: String?,
         szerokoscMag: String?,
         iloscMag: String?,
@@ -184,8 +186,6 @@ class ProbkaRepositoryImpl(private val sessionFactory: SessionFactory) : ProbkaR
 
     override fun getAllMagazynProbki(): List<MagazynDTO> {
         return useSession { session ->
-
-            // 1. Tylko aktywne rekordy z Technologia
             val technologie = session.createQuery(
                 "FROM Technologia t WHERE t.magAktywny = true",
                 Technologia::class.java
@@ -195,35 +195,39 @@ class ProbkaRepositoryImpl(private val sessionFactory: SessionFactory) : ProbkaR
 
             val numery = technologie.map { it.numer }
 
-            // 2. Jedno zapytanie do ZO - tylko numer i idKontrahenta
             val zoData = session.createQuery(
-                "SELECT zo.numer, zo.idKontrahenta FROM ZO zo WHERE zo.numer IN :numery",
+                "SELECT zo.numer, zo.idKontrahenta, zo.grubosc11, zo.grubosc21, zo.grubosc31 FROM ZO zo WHERE zo.numer IN :numery",
                 Array<Any>::class.java
             ).setParameter("numery", numery).resultList
-                .associate { row -> row[0] as Int to row[1] as Int? }
+                .associate { row ->
+                    row[0] as Int to Pair(
+                        row[1] as Int?,
+                        buildStruktura(row[2] as String?, row[3] as String?, row[4] as String?)
+                    )
+                }
 
-            // 3. Jedno zapytanie po kontrahentów
-            val kontrahentIds = zoData.values.filterNotNull().toSet()
-            val kontrahentMap = if (kontrahentIds.isNotEmpty()) {
-                findKontrahenciByIds(kontrahentIds)
-            } else {
-                emptyMap()
-            }
+            val zkDaty = session.createQuery(
+                "SELECT zk.numer, zk.dataZak FROM ZK zk WHERE zk.numer IN :numery",
+                Array<Any>::class.java
+            ).setParameter("numery", numery).resultList
+                .associate { row -> row[0] as Int to row[1] as LocalDateTime? }
 
-            // 4. Mapowanie - wszystko z pamięci
+            val kontrahentIds = zoData.values.mapNotNull { it.first }.toSet()
+            val kontrahentMap = if (kontrahentIds.isNotEmpty()) findKontrahenciByIds(kontrahentIds) else emptyMap()
+
             technologie.map { t ->
-                val kontrahentId = zoData[t.numer]
+                val (kontrahentId, strukturaZo) = zoData[t.numer] ?: Pair(null, null)
                 val kontrahent = kontrahentId?.let { kontrahentMap[it] }
-
                 MagazynDTO(
                     numer = t.numer,
                     kontrahentNazwa = kontrahent?.nazwa ?: "Nieznany",
                     tested = t.tested,
+                    strukturaMag = t.strukturaMag ?: strukturaZo,
                     skladMag = t.skladMag,
                     szerokoscMag = t.szerokoscMag,
                     iloscMag = t.iloscMag,
                     uwagiMag = t.uwagiMag,
-                    dataProdukcjiMag = t.dataProdukcjiMag,
+                    dataProdukcjiMag = t.dataProdukcjiMag ?: zkDaty[t.numer],
                     dataAktualizacjiMag = t.dataAktualizacjiMag
                 )
             }
@@ -258,9 +262,9 @@ class ProbkaRepositoryImpl(private val sessionFactory: SessionFactory) : ProbkaR
         }
     }
 
-
     override fun saveMagazynData(
         numer: Int,
+        strukturaMag: String?,
         skladMag: String?,
         szerokoscMag: String?,
         iloscMag: String?,
@@ -272,35 +276,47 @@ class ProbkaRepositoryImpl(private val sessionFactory: SessionFactory) : ProbkaR
             val tx = session.beginTransaction()
             try {
                 val existing = findTechnologiaByNumers(listOf(numer))[numer]
-
                 val technologia = existing?.copy(
+                    strukturaMag = strukturaMag,
                     skladMag = skladMag,
                     szerokoscMag = szerokoscMag,
                     iloscMag = iloscMag,
                     uwagiMag = uwagiMag,
                     dataProdukcjiMag = dataProdukcjiMag,
-                    dataAktualizacjiMag = LocalDateTime.now()
+                    dataAktualizacjiMag = LocalDateTime.now(),
+                    magAktywny = magAktywny
                 ) ?: Technologia(
                     numer = numer,
+                    strukturaMag = strukturaMag,
                     skladMag = skladMag,
                     szerokoscMag = szerokoscMag,
                     iloscMag = iloscMag,
                     uwagiMag = uwagiMag,
                     dataProdukcjiMag = dataProdukcjiMag,
-                    dataAktualizacjiMag = LocalDateTime.now()
+                    dataAktualizacjiMag = LocalDateTime.now(),
+                    magAktywny = magAktywny
                 )
-
-                if (existing == null) {
-                    session.persist(technologia)
-                } else {
-                    session.merge(technologia)
-                }
-
+                if (existing == null) session.persist(technologia) else session.merge(technologia)
                 tx.commit()
             } catch (e: Exception) {
                 tx.rollback()
                 throw e
             }
         }
+    }
+
+    private fun buildStruktura(g1: String?, g2: String?, g3: String?): String? {
+        val layers = listOfNotNull(
+            g1?.takeIf { it.isNotBlank() },
+            g2?.takeIf { it.isNotBlank() },
+            g3?.takeIf { it.isNotBlank() }
+        )
+        if (layers.isEmpty()) return null
+        val type = when (layers.size) {
+            1 -> "Taśma"
+            2 -> "Laminat"
+            else -> "Trilaminat"
+        }
+        return "$type ${layers.joinToString("/")}"
     }
 }

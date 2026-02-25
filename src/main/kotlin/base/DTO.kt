@@ -63,6 +63,7 @@ data class MagazynDTO(
     val numer: Int,
     val kontrahentNazwa: String,
     val tested: Boolean?,
+    val strukturaMag: String?,
     val skladMag: String?,
     val szerokoscMag: String?,
     val iloscMag: String?,
