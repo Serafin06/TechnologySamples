@@ -42,12 +42,7 @@ fun AddMagazynDialog(
                 probka.grubosc31?.takeIf { it.isNotBlank() }
             )
             if (layers.isNotEmpty() && strukturaMag.isBlank()) {
-                val type = when (layers.size) {
-                    1 -> "Taśma"; 2 -> "Laminat"; else -> "Trilaminat"
-                }
-                strukturaMag = "$type ${layers.joinToString("/")}"
-
-                // Możesz tu dodać inne pola, jeśli chcesz je kopiować, np. ilość z zamówienia
+                strukturaMag = layers.joinToString("/")
             }
         }
     }

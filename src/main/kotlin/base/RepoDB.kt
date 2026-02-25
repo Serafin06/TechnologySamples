@@ -311,12 +311,6 @@ class ProbkaRepositoryImpl(private val sessionFactory: SessionFactory) : ProbkaR
             g2?.takeIf { it.isNotBlank() },
             g3?.takeIf { it.isNotBlank() }
         )
-        if (layers.isEmpty()) return null
-        val type = when (layers.size) {
-            1 -> "Taśma"
-            2 -> "Laminat"
-            else -> "Trilaminat"
-        }
-        return "$type ${layers.joinToString("/")}"
+        return if (layers.isEmpty()) null else layers.joinToString("/")
     }
 }
