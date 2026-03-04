@@ -2,6 +2,7 @@ package ui.panels
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -19,6 +20,9 @@ import ui.heightCell
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
+enum class MagazynSortColumn { NUMER, KONTRAHENT, SKLAD, STRUKTURA, SZEROKOSC, ILOSC, DATA }
+data class SortState(val column: MagazynSortColumn, val ascending: Boolean = true)
+
 @Composable
 fun MagazynList(
     probki: List<MagazynDTO>,
@@ -26,15 +30,38 @@ fun MagazynList(
     onSave: (Int, String?, String?, String?, String?, String?, LocalDateTime?) -> Unit,
     onDelete: (Int) -> Unit
 ) {
+    var sortState by remember { mutableStateOf<SortState?>(null) }
+
+    val sortedProbki = remember(probki, sortState) {
+        val s = sortState ?: return@remember probki
+        val sorted = when (s.column) {
+            MagazynSortColumn.NUMER -> probki.sortedBy { it.numer }
+            MagazynSortColumn.KONTRAHENT -> probki.sortedBy { it.kontrahentNazwa }
+            MagazynSortColumn.SKLAD -> probki.sortedBy { it.skladMag ?: "" }
+            MagazynSortColumn.STRUKTURA -> probki.sortedBy { it.strukturaMag ?: "" }
+            MagazynSortColumn.SZEROKOSC -> probki.sortedBy { it.szerokoscMag?.toDoubleOrNull() ?: Double.MAX_VALUE }
+            MagazynSortColumn.ILOSC -> probki.sortedBy { it.iloscMag?.toDoubleOrNull() ?: Double.MAX_VALUE }
+            MagazynSortColumn.DATA -> probki.sortedBy { it.dataProdukcjiMag }
+        }
+        if (s.ascending) sorted else sorted.reversed()
+    }
+
     LazyColumn(
         modifier = Modifier.fillMaxSize().padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         item {
-            MagazynTableHeader()
+            MagazynTableHeader(
+                sortState = sortState,
+                onSort = { col ->
+                    sortState = if (sortState?.column == col)
+                        sortState!!.copy(ascending = !sortState!!.ascending)
+                    else SortState(col)
+                }
+            )
         }
 
-        items(probki) { probka ->
+        items(sortedProbki, key = {it.numer}) { probka ->
             MagazynRow(
                 probka = probka,
                 isEditMode = isEditMode,
@@ -46,7 +73,10 @@ fun MagazynList(
 }
 
 @Composable
-fun MagazynTableHeader() {
+fun MagazynTableHeader(
+    sortState: SortState?,
+    onSort: (MagazynSortColumn) -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -56,15 +86,36 @@ fun MagazynTableHeader() {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        HeaderCell("Numer", 0.07f)
-        HeaderCell("Kontrahent", 0.18f)
-        HeaderCell("Skład", 0.15f)
-        HeaderCell("Struktura", 0.12f)
-        HeaderCell("Szerokość", 0.10f)
-        HeaderCell("Ilość", 0.10f)
+        SortableHeaderCell("Numer", 0.07f, MagazynSortColumn.NUMER, sortState, onSort)
+        SortableHeaderCell("Kontrahent", 0.18f, MagazynSortColumn.KONTRAHENT, sortState, onSort)
+        SortableHeaderCell("Skład", 0.15f, MagazynSortColumn.SKLAD, sortState, onSort)
+        SortableHeaderCell("Struktura", 0.12f, MagazynSortColumn.STRUKTURA, sortState, onSort)
+        SortableHeaderCell("Szerokość", 0.10f, MagazynSortColumn.SZEROKOSC, sortState, onSort)
+        SortableHeaderCell("Ilość", 0.10f, MagazynSortColumn.ILOSC, sortState, onSort)
         HeaderCell("Uwagi", 0.16f)
-        HeaderCell("Data prod.", 0.12f)
+        SortableHeaderCell("Data prod.", 0.12f, MagazynSortColumn.DATA, sortState, onSort)
     }
+}
+
+@Composable
+fun RowScope.SortableHeaderCell(
+    text: String, weight: Float,
+    column: MagazynSortColumn,
+    sortState: SortState?,
+    onSort: (MagazynSortColumn) -> Unit
+) {
+    val indicator = when {
+        sortState?.column != column -> ""
+        sortState.ascending -> " ▲"
+        else -> " ▼"
+    }
+    Text(
+        text = text + indicator,
+        modifier = Modifier.weight(weight).clickable { onSort(column) },
+        style = MaterialTheme.typography.subtitle2,
+        fontWeight = FontWeight.Bold,
+        color = AppColors.OnPrimary
+    )
 }
 
 @Composable
