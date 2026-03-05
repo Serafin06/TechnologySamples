@@ -10,6 +10,7 @@ import androidx.compose.ui.unit.dp
 import ui.AppColors
 import ui.MagazynViewModel
 import ui.dialog.AddMagazynDialog
+import ui.dialog.MagazynReportDialog
 
 @Composable
 fun MagazynScreen(viewModel: MagazynViewModel) {
@@ -37,6 +38,7 @@ fun MagazynScreen(viewModel: MagazynViewModel) {
                     searchQuery = viewModel.searchQuery.collectAsState().value,
                     onSearchChange = { viewModel.updateSearchQuery(it) },
                     onAddClick = { viewModel.openAddDialog() },
+                    onReportClick = { viewModel.openReportDialog() },
                     strukturaFilter = viewModel.skladFilter.collectAsState().value,
                     onStrukruraFilterChange = { viewModel.updateSkladFilter(it) }
                 )
@@ -76,6 +78,27 @@ fun MagazynScreen(viewModel: MagazynViewModel) {
                     }
                 )
             }
+
+            if (viewModel.showReportDialog) {
+                MagazynReportDialog(
+                    availableKontrahenci = viewModel.availableKontrahenci,
+                    availableSklady = viewModel.availableSklady,
+                    availableSzerokosci = viewModel.availableSzerokosci,
+                    onDismiss = { viewModel.closeReportDialog() },
+                    onGenerate = { type, filter -> viewModel.generateReport(type, filter) }
+                )
+            }
+
+            viewModel.reportMessage?.let { msg ->
+                AlertDialog(
+                    onDismissRequest = { viewModel.clearReportMessage() },
+                    title = { Text("Raport") },
+                    text = { Text(msg) },
+                    confirmButton = {
+                        TextButton(onClick = { viewModel.clearReportMessage() }) { Text("OK") }
+                    }
+                )
+            }
         }
     }
 }
@@ -88,6 +111,7 @@ fun MagazynTopBar(
     onSearchChange: (String) -> Unit,
     onAddClick: () -> Unit,
     strukturaFilter: String,
+    onReportClick: () -> Unit,
     onStrukruraFilterChange: (String) -> Unit
 ) {
     TopAppBar(
@@ -138,6 +162,14 @@ fun MagazynTopBar(
                 ),
                 singleLine = true
             )
+
+            Button(
+                onClick = onReportClick,
+                modifier = Modifier.padding(end = 8.dp),
+                colors = ButtonDefaults.buttonColors(backgroundColor = AppColors.Surface)
+            ) {
+                Text("Raport")
+            }
 
             Button(
                 onClick = onAddClick,

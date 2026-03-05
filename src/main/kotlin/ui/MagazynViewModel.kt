@@ -6,6 +6,9 @@ import base.ProbkaDTO
 import base.ProbkaService
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
+import report.ExportType
+import report.magazyn.MagazynRaportFilter
+import report.magazyn.generujMagazynRaportAkcja
 import java.time.LocalDateTime
 
 /**
@@ -222,6 +225,40 @@ class MagazynViewModel(private val probkaService: ProbkaService) {
                 }
             }
         }
+    }
+
+    // --- RAPORT ---
+
+    var showReportDialog by mutableStateOf(false)
+        private set
+
+    var reportMessage by mutableStateOf<String?>(null)
+        private set
+
+    val availableKontrahenci: List<String>
+        get() = magazynProbki.map { it.kontrahentNazwa }.distinct().sorted()
+
+    val availableSklady: List<String>
+        get() = magazynProbki.mapNotNull { it.skladMag }.distinct().sorted()
+
+    val availableSzerokosci: List<String>
+        get() = magazynProbki.mapNotNull { it.szerokoscMag }.distinct().sorted()
+
+    fun openReportDialog() { showReportDialog = true }
+    fun closeReportDialog() { showReportDialog = false }
+    fun clearReportMessage() { reportMessage = null }
+
+    fun generateReport(type: ExportType, filter: MagazynRaportFilter) {
+        showReportDialog = false
+        generujMagazynRaportAkcja(
+            scope = coroutineScope,
+            type = type,
+            dane = magazynProbki,
+            filter = filter,
+            onComplete = { success, path ->
+                reportMessage = if (success) "Raport zapisano:\n$path" else "Błąd generowania raportu."
+            }
+        )
     }
 
     fun dispose() {
