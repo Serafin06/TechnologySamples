@@ -33,21 +33,22 @@ data class ReportDTO(
 
     // --- Informacje Dodatkowe ---
     val opis: String,          // z Technologia.opis
-    val dodatkoweInfo: String  // z Technologia.dodatkoweInfo
-)
+    val dodatkoweInfo: String,  // z Technologia.dodatkoweInfo
+    val produce: Boolean?,
+    val send: Boolean?,
+    val tested: Boolean?
+    )
 
 data class RaportFilter(
     val oddzialNazwa: String? = null,
-    val tylkoOtwarte: Boolean = false, // True = statusy 1 (W realizacji) i 2 (Planowane)
-    // Opcjonalnie: zakres dat, konkretny kontrahent itd.
+    val tylkoOtwarte: Boolean = false,
+    val kontrahent: String? = null,
+    val produce: Boolean? = null,
+    val send: Boolean? = null,
+    val tested: Boolean? = null,
+    val statusZO: Set<Byte>? = null
 ) {
     companion object {
-        // Gotowy preset dla Twojego pierwszego raportu
-        fun tychyOtwarte(): RaportFilter {
-            return RaportFilter(
-                oddzialNazwa = "Tychy",
-                tylkoOtwarte = true
-            )
-        }
+        fun tychyOtwarte() = RaportFilter(oddzialNazwa = "Tychy", tylkoOtwarte = true)
     }
 }

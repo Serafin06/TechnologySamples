@@ -7,6 +7,7 @@ import base.ProbkaService
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import report.ExportType
+import report.RaportFilter
 import report.ReportServiceI
 import report.generujRaportAkcja
 import java.time.LocalDateTime
@@ -343,35 +344,22 @@ class ProbkiViewModel(val probkaService: ProbkaService, private val reportServic
 
     // --- EKSPORT DANYCH ---
 
-    fun exportToExcel() {
-        // Wywołujemy akcję raportu, przekazując serwis i callback
-        generujRaportAkcja(
-            scope = coroutineScope,
-            type = ExportType.EXCEL,
-            reportService = reportService,
-            onComplete = { success, path ->
-                // Aktualizujemy stan, który zostanie wyświetlony w UI
-                exportMessage = if (success) {
-                    "Sukces! Raport zapisano w:\n$path"
-                } else {
-                    "Błąd! Nie udało się zapisać raportu."
-                }
-            }
-        )
-    }
+    var showReportDialog by mutableStateOf(false)
+        private set
 
-    fun exportToPdf() {
-        // To samo dla PDF
+    fun openReportDialog() { showReportDialog = true }
+    fun closeReportDialog() { showReportDialog = false }
+
+    fun generateReport(type: ExportType, filter: RaportFilter) {
+        showReportDialog = false
         generujRaportAkcja(
             scope = coroutineScope,
-            type = ExportType.PDF,
+            type = type,
             reportService = reportService,
+            filter = filter,
             onComplete = { success, path ->
-                exportMessage = if (success) {
-                    "Sukces! Raport zapisano w:\n$path"
-                } else {
-                    "Błąd! Nie udało się zapisać raportu."
-                }
+                exportMessage = if (success) "Sukces! Raport zapisano w:\n$path"
+                else "Błąd! Nie udało się zapisać raportu."
             }
         )
     }

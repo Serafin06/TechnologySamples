@@ -15,6 +15,7 @@ fun generujRaportAkcja(
     scope: CoroutineScope,
     type: ExportType,
     reportService: ReportServiceI,
+    filter: RaportFilter = RaportFilter.tychyOtwarte(),
     onComplete: (success: Boolean, path: String) -> Unit
 ) {
     scope.launch(Dispatchers.Swing) { // Uruchamiamy w wątku Swing/UI
@@ -46,8 +47,7 @@ fun generujRaportAkcja(
                     }
 
                     try {
-                        val filtr = RaportFilter.tychyOtwarte()
-                        val dane = reportService.przygotujDaneDoRaportu(filtr)
+                        val dane = reportService.przygotujDaneDoRaportu(filter)
                         generator.generujReport(dane, finalPath)
                         println("Sukces! Raport zapisany.")
 

@@ -26,7 +26,6 @@ object StatusConverter {
         }
 }
 
-
 object StatusExtractor {
     /**
      * Zwraca symbol: "W","P","R","A" lub "" (jeśli nie rozpoznano).

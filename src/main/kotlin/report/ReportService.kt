@@ -42,8 +42,15 @@ class ReportService(
                 grubosc3 = zo.grubosc31 ?: "",
 
                 opis = technologia?.opis ?: "",
-                dodatkoweInfo = technologia?.dodatkoweInfo ?: ""
+                dodatkoweInfo = technologia?.dodatkoweInfo ?: "",
+
+                produce = technologia?.produce,
+                send = technologia?.send,
+                tested = technologia?.tested
             )
-        }.sortedBy { it.numerZlecenia }
+        }.filter { filter.produce == null || it.produce == filter.produce }
+            .filter { filter.send == null || it.send == filter.send }
+            .filter { filter.tested == null || it.tested == filter.tested }
+            .sortedBy { it.numerZlecenia }
     }
 }

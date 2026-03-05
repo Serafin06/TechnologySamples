@@ -97,7 +97,7 @@ fun MagazynReportDialog(
 
 /** Wiersz z checkboxem i dropdownem dla jednego filtra */
 @Composable
-private fun FilterRow(
+internal fun FilterRow(
     label: String,
     enabled: Boolean,
     onToggle: (Boolean) -> Unit,
