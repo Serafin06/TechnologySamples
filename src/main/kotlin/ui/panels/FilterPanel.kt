@@ -29,8 +29,7 @@ fun FilterPanel(
     filterState: FilterState,
     onFilterChange: (FilterState) -> Unit,
     onRefresh: () -> Unit,
-    onExportExcel: () -> Unit,
-    onExportPdf: () -> Unit,
+    onExportClick: () -> Unit,
     isRefreshing: Boolean,
     availableKontrahenci: List<String>
 ) {
@@ -70,18 +69,8 @@ fun FilterPanel(
                             expanded = showExportMenu,
                             onDismissRequest = { showExportMenu = false }
                         ) {
-                            DropdownMenuItem(onClick = {
-                                showExportMenu = false
-                                onExportExcel()
-                            }) {
-                                Text("Eksportuj do Excel (.xlsx)")
-                            }
-
-                            DropdownMenuItem(onClick = {
-                                showExportMenu = false
-                                onExportPdf()
-                            }) {
-                                Text("Eksportuj do PDF")
+                            DropdownMenuItem(onClick = { showExportMenu = false; onExportClick() }) {
+                                Text("Generuj raport...")
                             }
                         }
                     }

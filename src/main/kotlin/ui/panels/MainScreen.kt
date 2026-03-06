@@ -60,8 +60,7 @@ fun ProbkiScreen(viewModel: ProbkiViewModel) {
                         }
                     },
                     availableKontrahenci = viewModel.availableKontrahenci,
-                    onExportExcel = { viewModel.exportToExcel() },
-                    onExportPdf = { viewModel.exportToPdf() }
+                    onExportClick = { viewModel.openReportDialog() }
                 )
 
                 // Zawartość
